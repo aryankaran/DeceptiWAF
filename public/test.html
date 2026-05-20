@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeceptiWAF - Attack Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background: #020617; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(239, 68, 68, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(239, 68, 68, 0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+      70%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .pulse-ring { animation: pulse-ring 2s infinite; }
+    @keyframes flash-red {
+      0%   { background-color: rgba(239, 68, 68, 0.3); }
+      100% { background-color: transparent; }
+    }
+    .flash-red { animation: flash-red 0.6s ease-out; }
+    @keyframes flash-green {
+      0%   { background-color: rgba(34, 197, 94, 0.3); }
+      100% { background-color: transparent; }
+    }
+    .flash-green { animation: flash-green 0.6s ease-out; }
+    .attack-btn { transition: all 0.15s; }
+    .attack-btn:hover { transform: translateY(-1px); }
+    .attack-btn:active { transform: translateY(0); }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen grid-bg">
+
+  <!-- ============================================================
+       DeceptiWAF - Attack Simulator / Cyber Range
+       Click buttons to fire real attacks at the WAF.
+       Open /soc in another tab (login as admin) to watch events
+       stream in live.
+       ============================================================ -->
+
+  <!-- Top bar -->
+  <header class="border-b border-red-900/40 bg-slate-900/70 backdrop-blur sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="relative w-3 h-3 rounded-full bg-red-500 pulse-ring"></div>
+        <div>
+          <p class="mono text-red-400 font-bold tracking-widest text-sm">DECEPTIWAF // ATTACK SIMULATOR</p>
+          <p class="mono text-[10px] text-red-700">cyber range  &middot;  fire attacks  &middot;  watch WAF react</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 mono text-xs">
+        <a href="/" class="text-slate-400 hover:text-slate-200 border border-slate-700 hover:border-slate-500 px-2 py-1 rounded">LOGIN PAGE</a>
+        <a href="/soc" class="text-green-400 hover:text-green-300 border border-green-900 hover:border-green-700 px-2 py-1 rounded">OPEN SOC &rarr;</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-6">
+
+    <!-- Hint banner -->
+    <div class="mb-6 bg-slate-900/60 border border-green-900/40 rounded-lg p-4 flex items-start gap-3">
+      <span class="mono text-green-400 text-sm mt-0.5">&gt;&gt;</span>
+      <div class="text-xs text-slate-300 leading-relaxed">
+        <span class="text-green-400 font-medium">HOW TO USE:</span>
+        Open the
+        <a href="/soc" class="text-green-300 underline">SOC dashboard</a>
+        in another browser tab (login as <code class="mono bg-slate-800 px-1.5 py-0.5 rounded">admin</code> /
+        <code class="mono bg-slate-800 px-1.5 py-0.5 rounded">socadmin123</code>).
+        Then come back here and click any attack button below. You'll see the request return
+        <span class="text-red-400">403 BLOCKED</span> here, and a live
+        <span class="text-red-400">[BLOCK]</span> event will stream into the SOC feed simultaneously.
+      </div>
+    </div>
+
+    <!-- KPI strip -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-slate-900/60 border border-slate-800 rounded-lg p-4">
+        <p class="mono text-[10px] text-slate-500 tracking-widest">ATTACKS LAUNCHED</p>
+        <p id="kpiTotal" class="mono text-2xl text-slate-100 font-bold mt-1">0</p>
+      </div>
+      <div class="bg-slate-900/60 border border-red-900/40 rounded-lg p-4">
+        <p class="mono text-[10px] text-red-700 tracking-widest">BLOCKED (403)</p>
+        <p id="kpiBlocked" class="mono text-2xl text-red-400 font-bold mt-1">0</p>
+      </div>
+      <div class="bg-slate-900/60 border border-green-900/40 rounded-lg p-4">
+        <p class="mono text-[10px] text-green-700 tracking-widest">PASSED THROUGH</p>
+        <p id="kpiPassed" class="mono text-2xl text-green-400 font-bold mt-1">0</p>
+      </div>
+      <div class="bg-slate-900/60 border border-amber-900/40 rounded-lg p-4">
+        <p class="mono text-[10px] text-amber-700 tracking-widest">BLOCK RATE</p>
+        <p id="kpiRate" class="mono text-2xl text-amber-400 font-bold mt-1">0%</p>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- LEFT: attack categories -->
+      <div class="space-y-6">
+
+        <!-- SQL Injection -->
+        <section class="bg-slate-900/60 border border-red-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-red-900/40 flex items-center justify-between">
+            <h2 class="mono text-sm text-red-400 tracking-widest">SQL INJECTION</h2>
+            <span class="mono text-[10px] text-red-700">7 payloads</span>
+          </div>
+          <div id="sqli-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
+        </section>
+
+        <!-- XSS -->
+        <section class="bg-slate-900/60 border border-orange-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-orange-900/40 flex items-center justify-between">
+            <h2 class="mono text-sm text-orange-400 tracking-widest">CROSS-SITE SCRIPTING (XSS)</h2>
+            <span class="mono text-[10px] text-orange-700">5 payloads</span>
+          </div>
+          <div id="xss-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
+        </section>
+
+        <!-- Path Traversal -->
+        <section class="bg-slate-900/60 border border-amber-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-amber-900/40 flex items-center justify-between">
+            <h2 class="mono text-sm text-amber-400 tracking-widest">PATH TRAVERSAL</h2>
+            <span class="mono text-[10px] text-amber-700">5 payloads</span>
+          </div>
+          <div id="pt-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT: more categories + log -->
+      <div class="space-y-6">
+
+        <!-- Malicious UAs -->
+        <section class="bg-slate-900/60 border border-fuchsia-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-fuchsia-900/40 flex items-center justify-between">
+            <h2 class="mono text-sm text-fuchsia-400 tracking-widest">MALICIOUS USER-AGENTS</h2>
+            <span class="mono text-[10px] text-fuchsia-700">5 scanners</span>
+          </div>
+          <div id="ua-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
+        </section>
+
+        <!-- Benign (control) -->
+        <section class="bg-slate-900/60 border border-green-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-green-900/40 flex items-center justify-between">
+            <h2 class="mono text-sm text-green-400 tracking-widest">BENIGN TRAFFIC (CONTROL)</h2>
+            <span class="mono text-[10px] text-green-700">should pass</span>
+          </div>
+          <div id="benign-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
+        </section>
+
+        <!-- Fire everything -->
+        <section class="bg-slate-900/60 border border-red-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-red-900/40">
+            <h2 class="mono text-sm text-red-400 tracking-widest">CHAOS MODE</h2>
+          </div>
+          <div class="p-4">
+            <button id="fireAll" class="w-full attack-btn bg-red-900 hover:bg-red-800 text-red-100 mono text-sm font-bold py-3 rounded-lg border border-red-700">
+              FIRE ALL ATTACKS (one of each)
+            </button>
+            <button id="clearLog" class="w-full mt-2 attack-btn bg-slate-800 hover:bg-slate-700 text-slate-300 mono text-xs py-2 rounded-lg border border-slate-700">
+              CLEAR LOG
+            </button>
+          </div>
+        </section>
+
+        <!-- Phase 3: Brute-Force Honeypot -->
+        <section class="bg-slate-900/60 border border-fuchsia-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-fuchsia-900/40 flex items-center justify-between">
+            <h2 class="mono text-sm text-fuchsia-400 tracking-widest">CRED SHIELD — BRUTE-FORCE HONEYPOT</h2>
+            <span class="mono text-[10px] text-fuchsia-700">Phase 3</span>
+          </div>
+          <div class="p-4 space-y-2">
+            <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+              Simulates a real brute-force attacker from your IP. After 3 failed logins the system
+              <span class="text-fuchsia-300">arms the honeypot</span>, then on the 4th attempt it
+              <span class="text-fuchsia-300">lies "Login Successful"</span> and redirects you to the fake
+              <code class="mono bg-slate-800 px-1 rounded">/trap</code> dashboard. Open the SOC dashboard
+              to see purple <code class="mono bg-slate-800 px-1 rounded">[HONEYPOT]</code> alerts stream in.
+            </p>
+
+            <button id="bruteForce" class="w-full attack-btn bg-fuchsia-900 hover:bg-fuchsia-800 text-fuchsia-100 mono text-sm font-bold py-3 rounded-lg border border-fuchsia-700">
+              SIMULATE BRUTE-FORCE ATTACK (4 logins)
+            </button>
+
+            <button id="bruteStep1" class="w-full attack-btn bg-slate-950/60 hover:bg-slate-900 text-slate-300 mono text-xs py-2 rounded-lg border border-slate-800">
+              STEP 1: Fail login #1
+            </button>
+            <button id="bruteStep2" class="w-full attack-btn bg-slate-950/60 hover:bg-slate-900 text-slate-300 mono text-xs py-2 rounded-lg border border-slate-800">
+              STEP 2: Fail login #2
+            </button>
+            <button id="bruteStep3" class="w-full attack-btn bg-slate-950/60 hover:bg-slate-900 text-slate-300 mono text-xs py-2 rounded-lg border border-slate-800">
+              STEP 3: Fail login #3 (arms honeypot)
+            </button>
+            <button id="bruteStep4" class="w-full attack-btn bg-fuchsia-950/60 hover:bg-fuchsia-900/40 text-fuchsia-300 mono text-xs py-2 rounded-lg border border-fuchsia-800">
+              STEP 4: Any login &rarr; TRAPPED
+            </button>
+
+            <div id="bruteStatus" class="mt-2 mono text-[11px] text-slate-500 px-2 py-1">
+              [idle] No brute-force attempts yet.
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Live result log -->
+    <section class="mt-6 bg-slate-900/60 border border-slate-800 rounded-lg">
+      <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-red-500 pulse-ring"></span>
+          <h2 class="mono text-sm text-slate-300 tracking-widest">ATTACK RESULT LOG</h2>
+        </div>
+        <span class="mono text-[10px] text-slate-600">most recent first</span>
+      </div>
+      <div id="resultLog" class="p-4 mono text-xs space-y-1 min-h-[200px] max-h-[400px] overflow-y-auto">
+        <div class="text-slate-600">[waiting] No attacks launched yet. Click a button above to begin.</div>
+      </div>
+    </section>
+
+    <p class="mono text-[10px] text-slate-700 text-center mt-6">
+      // deceptiwaf attack simulator  &middot;  all requests are real HTTP calls to the local server
+    </p>
+  </main>
+
+  <script>
+    // ============================================================
+    // Attack definitions — each maps to a real HTTP request
+    // ============================================================
+    const ATTACKS = {
+      sqli: [
+        { label: "' OR 1=1 --",                 desc: "Classic auth bypass tautology",
+          method: 'POST', url: '/login', body: "studentId=admin' OR 1=1 --&password=x" },
+        { label: "' UNION SELECT 1,2,3 --",     desc: "UNION-based data exfiltration",
+          method: 'POST', url: '/login', body: "studentId=x' UNION SELECT 1,2,3 --&password=x" },
+        { label: "'; DROP TABLE users; --",     desc: "Stacked DROP TABLE",
+          method: 'POST', url: '/login', body: "studentId=x'; DROP TABLE users; --&password=x" },
+        { label: "' AND SLEEP(5) --",           desc: "Time-based blind SQLi",
+          method: 'GET',  url: '/dashboard?q=x\' AND SLEEP(5) --' },
+        { label: "information_schema.tables",   desc: "Schema reconnaissance",
+          method: 'GET',  url: '/dashboard?q=x UNION SELECT table_name FROM information_schema.tables' },
+        { label: "xp_cmdshell('whoami')",       desc: "RCE via SQL Server",
+          method: 'GET',  url: '/dashboard?q=x\'; EXEC xp_cmdshell(\'whoami\'); --' },
+        { label: "URL-encoded ' OR 1=1 --",     desc: "Anti-evasion: URL-encoded payload",
+          method: 'POST', url: '/login', body: "studentId=admin%27%20OR%201%3D1%20--&password=x" },
+      ],
+      xss: [
+        { label: "<script>alert(1)</script>",            desc: "Classic script tag",
+          method: 'GET', url: '/dashboard?q=%3Cscript%3Ealert(1)%3C/script%3E' },
+        { label: "<img src=x onerror=alert(1)>",         desc: "onerror handler",
+          method: 'GET', url: '/dashboard?q=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E' },
+        { label: "<svg onload=alert(1)>",                desc: "SVG onload",
+          method: 'GET', url: '/dashboard?q=%3Csvg%20onload%3Dalert(1)%3E' },
+        { label: "<a href=javascript:alert(1)>",         desc: "javascript: protocol",
+          method: 'GET', url: '/dashboard?q=%3Ca%20href%3Djavascript:alert(1)%3Ex%3C/a%3E' },
+        { label: "<script>eval(String.fromCharCode)",    desc: "Charcode obfuscation",
+          method: 'GET', url: '/dashboard?q=%3Cscript%3Eeval(String.fromCharCode(97,108,101,114,116,40,49,41))%3C/script%3E' },
+      ],
+      pt: [
+        { label: "../../etc/passwd",                     desc: "Unix passwd file",
+          method: 'GET', url: '/dashboard?q=../../etc/passwd' },
+        { label: "..%2F..%2Fetc%2Fpasswd",               desc: "URL-encoded traversal",
+          method: 'GET', url: '/dashboard?q=..%2F..%2Fetc%2Fpasswd' },
+        { label: "/etc/shadow",                          desc: "Unix shadow file",
+          method: 'GET', url: '/dashboard?q=/etc/shadow' },
+        { label: "php://filter/resource=index.php",      desc: "PHP stream wrapper",
+          method: 'GET', url: '/dashboard?q=php://filter/resource=index.php' },
+        { label: "..\\..\\windows\\win.ini",             desc: "Windows path traversal",
+          method: 'GET', url: '/dashboard?q=..%5C..%5Cwindows%5Cwin.ini' },
+      ],
+      ua: [
+        { label: "User-Agent: sqlmap/1.6",     desc: "sqlmap automated scanner",  ua: 'sqlmap/1.6' },
+        { label: "User-Agent: nikto/2.1.6",    desc: "nikto web scanner",         ua: 'nikto/2.1.6' },
+        { label: "User-Agent: hydra/9.5",      desc: "hydra brute-forcer",        ua: 'hydra/9.5' },
+        { label: "User-Agent: Havij/1.17",     desc: "Havij SQLi tool",           ua: 'Havij/1.17' },
+        { label: "User-Agent: Acunetix/14.0",  desc: "Acunetix scanner",          ua: 'Acunetix-Scanner/14.0' },
+      ],
+      benign: [
+        { label: "GET / (login page)",          desc: "Normal page load",
+          method: 'GET', url: '/' },
+        { label: "Valid login (aryan)",         desc: "Legitimate credentials",
+          method: 'POST', url: '/login', body: "studentId=aryan&password=kuce2024" },
+        { label: "Search 'Data Structures'",    desc: "Normal course search",
+          method: 'GET', url: '/dashboard?q=Data+Structures' },
+        { label: "Search 'CSE301'",             desc: "Normal course code",
+          method: 'GET', url: '/dashboard?q=CSE301' },
+      ],
+    };
+
+    // ============================================================
+    // Stats
+    // ============================================================
+    let total = 0, blocked = 0, passed = 0;
+
+    function updateKpis() {
+      document.getElementById('kpiTotal').textContent = total;
+      document.getElementById('kpiBlocked').textContent = blocked;
+      document.getElementById('kpiPassed').textContent = passed;
+      const rate = total === 0 ? 0 : Math.round((blocked / total) * 100);
+      document.getElementById('kpiRate').textContent = rate + '%';
+    }
+
+    // ============================================================
+    // Log
+    // ============================================================
+    const logEl = document.getElementById('resultLog');
+
+    function logResult(label, desc, status, isBlock) {
+      // Clear "waiting" line on first entry
+      const waiting = logEl.querySelector('.text-slate-600');
+      if (waiting && waiting.textContent.startsWith('[waiting]')) waiting.remove();
+
+      // Defense-in-depth: escape everything even though label/desc are
+      // currently hardcoded (future-proofing against refactors).
+      const esc = (s) => String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+      const time = new Date().toLocaleTimeString('en-GB');
+      const color = isBlock ? 'text-red-400' : 'text-green-400';
+      const tag = isBlock ? '[BLOCKED]' : '[PASSED] ';
+      const statusColor = isBlock ? 'text-red-300' : 'text-green-300';
+
+      const div = document.createElement('div');
+      div.className = isBlock ? 'flash-red px-2 py-1 rounded' : 'flash-green px-2 py-1 rounded';
+      div.innerHTML =
+        '<span class="text-slate-600">' + esc(time) + '</span> ' +
+        '<span class="' + color + ' font-bold">' + tag + '</span> ' +
+        '<span class="' + statusColor + '">HTTP ' + esc(status) + '</span> ' +
+        '<span class="text-slate-300">' + esc(label) + '</span> ' +
+        '<span class="text-slate-600">— ' + esc(desc) + '</span>';
+      logEl.insertBefore(div, logEl.firstChild);
+
+      // Cap log length
+      while (logEl.children.length > 50) logEl.removeChild(logEl.lastChild);
+    }
+
+    // ============================================================
+    // Fire an attack
+    // ============================================================
+    async function fireAttack(attack) {
+      total++;
+      updateKpis();
+
+      const opts = { method: attack.method || 'GET', redirect: 'manual' };
+      if (attack.body) {
+        opts.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+        opts.body = attack.body;
+      }
+      if (attack.ua) {
+        opts.headers = opts.headers || {};
+        opts.headers['User-Agent'] = attack.ua;
+      }
+
+      try {
+        const resp = await fetch(attack.url, opts);
+        const status = resp.status;
+        const isBlock = (status === 403);
+
+        if (isBlock) blocked++; else passed++;
+        updateKpis();
+        logResult(attack.label, attack.desc, status, isBlock);
+      } catch (e) {
+        // Network error or CORS issue — most likely a redirect that fetch can't follow manually
+        passed++;
+        updateKpis();
+        logResult(attack.label, attack.desc, 'ERR', false);
+      }
+    }
+
+    // ============================================================
+    // Render attack buttons
+    // ============================================================
+    function renderButtons(containerId, attackList, accentColor) {
+      const container = document.getElementById(containerId);
+      for (const a of attackList) {
+        const btn = document.createElement('button');
+        btn.className = 'attack-btn text-left bg-slate-950/60 hover:bg-slate-900 border border-slate-800 hover:border-' + accentColor + '-700 rounded-lg px-3 py-2 group';
+        btn.innerHTML =
+          '<div class="flex items-center justify-between">' +
+            '<span class="mono text-xs text-slate-200 group-hover:text-' + accentColor + '-300">' + a.label + '</span>' +
+            '<span class="mono text-[10px] text-slate-600 group-hover:text-' + accentColor + '-500">FIRE &rarr;</span>' +
+          '</div>' +
+          '<p class="text-[10px] text-slate-500 mt-0.5">' + a.desc + '</p>';
+        btn.addEventListener('click', () => fireAttack(a));
+        container.appendChild(btn);
+      }
+    }
+
+    renderButtons('sqli-buttons',   ATTACKS.sqli,   'red');
+    renderButtons('xss-buttons',    ATTACKS.xss,    'orange');
+    renderButtons('pt-buttons',     ATTACKS.pt,     'amber');
+    renderButtons('ua-buttons',     ATTACKS.ua,     'fuchsia');
+    renderButtons('benign-buttons', ATTACKS.benign, 'green');
+
+    // ============================================================
+    // Chaos mode: fire one of each
+    // ============================================================
+    document.getElementById('fireAll').addEventListener('click', async () => {
+      const all = [
+        ...ATTACKS.sqli,
+        ...ATTACKS.xss,
+        ...ATTACKS.pt,
+        ...ATTACKS.ua,
+        // Skip benign in chaos mode so we only count attacks
+      ];
+      // Stagger them slightly so the SOC feed shows a nice rolling stream
+      for (const a of all) {
+        fireAttack(a);
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    });
+
+    document.getElementById('clearLog').addEventListener('click', () => {
+      logEl.innerHTML = '<div class="text-slate-600">[waiting] Log cleared. Click an attack button to begin.</div>';
+      total = 0; blocked = 0; passed = 0;
+      updateKpis();
+    });
+
+    // ============================================================
+    // Phase 3 — CredShield brute-force honeypot controls
+    // ============================================================
+    let bruteAttempt = 0;
+    const bruteStatusEl = document.getElementById('bruteStatus');
+
+    function bruteStatus(msg, color) {
+      const c = color || 'text-slate-500';
+      bruteStatusEl.className = 'mt-2 mono text-[11px] ' + c + ' px-2 py-1';
+      bruteStatusEl.textContent = msg;
+    }
+
+    // Fire one brute-force attempt with bad credentials.
+    // Returns the HTTP status (302 = redirected, 403 = blocked by WAF if payload triggers).
+    async function bruteOnce() {
+      bruteAttempt++;
+      const fakeUser = 'attacker' + bruteAttempt;
+      const fakePass = 'wrongpass' + bruteAttempt;
+      try {
+        const resp = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'studentId=' + encodeURIComponent(fakeUser) + '&password=' + encodeURIComponent(fakePass),
+          redirect: 'manual', // so we can inspect the redirect target
+        });
+        // With redirect: 'manual', fetch returns opaqueredirect (status 0) — but
+        // we can detect trap vs reject by following manually. Simpler: re-fetch
+        // with redirect: 'follow' and check the final URL.
+        return resp.status;
+      } catch (e) {
+        return 'ERR';
+      }
+    }
+
+    // Easier path: use XMLHttpRequest-style to actually follow redirects
+    // and detect whether we ended up on /trap.
+    function bruteFollow() {
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/login');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            // After following redirects, xhr.responseURL is the final URL
+            const finalUrl = xhr.responseURL || '';
+            const endedOnTrap = finalUrl.includes('/trap');
+            resolve({ endedOnTrap, finalUrl });
+          }
+        };
+        xhr.send('studentId=attacker' + bruteAttempt + '&password=wrongpass' + bruteAttempt);
+      });
+    }
+
+    async function doBruteStep(stepNum) {
+      bruteAttempt = stepNum;
+      const result = await bruteFollow();
+
+      if (result.endedOnTrap) {
+        logResult('Login #' + stepNum + ' (wrong creds)', 'Honeypot TRAP triggered', '302→/trap', false);
+        bruteStatus(
+          '[TRAPPED] Attempt #' + stepNum + ' was trapped! Server lied "Login Successful" and redirected to /trap.',
+          'text-fuchsia-300 font-bold'
+        );
+        // Open the trap in a new tab so the user can see it
+        window.open('/trap', '_blank');
+      } else if (stepNum >= 3) {
+        logResult('Login #' + stepNum + ' (wrong creds)', 'Honeypot ARMED — next attempt will trap', '302→/', false);
+        bruteStatus(
+          '[ARMED] Attempt #' + stepNum + ' crossed the threshold. Honeypot is active for your IP. Click STEP 4 to be trapped.',
+          'text-fuchsia-400'
+        );
+      } else {
+        logResult('Login #' + stepNum + ' (wrong creds)', 'Brute-force attempt #' + stepNum + ' — failed', '302→/', false);
+        bruteStatus(
+          '[PROBE] Attempt #' + stepNum + ' failed normally. Threshold is 3. ' + (3 - stepNum) + ' more to arm the honeypot.',
+          'text-amber-400'
+        );
+      }
+    }
+
+    document.getElementById('bruteStep1').addEventListener('click', () => doBruteStep(1));
+    document.getElementById('bruteStep2').addEventListener('click', () => doBruteStep(2));
+    document.getElementById('bruteStep3').addEventListener('click', () => doBruteStep(3));
+    document.getElementById('bruteStep4').addEventListener('click', () => doBruteStep(4));
+
+    // One-click full simulation: fire 4 logins with 400ms stagger
+    document.getElementById('bruteForce').addEventListener('click', async () => {
+      bruteStatus('[RUNNING] Simulating 4 brute-force attempts...', 'text-fuchsia-300');
+      for (let i = 1; i <= 4; i++) {
+        await doBruteStep(i);
+        await new Promise((r) => setTimeout(r, 400));
+      }
+    });
+  </script>
+</body>
+</html>

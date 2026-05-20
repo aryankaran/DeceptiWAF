@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KUCE Student Portal - Sign In</title>
+
+  <!-- Tailwind CSS via CDN (no build step) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 via-blue-50 to-slate-200 min-h-screen flex items-center justify-center p-4">
+
+  <!-- ============================================================
+       KUCE Student Portal - Login Page (Decoy Surface)
+       Phase 1: Plain credential form. POSTs to /login.
+       Phase 3: CredShield will wrap /login with brute-force logic.
+       ============================================================ -->
+  <div class="w-full max-w-md">
+
+    <!-- Brand header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-900 text-white text-2xl font-bold shadow-lg mb-4">
+        K
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800">KUCE Student Portal</h1>
+      <p class="text-sm text-slate-500 mt-1">Kashmir University College of Engineering</p>
+    </div>
+
+    <!-- Login card -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+
+      <h2 class="text-lg font-semibold text-slate-700 mb-1">Sign in to your account</h2>
+      <p class="text-xs text-slate-500 mb-6">Use your student credentials to continue.</p>
+
+      <!-- Error banner -->
+      <div id="errorBanner" class="hidden mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+        <span id="errorText">Invalid credentials. Please try again.</span>
+      </div>
+
+      <form action="/login" method="POST" class="space-y-5">
+
+        <!-- Student ID -->
+        <div>
+          <label for="studentId" class="block text-sm font-medium text-slate-700 mb-1.5">
+            Student ID
+          </label>
+          <input
+            type="text"
+            id="studentId"
+            name="studentId"
+            autocomplete="username"
+            placeholder="e.g. S1001"
+            required
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+          />
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            required
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+          />
+        </div>
+
+        <!-- Remember + forgot -->
+        <div class="flex items-center justify-between text-sm">
+          <label class="flex items-center text-slate-600 cursor-pointer">
+            <input type="checkbox" name="remember" class="mr-2 rounded border-slate-300" />
+            Remember me
+          </label>
+          <a href="#" class="text-blue-700 hover:text-blue-900 hover:underline">Forgot password?</a>
+        </div>
+
+        <!-- Submit -->
+        <button
+          type="submit"
+          class="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2.5 rounded-lg transition shadow-md"
+        >
+          Sign In
+        </button>
+      </form>
+
+      <!-- Helper -->
+      <div class="mt-6 pt-5 border-t border-slate-100">
+        <p class="text-xs text-slate-500 mb-3 text-center">Demo accounts (click to autofill):</p>
+        <div class="flex flex-wrap gap-1.5 justify-center mb-3">
+          <button type="button" data-user="aryan"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">aryan</button>
+          <button type="button" data-user="sucheta"  class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">sucheta</button>
+          <button type="button" data-user="isha"     class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">isha</button>
+          <button type="button" data-user="sweet"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">sweet</button>
+          <button type="button" data-user="shaly"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">shaly</button>
+          <button type="button" data-user="demo1"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">demo1</button>
+          <button type="button" data-user="demo2"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">demo2</button>
+          <button type="button" data-user="admin"    class="demo-chip mono text-[11px] bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 rounded font-medium">admin &rarr; /soc</button>
+        </div>
+        <p class="text-center text-xs text-slate-500">
+          Student password: <code class="mono bg-slate-100 px-1.5 py-0.5 rounded">kuce2024</code>
+          &middot; Admin password: <code class="mono bg-slate-100 px-1.5 py-0.5 rounded">socadmin123</code>
+        </p>
+        <p class="text-center text-xs text-slate-500 mt-3">
+          Having trouble signing in? Contact the
+          <a href="#" class="text-blue-700 hover:underline">IT Helpdesk</a>.
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="text-center text-xs text-slate-500 mt-6">
+      &copy; 2025 KUCE Information Systems. All rights reserved.
+    </p>
+
+    <!-- Attack simulator link (demo utility) -->
+    <p class="text-center text-xs mt-3">
+      <a href="/test" class="mono text-red-700 hover:text-red-900 hover:underline">&gt;&gt; Open Attack Simulator (Cyber Range) &lt;&lt;</a>
+    </p>
+  </div>
+
+  <!-- Minimal client script: surface ?error=... from the redirect + demo chips -->
+  <script>
+    (function () {
+      // Error banner
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get('error');
+      const banner = document.getElementById('errorBanner');
+      const text = document.getElementById('errorText');
+      if (err) {
+        banner.classList.remove('hidden');
+        if (err === 'invalid')      text.textContent = 'Invalid Student ID or password. Please try again.';
+        else if (err === 'missing') text.textContent = 'Please provide both Student ID and password.';
+        else if (err === 'auth')    text.textContent = 'Session expired. Please sign in again.';
+        else                        text.textContent = 'Login failed. Please try again.';
+      }
+
+      // Demo chip autofill
+      const userInput = document.getElementById('studentId');
+      const passInput = document.getElementById('password');
+      const STUDENT_PASS = 'kuce2024';
+      const ADMIN_PASS   = 'socadmin123';
+      document.querySelectorAll('.demo-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const u = chip.dataset.user;
+          userInput.value = u;
+          passInput.value = (u === 'admin') ? ADMIN_PASS : STUDENT_PASS;
+          userInput.focus();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeceptiWAF SOC - Command Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(34, 197, 94, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 197, 94, 0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+    .blink { animation: blink 1s steps(1) infinite; }
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      70%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .pulse-ring { animation: pulse-ring 2s infinite; }
+    @keyframes flash-red {
+      0%   { background-color: rgba(239, 68, 68, 0.25); }
+      100% { background-color: transparent; }
+    }
+    .flash-red { animation: flash-red 0.6s ease-out; }
+    @keyframes flash-fuchsia {
+      0%   { background-color: rgba(217, 70, 239, 0.25); }
+      100% { background-color: transparent; }
+    }
+    .flash-fuchsia { animation: flash-fuchsia 0.6s ease-out; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen grid-bg">
+
+  <!-- ============================================================
+       DeceptiWAF SOC Dashboard (Phase 4 — full build)
+       - Live WAF + honeypot event feed via socket.io
+       - Event history loaded from /api/events/recent on boot
+       - IP geolocation (city/country/ISP) per attacker
+       - Top attackers catalog
+       - Aggregate stats
+       ============================================================ -->
+
+  <!-- Top bar -->
+  <header class="border-b border-green-900/40 bg-slate-900/70 backdrop-blur sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="relative w-3 h-3 rounded-full bg-red-500 pulse-ring"></div>
+        <div>
+          <p class="mono text-green-400 font-bold tracking-widest text-sm">DECEPTIWAF // SOC</p>
+          <p class="mono text-[10px] text-green-700">command center v4.0  &middot;  live</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-6 mono text-xs">
+        <span class="text-green-500">SESSION: <span id="clock" class="text-green-300">--:--:--</span></span>
+        <span class="text-green-700">|</span>
+        <span class="text-slate-400">OPERATOR: <span class="text-green-300">admin</span></span>
+        <button id="refreshBtn" class="text-amber-400 hover:text-amber-300 border border-amber-900 hover:border-amber-700 px-2 py-1 rounded">REFRESH</button>
+        <form action="/logout" method="POST" id="logoutForm">
+          <button type="submit" class="text-red-400 hover:text-red-300 border border-red-900 hover:border-red-700 px-2 py-1 rounded">DISCONNECT</button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-6">
+
+    <!-- KPI strip -->
+    <section class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div class="bg-slate-900/60 border border-green-900/40 rounded-lg p-4">
+        <p class="mono text-[10px] text-green-700 tracking-widest">EVENTS / MIN</p>
+        <p id="kpiEpm" class="mono text-2xl text-green-400 font-bold mt-1">0.0</p>
+      </div>
+      <div class="bg-slate-900/60 border border-red-900/40 rounded-lg p-4">
+        <p class="mono text-[10px] text-red-700 tracking-widest">BLOCKED</p>
+        <p id="kpiBlocked" class="mono text-2xl text-red-400 font-bold mt-1">0</p>
+      </div>
+      <div class="bg-slate-900/60 border border-fuchsia-900/40 rounded-lg p-4">
+        <p class="mono text-[10px] text-fuchsia-700 tracking-widest">TRAPPED</p>
+        <p id="kpiTrapped" class="mono text-2xl text-fuchsia-400 font-bold mt-1">0</p>
+      </div>
+      <div class="bg-slate-900/60 border border-amber-900/40 rounded-lg p-4">
+        <p class="mono text-[10px] text-amber-700 tracking-widest">UNIQUE IPs</p>
+        <p id="kpiIps" class="mono text-2xl text-amber-400 font-bold mt-1">0</p>
+      </div>
+      <div class="bg-slate-900/60 border border-sky-900/40 rounded-lg p-4">
+        <p class="mono text-[10px] text-sky-700 tracking-widest">GEO LOOKUPS</p>
+        <p id="kpiGeo" class="mono text-2xl text-sky-400 font-bold mt-1">0</p>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Live feed -->
+      <section class="lg:col-span-2 bg-slate-900/60 border border-green-900/40 rounded-lg">
+        <div class="px-4 py-3 border-b border-green-900/40 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-green-500 blink"></span>
+            <h2 class="mono text-sm text-green-400 tracking-widest">LIVE ATTACK FEED</h2>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="mono text-[10px] text-slate-500 flex items-center gap-1">
+              <input id="autoScroll" type="checkbox" checked class="rounded bg-slate-800 border-slate-700" /> autoscroll
+            </label>
+            <button id="clearFeed" class="mono text-[10px] text-red-400 hover:text-red-300 border border-red-900 hover:border-red-700 px-2 py-0.5 rounded">CLEAR</button>
+          </div>
+        </div>
+        <div id="feed" class="p-4 mono text-xs space-y-1 min-h-[420px] max-h-[60vh] overflow-y-auto">
+          <div class="text-slate-500">[boot] SOC dashboard initializing...</div>
+        </div>
+      </section>
+
+      <!-- Side panel -->
+      <aside class="space-y-6">
+
+        <!-- Top attackers (with geo) -->
+        <div class="bg-slate-900/60 border border-amber-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-amber-900/40 flex items-center justify-between">
+            <h3 class="mono text-sm text-amber-400 tracking-widest">TOP ATTACKERS</h3>
+            <span id="topCount" class="mono text-[10px] text-amber-700">0</span>
+          </div>
+          <div id="topAttackers" class="mono text-xs text-slate-500 max-h-72 overflow-y-auto">
+            <div class="p-4">No attackers yet. Run attacks via /test to populate.</div>
+          </div>
+        </div>
+
+        <!-- Trapped attackers -->
+        <div class="bg-slate-900/60 border border-fuchsia-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-fuchsia-900/40 flex items-center justify-between">
+            <h3 class="mono text-sm text-fuchsia-400 tracking-widest">TRAPPED ATTACKERS</h3>
+            <div class="flex items-center gap-2">
+              <span id="trappedBadge" class="mono text-[10px] text-fuchsia-700">0 active</span>
+              <button id="resetHoneypot" class="mono text-[10px] text-red-400 hover:text-red-300 border border-red-900 hover:border-red-700 px-2 py-0.5 rounded">RESET</button>
+            </div>
+          </div>
+          <div id="trappedPanel" class="mono text-xs text-slate-500 max-h-60 overflow-y-auto">
+            <div class="p-4">No attackers currently trapped.</div>
+          </div>
+        </div>
+
+        <!-- System status -->
+        <div class="bg-slate-900/60 border border-green-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-green-900/40">
+            <h3 class="mono text-sm text-green-400 tracking-widest">SYSTEM STATUS</h3>
+          </div>
+          <div class="p-4 mono text-xs space-y-1.5">
+            <div class="flex justify-between"><span class="text-slate-500">WAF engine</span><span class="text-green-400">ONLINE</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">CredShield</span><span class="text-green-400">ONLINE</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Socket.io bus</span><span id="sockStatus" class="text-amber-400">connecting...</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">IP geolocation</span><span class="text-green-400">ONLINE (ip-api.com)</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Event history</span><span id="histStatus" class="text-amber-400">loading...</span></div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+
+    <p class="mono text-[10px] text-green-800 text-center mt-6">
+      // deceptiwaf soc v4.0  &middot;  ip geolocation by ip-api.com  &middot;  events cached in-memory (last 500)
+    </p>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // ============================================================
+    // Session + token helpers
+    // ============================================================
+    function getToken() {
+      const urlToken = new URLSearchParams(window.location.search).get('token');
+      if (urlToken) { try { localStorage.setItem('dwaf_token', urlToken); } catch (e) {} return urlToken; }
+      try { return localStorage.getItem('dwaf_token'); } catch (e) { return null; }
+    }
+    function clearToken() { try { localStorage.removeItem('dwaf_token'); } catch (e) {} }
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // ============================================================
+    // Logout wiring
+    // ============================================================
+    (function wireLogout() {
+      const form = document.getElementById('logoutForm');
+      if (!form) return;
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const token = getToken();
+        const url = token ? '/logout?token=' + encodeURIComponent(token) : '/logout';
+        fetch(url, { method: 'POST', credentials: 'same-origin' })
+          .then(() => { clearToken(); window.location.href = '/'; })
+          .catch(() => { clearToken(); window.location.href = '/'; });
+      });
+    })();
+
+    // ============================================================
+    // Session check — bounce non-admins
+    // ============================================================
+    (async function checkSession() {
+      const token = getToken();
+      if (!token) { window.location.href = '/?error=auth'; return; }
+      try {
+        const resp = await fetch('/api/me?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+        if (!resp.ok) { clearToken(); window.location.href = '/?error=auth'; return; }
+        const data = await resp.json();
+        if (data.user.role !== 'admin') window.location.href = '/dashboard?token=' + encodeURIComponent(token);
+      } catch (e) { console.error('[soc] session check failed:', e); }
+    })();
+
+    // ============================================================
+    // State
+    // ============================================================
+    let blockedCount = 0, trappedCount = 0;
+    let uniqueIps = new Set();
+    let eventTimes = [];
+    let trappedAttackers = new Map();
+    let attackers = new Map(); // ip -> aggregate
+    let geoCacheSize = 0;
+
+    const feed = document.getElementById('feed');
+
+    function fmtTime(iso) {
+      const d = new Date(iso);
+      const p = (n) => String(n).padStart(2, '0');
+      return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+
+    // Convert ISO country code to flag emoji
+    function flagEmoji(cc) {
+      if (!cc || cc.length !== 2 || cc === '??' || cc === 'LO') return '';
+      const cp = [...cc.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65);
+      return String.fromCodePoint(...cp) + ' ';
+    }
+
+    function fmtGeo(g) {
+      if (!g) return '';
+      const flag = flagEmoji(g.countryCode);
+      if (g.source === 'local') return flag + 'Local Network';
+      if (g.source === 'fallback' || g.source === 'pending') return flag + 'geo...';
+      const parts = [];
+      if (g.city && g.city !== '—') parts.push(g.city);
+      if (g.country && g.country !== 'Unknown') parts.push(g.country);
+      return flag + (parts.length ? parts.join(', ') : 'Unknown');
+    }
+
+    function fmtGeoDetail(g) {
+      if (!g) return '';
+      const lines = [];
+      if (g.isp && g.isp !== '—') lines.push('ISP: ' + g.isp);
+      if (g.org && g.org !== '—') lines.push('Org: ' + g.org);
+      if (g.source) lines.push('source: ' + g.source);
+      return lines.join(' / ');
+    }
+
+    // ============================================================
+    // KPIs
+    // ============================================================
+    function updateKpis() {
+      document.getElementById('kpiBlocked').textContent = blockedCount;
+      document.getElementById('kpiTrapped').textContent = trappedCount;
+      document.getElementById('kpiIps').textContent = uniqueIps.size;
+      document.getElementById('kpiGeo').textContent = geoCacheSize;
+      const cutoff = Date.now() - 60000;
+      eventTimes = eventTimes.filter((t) => t > cutoff);
+      document.getElementById('kpiEpm').textContent = (eventTimes.length).toFixed(1);
+    }
+
+    // ============================================================
+    // Feed rendering
+    // ============================================================
+    function appendFeed(html, flash) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      if (flash) div.className = flash + ' px-2 py-1 rounded';
+      feed.appendChild(div);
+      const auto = document.getElementById('autoScroll').checked;
+      if (auto) feed.scrollTop = feed.scrollHeight;
+      // Cap feed length
+      while (feed.children.length > 200) feed.removeChild(feed.firstChild);
+    }
+
+    function renderWafEvent(evt) {
+      eventTimes.push(Date.now());
+      uniqueIps.add(evt.ip);
+      if (evt.type === 'block') blockedCount++;
+
+      const color = evt.type === 'block' ? 'text-red-400' : 'text-amber-400';
+      const tag = evt.type === 'block' ? '[BLOCK] ' : '[FLAG]  ';
+      const flash = evt.type === 'block' ? 'flash-red' : '';
+      const geoStr = fmtGeo(evt.geo);
+
+      appendFeed(
+        '<div class="' + color + '">' +
+        '<span class="text-slate-600">' + esc(fmtTime(evt.timestamp)) + '</span> ' +
+        tag +
+        '<span class="text-fuchsia-300">' + esc(evt.attackType) + '</span> ' +
+        'score=<span class="text-red-300">' + esc(evt.score) + '</span>/' + esc(evt.threshold) + ' ' +
+        'ip=<span class="text-amber-300">' + esc(evt.ip) + '</span> ' +
+        (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+        esc(evt.method) + ' ' + esc(evt.path) +
+        '</div>',
+        flash
+      );
+
+      if (evt.type === 'block' && evt.hits) {
+        for (const h of evt.hits) {
+          appendFeed(
+            '<div class="text-slate-500 pl-6">  - ' + esc(h.family) + '/' + esc(h.id) +
+            ' (' + esc(h.score) + 'pt) <span class="text-slate-600">[' + esc(h.source) + ']</span> ' +
+            '<span class="text-slate-700">' + esc(h.label) + '</span></div>'
+          );
+        }
+      }
+
+      updateKpis();
+      updateAttackerCatalog(evt);
+    }
+
+    function renderHoneypotEvent(evt) {
+      eventTimes.push(Date.now());
+      uniqueIps.add(evt.ip);
+      const t = fmtTime(evt.timestamp);
+      const geoStr = fmtGeo(evt.geo);
+
+      if (evt.type === 'failed') {
+        appendFeed(
+          '<div class="text-amber-400">' +
+          '<span class="text-slate-600">' + esc(t) + '</span> ' +
+          '[BRUTE]  ip=<span class="text-amber-300">' + esc(evt.ip) + '</span> ' +
+          (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+          'user=<span class="text-amber-300">' + esc(evt.username) + '</span> ' +
+          'fails=<span class="text-red-300">' + esc(evt.attempt) + '</span>/' + esc(evt.threshold) +
+          '</div>'
+        );
+      } else if (evt.type === 'activated') {
+        appendFeed(
+          '<div class="text-fuchsia-400 font-bold">' +
+          '<span class="text-slate-600">' + esc(t) + '</span> ' +
+          '[HONEYPOT ARMED] ip=<span class="text-fuchsia-300">' + esc(evt.ip) + '</span> ' +
+          (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+          'after ' + esc(evt.attempt) + ' fails — next login trapped' +
+          '</div>',
+          'flash-fuchsia'
+        );
+      } else if (evt.type === 'trapped') {
+        trappedCount++;
+        trappedAttackers.set(evt.ip, {
+          ip: evt.ip, username: evt.username, attempt: evt.attempt,
+          since: evt.timestamp, geo: evt.geo,
+        });
+        appendFeed(
+          '<div class="text-fuchsia-300 font-bold">' +
+          '<span class="text-slate-600">' + esc(t) + '</span> ' +
+          '[HONEYPOT TRAP] ip=<span class="text-fuchsia-300">' + esc(evt.ip) + '</span> ' +
+          (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+          'claimed_user=<span class="text-amber-300">' + esc(evt.username) + '</span> ' +
+          'attempt=' + esc(evt.attempt) + ' — <span class="text-fuchsia-400">-> /trap</span>' +
+          '</div>',
+          'flash-fuchsia'
+        );
+        renderTrappedAttackers();
+      }
+
+      updateKpis();
+      updateAttackerCatalog(evt);
+    }
+
+    // ============================================================
+    // Attacker catalog (top attackers panel)
+    // ============================================================
+    function updateAttackerCatalog(evt) {
+      if (!evt.ip) return;
+      let a = attackers.get(evt.ip);
+      if (!a) {
+        a = { ip: evt.ip, geo: evt.geo || null, total: 0, blocked: 0, flagged: 0, trapped: 0, failed: 0, lastSeen: evt.timestamp };
+        attackers.set(evt.ip, a);
+      }
+      a.total++;
+      a.lastSeen = evt.timestamp;
+      if (evt.geo) a.geo = evt.geo;
+      if (evt.kind === 'waf' && evt.type === 'block') a.blocked++;
+      else if (evt.kind === 'waf' && evt.type === 'flag') a.flagged++;
+      else if (evt.kind === 'honeypot' && evt.type === 'trapped') a.trapped++;
+      else if (evt.kind === 'honeypot' && evt.type === 'failed') a.failed++;
+      renderTopAttackers();
+    }
+
+    function renderTopAttackers() {
+      const panel = document.getElementById('topAttackers');
+      const count = document.getElementById('topCount');
+      const list = Array.from(attackers.values()).sort((a, b) => b.total - a.total).slice(0, 10);
+      count.textContent = attackers.size + ' total';
+      if (list.length === 0) {
+        panel.innerHTML = '<div class="p-4">No attackers yet. Run attacks via /test to populate.</div>';
+        return;
+      }
+      let html = '';
+      for (const a of list) {
+        const geoStr = fmtGeo(a.geo);
+        const flag = a.geo ? flagEmoji(a.geo.countryCode) : '';
+        html +=
+          '<div class="px-4 py-2 border-b border-amber-900/30 last:border-0">' +
+          '<div class="flex justify-between items-center">' +
+            '<span class="text-amber-300">' + flag + esc(a.ip) + '</span>' +
+            '<span class="text-slate-600 text-[10px]">' + esc(fmtTime(a.lastSeen)) + '</span>' +
+          '</div>' +
+          '<div class="text-slate-500 mt-0.5">' +
+            '<span class="text-sky-400">' + esc(geoStr) + '</span> ' +
+            'events=<span class="text-slate-300">' + a.total + '</span> ' +
+            'blk=<span class="text-red-400">' + a.blocked + '</span> ' +
+            'trp=<span class="text-fuchsia-400">' + a.trapped + '</span>' +
+          '</div>' +
+          '</div>';
+      }
+      panel.innerHTML = html;
+    }
+
+    function renderTrappedAttackers() {
+      const panel = document.getElementById('trappedPanel');
+      const badge = document.getElementById('trappedBadge');
+      if (badge) badge.textContent = trappedAttackers.size + ' active';
+      if (trappedAttackers.size === 0) {
+        panel.innerHTML = '<div class="p-4">No attackers currently trapped.</div>';
+        return;
+      }
+      let html = '';
+      for (const a of trappedAttackers.values()) {
+        const since = new Date(a.since).toLocaleTimeString('en-GB');
+        const geoStr = a.geo ? fmtGeo(a.geo) : '';
+        html +=
+          '<div class="px-4 py-2 border-b border-fuchsia-900/30 last:border-0">' +
+          '<div class="flex justify-between"><span class="text-fuchsia-300">' + esc(a.ip) + '</span><span class="text-slate-600">' + esc(since) + '</span></div>' +
+          '<div class="text-slate-500 mt-0.5">' +
+            (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+            'user=<span class="text-amber-300">' + esc(a.username) + '</span> ' +
+            'attempts=<span class="text-red-300">' + esc(a.attempt) + '</span>' +
+          '</div>' +
+          '</div>';
+      }
+      panel.innerHTML = html;
+    }
+
+    // ============================================================
+    // Load event history on boot
+    // ============================================================
+    async function loadHistory() {
+      const token = getToken();
+      if (!token) return;
+      try {
+        const resp = await fetch('/api/events/recent?limit=50&token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+        if (!resp.ok) {
+          document.getElementById('histStatus').textContent = 'failed (' + resp.status + ')';
+          document.getElementById('histStatus').className = 'text-red-400';
+          return;
+        }
+        const data = await resp.json();
+        const events = (data.events || []).slice().reverse(); // oldest first for append
+        if (events.length === 0) {
+          feed.innerHTML = '<div class="text-slate-500">[boot] No events in history yet.</div>' +
+            '<div class="text-slate-600 mt-2"><span class="text-green-700">&gt;&gt;</span> Open <a href="/test" class="text-green-400 underline">/test</a> and fire attacks to populate this feed.</div>' +
+            '<div class="text-slate-700 mt-4">[idle] listening...<span class="blink">_</span></div>';
+        } else {
+          feed.innerHTML = '<div class="text-slate-500">[history] loaded ' + events.length + ' recent events:</div>';
+          for (const evt of events) {
+            if (evt.kind === 'waf') renderWafEvent(evt);
+            else if (evt.kind === 'honeypot') renderHoneypotEvent(evt);
+          }
+          appendFeed('<div class="text-green-500 mt-2">--- end of history, listening live ---</div>');
+        }
+        document.getElementById('histStatus').textContent = 'loaded (' + events.length + ')';
+        document.getElementById('histStatus').className = 'text-green-400';
+
+        // Also load top attackers
+        const aResp = await fetch('/api/attackers/top?limit=20&token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+        if (aResp.ok) {
+          const aData = await aResp.json();
+          for (const a of (aData.attackers || [])) {
+            attackers.set(a.ip, {
+              ip: a.ip, geo: a.geo, total: a.totalEvents,
+              blocked: a.blockedCount, flagged: a.flaggedCount,
+              trapped: a.trappedCount, failed: a.failedCount,
+              lastSeen: a.lastSeen,
+            });
+          }
+          renderTopAttackers();
+        }
+
+        // Load aggregate stats
+        const sResp = await fetch('/api/stats?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+        if (sResp.ok) {
+          const sData = await sResp.json();
+          blockedCount = sData.blocked || 0;
+          trappedCount = sData.trapped || 0;
+          geoCacheSize = sData.geo?.cacheSize || 0;
+          // uniqueIps from attackers map
+          for (const ip of attackers.keys()) uniqueIps.add(ip);
+          updateKpis();
+        }
+      } catch (e) {
+        console.error('[soc] loadHistory error:', e);
+        document.getElementById('histStatus').textContent = 'error';
+        document.getElementById('histStatus').className = 'text-red-400';
+      }
+    }
+
+    // ============================================================
+    // Socket.io live events
+    // ============================================================
+    const socket = io();
+    socket.on('connect', () => {
+      document.getElementById('sockStatus').textContent = 'ONLINE';
+      document.getElementById('sockStatus').className = 'text-green-400';
+      appendFeed('<div class="text-green-500">[socket] connected (' + socket.id + ')</div>');
+    });
+    socket.on('disconnect', () => {
+      document.getElementById('sockStatus').textContent = 'OFFLINE';
+      document.getElementById('sockStatus').className = 'text-red-400';
+      appendFeed('<div class="text-red-500">[socket] disconnected</div>');
+    });
+    socket.on('waf_event', renderWafEvent);
+    socket.on('honeypot_event', renderHoneypotEvent);
+
+    // ============================================================
+    // Admin controls
+    // ============================================================
+    document.getElementById('resetHoneypot').addEventListener('click', async () => {
+      if (!confirm('Disarm ALL honeypot-trapped IPs?')) return;
+      const token = getToken();
+      try {
+        const resp = await fetch('/api/honeypot/reset?token=' + encodeURIComponent(token), { method: 'POST', credentials: 'same-origin' });
+        if (resp.ok) {
+          trappedAttackers.clear();
+          renderTrappedAttackers();
+          appendFeed('<div class="text-green-400 font-bold">[ADMIN] Honeypot reset — all IPs disarmed.</div>');
+        }
+      } catch (e) {}
+    });
+
+    document.getElementById('clearFeed').addEventListener('click', () => {
+      feed.innerHTML = '<div class="text-slate-500">[feed] cleared by operator.</div>';
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      feed.innerHTML = '<div class="text-slate-500">[boot] refreshing...</div>';
+      blockedCount = 0; trappedCount = 0; uniqueIps.clear(); eventTimes = [];
+      attackers.clear(); trappedAttackers.clear();
+      updateKpis(); renderTopAttackers(); renderTrappedAttackers();
+      loadHistory();
+    });
+
+    // ============================================================
+    // Clock + periodic refresh
+    // ============================================================
+    function tick() {
+      const d = new Date();
+      const p = (n) => String(n).padStart(2, '0');
+      document.getElementById('clock').textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+    tick();
+    setInterval(tick, 1000);
+    setInterval(updateKpis, 5000);
+
+    // Kick off history load
+    loadHistory();
+  </script>
+</body>
+</html>
