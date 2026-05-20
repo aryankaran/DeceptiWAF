@@ -1,0 +1,26 @@
+{
+  "name": "deceptiwaf",
+  "version": "1.0.0",
+  "description": "DeceptiWAF - A deception-based Web Application Firewall with brute-force honeypot and live SOC dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "waf",
+    "security",
+    "honeypot",
+    "deception",
+    "soc",
+    "express",
+    "socket.io"
+  ],
+  "author": "DeceptiWAF Project",
+  "license": "MIT",
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
