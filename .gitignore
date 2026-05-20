@@ -1,0 +1,7 @@
+node_modules
+upload
+*.db
+*.db-shm
+*.db-wal
+new-slides
+out/
