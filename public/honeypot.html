@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalyani University Portal — Student Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', system-ui, sans-serif; background-color: #f1f5f9; }
+    h1, h2, h3, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-comic { font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .academic-card { background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.05); }
+    .row-hidden { display: none; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+  <!-- Top Academic Navigation Bar -->
+  <nav class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="p-1.5 rounded-xl bg-white shadow-sm flex items-center justify-center">
+          <img src="/logo.png" alt="Kalyani University" class="h-8 w-auto object-contain" />
+        </div>
+        <div>
+          <p class="font-comic font-bold text-white leading-tight text-base">Kalyani University</p>
+          <p class="text-[11px] text-slate-400 font-medium">Official Student Portal</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs">
+        <div class="hidden sm:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="text-slate-300">Signed in:</span>
+          <span id="navName" class="font-bold text-white">...</span>
+        </div>
+        <form action="/logout" method="POST" id="logoutForm">
+          <button type="submit" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 px-3.5 py-1.5 rounded-lg font-medium transition-colors">
+            Sign Out
+          </button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+
+    <!-- Student Profile Header Card -->
+    <section class="academic-card rounded-2xl p-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div class="flex items-center gap-5">
+          <div id="avatar" class="w-16 h-16 rounded-xl bg-slate-900 text-amber-400 border border-slate-700 flex items-center justify-center text-xl font-display font-extrabold shadow-md">
+            --
+          </div>
+          <div>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <h1 id="profileName" class="font-comic text-2xl font-bold text-slate-900">Loading Student...</h1>
+              <span id="roleBadge" class="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-xs font-bold border border-amber-300">
+                STUDENT
+              </span>
+            </div>
+            <p id="profileMeta" class="text-sm font-medium text-slate-600 mt-1"></p>
+            <p id="profileContact" class="text-xs text-slate-500 mt-0.5"></p>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 text-right shrink-0 w-full sm:w-auto">
+          <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Enrollment Status</p>
+          <p class="font-comic font-bold text-emerald-700 text-sm mt-0.5">ACTIVE & REGULAR</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Academic Session 2025–2026</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Academic Metrics Grid -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="academic-card rounded-xl p-5">
+        <p class="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Cumulative GPA</p>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="statCgpa" class="font-comic text-3xl font-bold text-slate-900">--</p>
+          <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">/ 10.0</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">First Class Distinction</p>
+      </div>
+
+      <div class="academic-card rounded-xl p-5">
+        <p class="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Overall Attendance</p>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="statAttendance" class="font-comic text-3xl font-bold text-emerald-700">--</p>
+          <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Eligible</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-1.5 mt-3 overflow-hidden">
+          <div id="attBar" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="academic-card rounded-xl p-5">
+        <p class="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Earned Credits</p>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="statCredits" class="font-comic text-3xl font-bold text-slate-900">--</p>
+          <span class="text-xs text-slate-500">/ 160</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Degree Completion: 80%</p>
+      </div>
+
+      <div class="academic-card rounded-xl p-5">
+        <p class="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Pending Dues</p>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="statDues" class="font-comic text-3xl font-bold text-amber-700">--</p>
+        </div>
+        <p id="duesStatus" class="text-xs text-slate-500 mt-2">Clear balance</p>
+      </div>
+    </section>
+
+    <!-- Course Registration & Grade Ledger Section -->
+    <section class="academic-card rounded-2xl overflow-hidden">
+      
+      <!-- Catalog Search Header -->
+      <div class="p-5 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
+        <div>
+          <h2 id="coursesTitle" class="font-comic text-lg font-bold text-slate-900">Enrolled Courses & Grade Ledger</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Official course registration records for the current semester.</p>
+        </div>
+
+        <div class="relative w-full md:w-72">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="searchInput" type="text" placeholder="Search courses or faculty..."
+            class="w-full pl-9 pr-8 py-2 rounded-lg bg-white border border-slate-300 text-xs focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none placeholder:text-slate-400 font-medium" />
+          <span id="searchCount" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400"></span>
+        </div>
+      </div>
+
+      <!-- Course Ledger Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-100 text-slate-700 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200">
+            <tr>
+              <th class="px-5 py-3">Course Code</th>
+              <th class="px-5 py-3">Subject Name</th>
+              <th class="px-5 py-3">Faculty Instructor</th>
+              <th class="px-5 py-3">Credits</th>
+              <th class="px-5 py-3 text-right">Grade Status</th>
+            </tr>
+          </thead>
+          <tbody id="coursesBody" class="divide-y divide-slate-200">
+            <tr><td colspan="5" class="px-5 py-8 text-center text-slate-400 font-medium">Loading course ledger...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="text-center text-xs text-slate-500 py-4">
+      &copy; 2026 Kalyani University Academic Portal &middot; Secured by DeceptiWAF
+    </footer>
+  </main>
+
+  <script>
+    function getToken() {
+      const t = new URLSearchParams(window.location.search).get('token');
+      if (t) return t;
+      try { return localStorage.getItem('dwaf_token') || sessionStorage.getItem('dwaf_token'); } catch (e) { return null; }
+    }
+    function storeTokenByRole(token, role) {
+      try { if (role === 'honeypot') sessionStorage.setItem('dwaf_token', token); else localStorage.setItem('dwaf_token', token); } catch (e) {}
+    }
+    function clearToken() { try { localStorage.removeItem('dwaf_token'); } catch (e) {} try { sessionStorage.removeItem('dwaf_token'); } catch (e) {} }
+
+    document.getElementById('logoutForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const token = getToken();
+      fetch((token ? '/logout?token=' + encodeURIComponent(token) : '/logout'), { method: 'POST', credentials: 'same-origin' })
+        .then(() => { clearToken(); window.location.href = '/'; })
+        .catch(() => { clearToken(); window.location.href = '/'; });
+    });
+
+    (async function loadProfile() {
+      const token = getToken();
+      if (!token) { window.location.href = '/?error=auth'; return; }
+      try {
+        const resp = await fetch('/api/me?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+        if (!resp.ok) { clearToken(); window.location.href = '/?error=auth'; return; }
+        const u = (await resp.json()).user;
+        storeTokenByRole(token, u.role);
+
+        document.getElementById('avatar').textContent = u.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+        document.getElementById('navName').textContent = u.name;
+        document.getElementById('profileName').textContent = u.name;
+        document.getElementById('profileMeta').textContent = 'Student ID: ' + u.username + '  ·  ' + u.branch + '  ·  Semester ' + u.semester;
+        document.getElementById('profileContact').textContent = 'Email: ' + u.email + '  ·  Section: ' + (u.section || 'A');
+        
+        document.getElementById('statCgpa').textContent = (u.cgpa ? u.cgpa.toFixed(2) : '8.50');
+        document.getElementById('statAttendance').textContent = (u.attendance || 90) + '%';
+        document.getElementById('attBar').style.width = (u.attendance || 90) + '%';
+        document.getElementById('statCredits').textContent = (u.credits || 120);
+        
+        const duesVal = u.dues || 0;
+        document.getElementById('statDues').textContent = (duesVal === 0 ? '₹ 0' : '₹ ' + duesVal.toLocaleString());
+        document.getElementById('duesStatus').textContent = duesVal === 0 ? 'No outstanding fees' : 'Payment due soon';
+        document.getElementById('coursesTitle').textContent = 'Enrolled Courses & Grade Ledger — Semester ' + u.semester;
+
+        const body = document.getElementById('coursesBody');
+        body.innerHTML = '';
+        (u.courses || []).forEach(([code, title, instr, credits, grade]) => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50';
+          const gradeColor = grade.startsWith('A')
+            ? 'text-emerald-800 bg-emerald-50 border-emerald-300'
+            : 'text-amber-800 bg-amber-50 border-amber-300';
+          tr.innerHTML =
+            '<td class="px-5 py-3.5 mono font-semibold text-slate-800">' + code + '</td>' +
+            '<td class="px-5 py-3.5 font-semibold text-slate-900">' + title + '</td>' +
+            '<td class="px-5 py-3.5 text-slate-600">' + instr + '</td>' +
+            '<td class="px-5 py-3.5 font-medium text-slate-600">' + credits + ' Credits</td>' +
+            '<td class="px-5 py-3.5 text-right"><span class="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold border ' + gradeColor + '">' + grade + '</span></td>';
+          tr.dataset.search = (code + ' ' + title + ' ' + instr).toLowerCase();
+          body.appendChild(tr);
+        });
+
+        const input = document.getElementById('searchInput');
+        const countEl = document.getElementById('searchCount');
+        input.addEventListener('input', () => {
+          const q = input.value.trim().toLowerCase();
+          let visible = 0, total = 0;
+          body.querySelectorAll('tr').forEach((r) => {
+            total++;
+            if (!q || r.dataset.search.includes(q)) { r.classList.remove('row-hidden'); visible++; }
+            else r.classList.add('row-hidden');
+          });
+          countEl.textContent = q ? (visible + '/' + total) : '';
+        });
+      } catch (e) {
+        console.error('[honeypot] load error:', e);
+        window.location.href = '/?error=auth';
+      }
+    })();
+  </script>
+</body>
+</html>
