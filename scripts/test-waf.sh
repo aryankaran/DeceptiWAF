@@ -169,7 +169,49 @@ expect_block "dirbuster UA" -H "User-Agent: DirBuster/1.0" "$BASE/"
 echo ""
 
 # ------------------------------------------------------------------
-echo "${c_cyn}[5] Benign traffic (should NOT be blocked)${c_rst}"
+echo "${c_cyn}[5] Anti-Evasion (Phase 5)${c_rst}"
+# ------------------------------------------------------------------
+
+# HTML entity encoded XSS (named)
+expect_block "HTML named: &lt;script&gt;" \
+  -G "$BASE/dashboard" --data-urlencode "q=&lt;script&gt;alert(1)&lt;/script&gt;"
+
+# HTML decimal encoded XSS
+expect_block "HTML decimal: &#60;script&#62;" \
+  -G "$BASE/dashboard" --data-urlencode "q=&#60;script&#62;alert(1)&#60;/script&#62;"
+
+# HTML hex encoded XSS
+expect_block "HTML hex: &#x3c;script&#x3e;" \
+  -G "$BASE/dashboard" --data-urlencode "q=&#x3c;script&#x3e;alert(1)&#x3c;/script&#x3e;"
+
+# Unicode full-width UNION SELECT (NFKC normalization)
+expect_block "Full-width UNION SELECT" \
+  -X POST --data-urlencode "studentId=' ＵＮＩＯＮ ＳＥＬＥＣＴ 1,2,3 --" --data "password=x" "$BASE/login"
+
+# SQL comment evasion
+expect_block "UNION/**/SELECT (SQL comment)" \
+  -X POST -d "studentId=x' UNION/**/SELECT 1,2,3 --&password=x" "$BASE/login"
+
+# SQL comment with text inside
+expect_block "UNION/*foo*/SELECT" \
+  -X POST -d "studentId=x' UNION/*foo*/SELECT 1,2,3 --&password=x" "$BASE/login"
+
+# Whitespace padding
+expect_block "UNION     SELECT (padded)" \
+  -X POST -d "studentId=x' UNION     SELECT 1,2,3 --&password=x" "$BASE/login"
+
+# Layered: URL-encoded + HTML entity
+expect_block "URL+HTML layered %26lt%3Bscript" \
+  -G "$BASE/dashboard" --data-urlencode "q=%26lt%3Bscript%26gt%3Balert(1)%26lt%3B/script%26gt%3B"
+
+# Double URL-encoded
+expect_block "Double URL-encoded %2527 OR 1=1" \
+  -X POST -d "studentId=admin%2527%2520OR%25201%253D1%2520--&password=x" "$BASE/login"
+
+echo ""
+
+# ------------------------------------------------------------------
+echo "${c_cyn}[6] Benign traffic (should NOT be blocked)${c_rst}"
 # ------------------------------------------------------------------
 
 expect_pass "Normal login page GET" "$BASE/"
@@ -189,7 +231,7 @@ expect_pass "SQL comment only (score 1)" \
 echo ""
 
 # ------------------------------------------------------------------
-echo "${c_cyn}[6] Edge cases (low-score flagged but allowed)${c_rst}"
+echo "${c_cyn}[7] Edge cases (low-score flagged but allowed)${c_rst}"
 # ------------------------------------------------------------------
 
 # Just an alert() call alone — score 2 (allowed, flagged)

@@ -644,12 +644,20 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('==================================================');
-  console.log('  DeceptiWAF - Target App (Phase 1 + demo users)');
+  console.log('  DeceptiWAF v1.4 - Target App + SOC Dashboard');
   console.log('==================================================');
   console.log(`  Login page    : http://localhost:${PORT}/`);
   console.log(`  Dashboard     : http://localhost:${PORT}/dashboard`);
   console.log(`  Honeypot trap : http://localhost:${PORT}/trap`);
   console.log(`  SOC (admin)   : http://localhost:${PORT}/soc`);
+  console.log(`  Attack sim    : http://localhost:${PORT}/test`);
+  console.log(`  Health check  : http://localhost:${PORT}/health`);
+  console.log('--------------------------------------------------');
+  console.log('  Modules online:');
+  console.log('    [Phase 1] Target app (login, dashboard, honeypot)');
+  console.log('    [Phase 2] WAF middleware (50+ regex rules, scoring)');
+  console.log('    [Phase 3] CredShield (brute-force honeypot, TTL)');
+  console.log('    [Phase 4] SOC dashboard (geo, event history, catalog)');
   console.log('--------------------------------------------------');
   console.log('  Demo students (password: kuce2024):');
   console.log('    aryan, sucheta, isha, sweet, shaly, demo1, demo2');

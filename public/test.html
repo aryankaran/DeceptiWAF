@@ -136,6 +136,22 @@
           <div id="pt-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
         </section>
 
+        <!-- Phase 5: Anti-Evasion Attacks -->
+        <section class="bg-slate-900/60 border border-cyan-900/40 rounded-lg">
+          <div class="px-4 py-3 border-b border-cyan-900/40 flex items-center justify-between">
+            <h2 class="mono text-sm text-cyan-400 tracking-widest">ANTI-EVASION ATTACKS</h2>
+            <span class="mono text-[10px] text-cyan-700">Phase 5</span>
+          </div>
+          <div id="evasion-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
+          <div class="px-4 pb-4">
+            <p class="text-[10px] text-slate-500 leading-relaxed">
+              These payloads try to bypass naïve WAFs using encoding tricks. DeceptiWAF's multi-layer
+              de-obfuscation (URL-decode + HTML-entity-decode + Unicode-normalize + SQL-comment-strip)
+              catches them all.
+            </p>
+          </div>
+        </section>
+
       </div>
 
       <!-- RIGHT: more categories + log -->
@@ -296,6 +312,39 @@
         { label: "Search 'CSE301'",             desc: "Normal course code",
           method: 'GET', url: '/dashboard?q=CSE301' },
       ],
+
+      // Phase 5: Anti-Evasion attacks — each tries a different encoding trick
+      // to bypass naïve WAFs. DeceptiWAF's multi-layer de-obfuscation catches all.
+      evasion: [
+        { label: "&lt;script&gt;alert(1)&lt;/script&gt;",
+          desc: "HTML named entities (a naïve WAF sees no <script>)",
+          method: 'GET', url: '/dashboard?q=%26lt%3Bscript%26gt%3Balert(1)%26lt%3B%2Fscript%26gt%3B' },
+        { label: "&#60;script&#62;alert(1)&#60;/script&#62;",
+          desc: "HTML decimal entities",
+          method: 'GET', url: '/dashboard?q=%26%2360%3Bscript%26%2362%3Balert(1)%26%2360%3B%2Fscript%26%2362%3B' },
+        { label: "&#x3c;script&#x3e; (hex entities)",
+          desc: "HTML hex entities",
+          method: 'GET', url: '/dashboard?q=%26%23x3c%3Bscript%26%23x3e%3Balert(1)%26%23x3c%3B%2Fscript%26%23x3e%3B' },
+        { label: "ＵＮＩＯＮ ＳＥＬＥＣＴ (full-width)",
+          desc: "Unicode full-width chars (NFKC normalization catches this)",
+          method: 'POST', url: '/login',
+          body: "studentId=%27+%EF%BC%B5%EF%BC%AE%EF%BC%A9%EF%BC%AF%EF%BC%AE+%EF%BC%B3%EF%BC%A5%EF%BC%A2%EF%BC%A5%EF%BC%A3%EF%BC%B4+1%2C2%2C3+--&password=x" },
+        { label: "UNION/**/SELECT (SQL comment)",
+          desc: "SQL comment between keywords to break regex matching",
+          method: 'POST', url: '/login',
+          body: "studentId=x%27+UNION%2F**%2FSELECT+1%2C2%2C3+--&password=x" },
+        { label: "UNION     SELECT (whitespace pad)",
+          desc: "Excessive whitespace between keywords",
+          method: 'POST', url: '/login',
+          body: "studentId=x%27+UNION+++++SELECT+1%2C2%2C3+--&password=x" },
+        { label: "%26lt%3Bscript (URL+HTML layered)",
+          desc: "URL-encoded HTML entities (double-layer obfuscation)",
+          method: 'GET', url: '/dashboard?q=%2526lt%253Bscript%2526gt%253Balert(1)%2526lt%253B%252Fscript%2526gt%253B' },
+        { label: "%2527 OR 1=1 (double URL-encoded)",
+          desc: "Double URL-encoding to bypass single-decode WAFs",
+          method: 'POST', url: '/login',
+          body: "studentId=admin%2527%2520OR%25201%253D1%2520--&password=x" },
+      ],
     };
 
     // ============================================================
@@ -398,11 +447,12 @@
       }
     }
 
-    renderButtons('sqli-buttons',   ATTACKS.sqli,   'red');
-    renderButtons('xss-buttons',    ATTACKS.xss,    'orange');
-    renderButtons('pt-buttons',     ATTACKS.pt,     'amber');
-    renderButtons('ua-buttons',     ATTACKS.ua,     'fuchsia');
-    renderButtons('benign-buttons', ATTACKS.benign, 'green');
+    renderButtons('sqli-buttons',     ATTACKS.sqli,     'red');
+    renderButtons('xss-buttons',      ATTACKS.xss,      'orange');
+    renderButtons('pt-buttons',       ATTACKS.pt,       'amber');
+    renderButtons('evasion-buttons',  ATTACKS.evasion,  'cyan');
+    renderButtons('ua-buttons',       ATTACKS.ua,       'fuchsia');
+    renderButtons('benign-buttons',   ATTACKS.benign,   'green');
 
     // ============================================================
     // Chaos mode: fire one of each
@@ -413,6 +463,7 @@
         ...ATTACKS.xss,
         ...ATTACKS.pt,
         ...ATTACKS.ua,
+        ...ATTACKS.evasion,
         // Skip benign in chaos mode so we only count attacks
       ];
       // Stagger them slightly so the SOC feed shows a nice rolling stream
