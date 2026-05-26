@@ -17,6 +17,7 @@
  */
 
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
 const http = require('http');
@@ -26,6 +27,7 @@ const { wafMiddleware } = require('./lib/waf');
 const credShield = require('./lib/credshield');
 const geo = require('./lib/geo');
 const eventStore = require('./lib/eventStore');
+const config = require('./config');
 
 // ------------------------------------------------------------------
 // Crash resistance — never let the server die silently.
@@ -71,183 +73,25 @@ app.use(wafMiddleware);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ------------------------------------------------------------------
-// Demo users — username-style IDs (Phase 1 polish)
-// All student passwords: "kuce2024"   |   Admin password: "socadmin123"
+// User database — loaded from data/users.json (separated from code)
+// Passwords live in config.js, profile data lives in the JSON file.
 // ------------------------------------------------------------------
-const STUDENT_PASSWORD = 'kuce2024';
-const ADMIN_PASSWORD = 'socadmin123';
+const STUDENT_PASSWORD = config.STUDENT_PASSWORD;
+const ADMIN_PASSWORD   = config.ADMIN_PASSWORD;
 
-const USERS = {
-  aryan: {
-    role: 'student',
-    name: 'Aryan Verma',
-    username: 'aryan',
-    branch: 'B.Tech Computer Science',
-    semester: 5,
-    section: 'A',
-    email: 'aryan.v@kuce.edu.in',
-    cgpa: 8.74,
-    attendance: 92,
-    credits: 124,
-    dues: 2500,
-    courses: [
-      ['CSE301', 'Data Structures & Algorithms', 'Dr. A. Khan',    4, 'A'],
-      ['CSE305', 'Database Management Systems',  'Prof. M. Iqbal',  4, 'A+'],
-      ['CSE310', 'Computer Networks',            'Dr. S. Raina',    3, 'B+'],
-      ['CSE312', 'Operating Systems',            'Dr. P. Bhat',     4, 'A'],
-      ['HUM201', 'Technical Communication',      'Ms. F. Ansari',   2, 'A'],
-    ],
-  },
-  sucheta: {
-    role: 'student',
-    name: 'Sucheta Nair',
-    username: 'sucheta',
-    branch: 'B.Tech Computer Science',
-    semester: 5,
-    section: 'A',
-    email: 'sucheta.n@kuce.edu.in',
-    cgpa: 9.12,
-    attendance: 96,
-    credits: 132,
-    dues: 0,
-    courses: [
-      ['CSE301', 'Data Structures & Algorithms', 'Dr. A. Khan',    4, 'A+'],
-      ['CSE305', 'Database Management Systems',  'Prof. M. Iqbal',  4, 'A'],
-      ['CSE310', 'Computer Networks',            'Dr. S. Raina',    3, 'A'],
-      ['CSE312', 'Operating Systems',            'Dr. P. Bhat',     4, 'A+'],
-      ['HUM201', 'Technical Communication',      'Ms. F. Ansari',   2, 'A'],
-    ],
-  },
-  isha: {
-    role: 'student',
-    name: 'Isha Gupta',
-    username: 'isha',
-    branch: 'B.Tech Information Technology',
-    semester: 5,
-    section: 'B',
-    email: 'isha.g@kuce.edu.in',
-    cgpa: 8.45,
-    attendance: 88,
-    credits: 120,
-    dues: 1500,
-    courses: [
-      ['IT301',  'Web Technologies',      'Dr. R. Bose',    4, 'A'],
-      ['IT305',  'Cloud Computing',       'Prof. S. Das',   4, 'A'],
-      ['IT310',  'Information Security',  'Dr. M. Khanna',  3, 'A+'],
-      ['IT312',  'Software Engineering',  'Dr. P. Bhat',    4, 'B+'],
-      ['HUM201', 'Technical Communication','Ms. F. Ansari', 2, 'A'],
-    ],
-  },
-  sweet: {
-    role: 'student',
-    name: 'Sweet Patel',
-    username: 'sweet',
-    branch: 'B.Tech Electronics & Communication',
-    semester: 5,
-    section: 'B',
-    email: 'sweet.p@kuce.edu.in',
-    cgpa: 7.92,
-    attendance: 84,
-    credits: 116,
-    dues: 3200,
-    courses: [
-      ['ECE301', 'Signals & Systems',         'Dr. R. Verma',   4, 'B+'],
-      ['ECE305', 'Analog Circuits',           'Prof. K. Joshi', 4, 'B'],
-      ['ECE310', 'Digital Communication',     'Dr. N. Kaul',    3, 'B+'],
-      ['ECE312', 'Microprocessors',           'Dr. V. Shah',    4, 'A'],
-      ['HUM201', 'Technical Communication',   'Ms. F. Ansari',  2, 'A'],
-    ],
-  },
-  shaly: {
-    role: 'student',
-    name: 'Shaly Sinha',
-    username: 'shaly',
-    branch: 'B.Tech Computer Science',
-    semester: 5,
-    section: 'A',
-    email: 'shaly.s@kuce.edu.in',
-    cgpa: 8.88,
-    attendance: 90,
-    credits: 128,
-    dues: 800,
-    courses: [
-      ['CSE301', 'Data Structures & Algorithms', 'Dr. A. Khan',    4, 'A'],
-      ['CSE305', 'Database Management Systems',  'Prof. M. Iqbal', 4, 'A'],
-      ['CSE310', 'Computer Networks',            'Dr. S. Raina',   3, 'A'],
-      ['CSE312', 'Operating Systems',            'Dr. P. Bhat',    4, 'A'],
-      ['HUM201', 'Technical Communication',      'Ms. F. Ansari',  2, 'A+'],
-    ],
-  },
-  demo1: {
-    role: 'student',
-    name: 'Demo User One',
-    username: 'demo1',
-    branch: 'B.Tech Computer Science',
-    semester: 5,
-    section: 'A',
-    email: 'demo1@kuce.edu.in',
-    cgpa: 8.00,
-    attendance: 85,
-    credits: 120,
-    dues: 0,
-    courses: [
-      ['CSE301', 'Data Structures & Algorithms', 'Dr. A. Khan',    4, 'A'],
-      ['CSE305', 'Database Management Systems',  'Prof. M. Iqbal', 4, 'B+'],
-      ['CSE310', 'Computer Networks',            'Dr. S. Raina',   3, 'A'],
-      ['CSE312', 'Operating Systems',            'Dr. P. Bhat',    4, 'B'],
-      ['HUM201', 'Technical Communication',      'Ms. F. Ansari',  2, 'A'],
-    ],
-  },
-  demo2: {
-    role: 'student',
-    name: 'Demo User Two',
-    username: 'demo2',
-    branch: 'B.Tech Electronics & Communication',
-    semester: 5,
-    section: 'B',
-    email: 'demo2@kuce.edu.in',
-    cgpa: 8.20,
-    attendance: 89,
-    credits: 124,
-    dues: 500,
-    courses: [
-      ['ECE301', 'Signals & Systems',         'Dr. R. Verma',   4, 'A'],
-      ['ECE305', 'Analog Circuits',           'Prof. K. Joshi', 4, 'A'],
-      ['ECE310', 'Digital Communication',     'Dr. N. Kaul',    3, 'B+'],
-      ['ECE312', 'Microprocessors',           'Dr. V. Shah',    4, 'A'],
-      ['HUM201', 'Technical Communication',   'Ms. F. Ansari',  2, 'A'],
-    ],
-  },
-  admin: {
-    role: 'admin',
-    name: 'SOC Administrator',
-    username: 'admin',
-    email: 'soc@kuce.edu.in',
-  },
-
-  // Phase 3: sentinel "user" for honeypot-trapped attackers. Their session
-  // token resolves to this object, which gets them into /trap but nowhere else.
-  __honeypot__: {
-    role: 'honeypot',
-    name: 'Aarav Mehta',          // fake name shown if /api/me is ever called
-    username: 'shaly',            // looks like a real compromised account
-    branch: 'B.Tech Electronics & Communication',
-    semester: 5,
-    section: 'B',
-    email: 'aarav.m2042@kuce.edu.in',
-    cgpa: 9.12,
-    attendance: 96,
-    credits: 132,
-    dues: 0,
-    courses: [
-      ['ECE301', 'Signals & Systems',         'Dr. R. Verma',   4, 'A+'],
-      ['ECE305', 'Analog Circuits',           'Prof. K. Joshi', 4, 'A'],
-      ['ECE310', 'Digital Communication',     'Dr. N. Kaul',    3, 'A'],
-      ['ECE312', 'Microprocessors',           'Dr. V. Shah',    4, 'A'],
-      ['HUM201', 'Technical Communication',   'Ms. F. Ansari',  2, 'A'],
-    ],
-  },
-};
+let USERS = {};
+try {
+  const raw = fs.readFileSync(path.join(__dirname, config.USERS_DATA_FILE), 'utf8');
+  USERS = JSON.parse(raw);
+  // Strip the _comment / _passwords meta keys
+  delete USERS._comment;
+  delete USERS._passwords;
+  console.log(`[DATA] Loaded ${Object.keys(USERS).length} users from ${config.USERS_DATA_FILE}`);
+} catch (e) {
+  console.error(`[FATAL] Could not load user data from ${config.USERS_DATA_FILE}: ${e.message}`);
+  console.error('        Create the file or restore from backup. Server cannot start without users.');
+  process.exit(1);
+}
 
 // ------------------------------------------------------------------
 // Session store (in-memory for Phase 1)
@@ -369,16 +213,20 @@ app.post('/login', (req, res) => {
     console.log(
       `${magenta}[HONEYPOT TRAP]${reset} ip=${ip}  ` +
       `attempt=${trapInfo.attempt}  trapCount=${trapInfo.trapCount}  ` +
-      `claimed_user=${username}  ${yellow}redirect -> /trap${reset}`
+      `claimed_user=${username}  ${yellow}redirect -> /dashboard (honeypot served silently)${reset}`
     );
 
     const secure = isHttps(req);
     res.cookie('deceptiwaf_session', fakeToken, {
-      httpOnly: true, maxAge: 30 * 60 * 1000,
+      httpOnly: true, maxAge: config.HONEYPOT_SESSION_MAX_AGE_MS,
       sameSite: secure ? 'none' : 'lax', secure, path: '/',
     });
 
-    return res.redirect(`/trap?token=${fakeToken}`);
+    // CRITICAL: redirect to /dashboard (NOT /trap) so the attacker's URL bar
+    // shows a perfectly normal path. They think they cracked the password and
+    // landed on the real dashboard. The /dashboard route detects the honeypot
+    // role and silently serves honeypot.html instead of dashboard.html.
+    return res.redirect(`/dashboard?token=${fakeToken}`);
   }
 
   // ------------------------------------------------------------------
@@ -447,7 +295,7 @@ app.post('/login', (req, res) => {
   const secure = isHttps(req);
   res.cookie('deceptiwaf_session', token, {
     httpOnly: true,
-    maxAge: 2 * 60 * 60 * 1000,
+    maxAge: config.SESSION_MAX_AGE_MS,
     sameSite: secure ? 'none' : 'lax',
     secure,
     path: '/',
@@ -561,29 +409,47 @@ app.post('/api/events/clear', (req, res) => {
   res.json({ ok: true });
 });
 
-// Real student dashboard — auth-guarded, students only
+// Student dashboard — auth-guarded.
+// CRITICAL DECEPTION: if the logged-in user has role 'honeypot' (i.e. a
+// trapped attacker), we silently serve honeypot.html INSTEAD of
+// dashboard.html. The URL stays /dashboard — the attacker has NO idea
+// they've been detected. They think they cracked the password and are
+// viewing the real student portal.
 app.get('/dashboard', (req, res) => {
   const user = getUserFromSession(req);
   if (!user)                      return res.redirect('/?error=auth');
   if (user.role === 'admin')      return res.redirect('/soc');
-  // Phase 3: honeypot-trapped attackers get redirected back to /trap
-  if (user.role === 'honeypot')   return res.redirect('/trap');
+
+  if (user.role === 'honeypot') {
+    // Silently serve the fake dashboard. URL bar still shows /dashboard.
+    // This is the core of the deception — the attacker must not see /trap.
+    console.log(`\x1b[35m[HONEYPOT]\x1b[0m serving fake dashboard to trapped attacker  ip=${req.ip}  user=${user.username}`);
+    return res.sendFile(path.join(__dirname, 'public', 'honeypot.html'));
+  }
+
+  // Normal student — serve the real dashboard
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// Honeypot trap — Phase 3 lockdown:
-//   Allow if (a) the requester's IP is honeypot-active, OR
-//             (b) they hold a __honeypot__ session token.
-//   Otherwise redirect to login (so attackers can't just navigate here).
+// /trap route — kept for backward compatibility, but always redirects to
+// /dashboard. Trapped attackers who manually type /trap (or have it
+// bookmarked from an older version) get sent to /dashboard, which serves
+// them the honeypot page silently. No one should ever see /trap in their
+// URL bar — that would tip off the attacker.
 app.get('/trap', (req, res) => {
   const user = getUserFromSession(req);
   const ipActive = credShield.isHoneypotActive(req.ip);
   const hasTrapSession = user && user.role === 'honeypot';
 
+  // Not authorized to see the honeypot? Send to login.
   if (!ipActive && !hasTrapSession) {
     return res.redirect('/?error=auth');
   }
-  res.sendFile(path.join(__dirname, 'public', 'honeypot.html'));
+  // Authorized (trapped IP or honeypot session) → redirect to /dashboard
+  // so the URL bar shows the normal path. The /dashboard route above will
+  // serve honeypot.html silently.
+  const token = getTokenFromRequest(req);
+  return res.redirect(`/dashboard${token ? '?token=' + token : ''}`);
 });
 
 // SOC dashboard — admin-only
@@ -641,8 +507,8 @@ io.on('connection', (socket) => {
 // ------------------------------------------------------------------
 // Start server
 // ------------------------------------------------------------------
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
+const PORT = config.PORT;
+server.listen(PORT, config.HOST, () => {
   console.log('==================================================');
   console.log('  DeceptiWAF v1.4 - Target App + SOC Dashboard');
   console.log('==================================================');

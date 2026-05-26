@@ -201,7 +201,7 @@
               Simulates a real brute-force attacker from your IP. After 3 failed logins the system
               <span class="text-fuchsia-300">arms the honeypot</span>, then on the 4th attempt it
               <span class="text-fuchsia-300">lies "Login Successful"</span> and redirects you to the fake
-              <code class="mono bg-slate-800 px-1 rounded">/trap</code> dashboard. Open the SOC dashboard
+              <code class="mono bg-slate-800 px-1 rounded">/dashboard</code> (looks like the real thing). Open the SOC dashboard
               to see purple <code class="mono bg-slate-800 px-1 rounded">[HONEYPOT]</code> alerts stream in.
             </p>
 
@@ -272,7 +272,7 @@
           method: 'POST', url: '/login', body: "studentId=admin%27%20OR%201%3D1%20--&password=x" },
       ],
       xss: [
-        { label: "<script>alert(1)</script>",            desc: "Classic script tag",
+        { label: "<script>alert(1)<\/script>",            desc: "Classic script tag",
           method: 'GET', url: '/dashboard?q=%3Cscript%3Ealert(1)%3C/script%3E' },
         { label: "<img src=x onerror=alert(1)>",         desc: "onerror handler",
           method: 'GET', url: '/dashboard?q=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E' },
@@ -514,7 +514,8 @@
     }
 
     // Easier path: use XMLHttpRequest-style to actually follow redirects
-    // and detect whether we ended up on /trap.
+    // and detect whether we ended up on /dashboard (the trap now serves
+    // honeypot content at /dashboard so the attacker doesn't see /trap).
     function bruteFollow() {
       return new Promise((resolve) => {
         const xhr = new XMLHttpRequest();
@@ -522,9 +523,11 @@
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         xhr.onreadystatechange = function () {
           if (xhr.readyState === 4) {
-            // After following redirects, xhr.responseURL is the final URL
+            // After following redirects, xhr.responseURL is the final URL.
+            // Since we used WRONG credentials, landing on /dashboard means
+            // we were trapped (wrong creds should never succeed normally).
             const finalUrl = xhr.responseURL || '';
-            const endedOnTrap = finalUrl.includes('/trap');
+            const endedOnTrap = finalUrl.includes('/dashboard');
             resolve({ endedOnTrap, finalUrl });
           }
         };
@@ -537,13 +540,15 @@
       const result = await bruteFollow();
 
       if (result.endedOnTrap) {
-        logResult('Login #' + stepNum + ' (wrong creds)', 'Honeypot TRAP triggered', '302→/trap', false);
+        logResult('Login #' + stepNum + ' (wrong creds)', 'Honeypot TRAP triggered (served fake /dashboard)', '302→/dashboard', false);
         bruteStatus(
-          '[TRAPPED] Attempt #' + stepNum + ' was trapped! Server lied "Login Successful" and redirected to /trap.',
+          '[TRAPPED] Attempt #' + stepNum + ' was trapped! Server lied "Login Successful" — URL bar shows /dashboard (looks totally normal to the attacker).',
           'text-fuchsia-300 font-bold'
         );
-        // Open the trap in a new tab so the user can see it
-        window.open('/trap', '_blank');
+        // Open the fake dashboard in a new tab so you can see what the
+        // attacker sees. The URL bar will show /dashboard — no hint of /trap.
+        const token = result.finalUrl.split('token=')[1] || '';
+        window.open('/dashboard' + (token ? '?token=' + token : ''), '_blank');
       } else if (stepNum >= 3) {
         logResult('Login #' + stepNum + ' (wrong creds)', 'Honeypot ARMED — next attempt will trap', '302→/', false);
         bruteStatus(
