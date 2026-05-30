@@ -216,7 +216,7 @@ echo "${c_cyn}[6] Benign traffic (should NOT be blocked)${c_rst}"
 
 expect_pass "Normal login page GET" "$BASE/"
 expect_pass "Valid login POST" \
-  -X POST -d "studentId=aryan&password=kuce2024" "$BASE/login"
+  -X POST -d "studentId=aryan&password=aryan@2024" "$BASE/login"
 expect_pass "Normal search query" \
   -G "$BASE/dashboard" --data-urlencode "q=Data Structures"
 expect_pass "Course code search" \

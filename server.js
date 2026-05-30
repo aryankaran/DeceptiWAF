@@ -74,10 +74,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ------------------------------------------------------------------
 // User database — loaded from data/users.json (separated from code)
-// Passwords live in config.js, profile data lives in the JSON file.
+// Passwords are stored as SHA-256 hashes in each user's passwordHash
+// field. The login route hashes the input password and compares.
 // ------------------------------------------------------------------
-const STUDENT_PASSWORD = config.STUDENT_PASSWORD;
-const ADMIN_PASSWORD   = config.ADMIN_PASSWORD;
+const STUDENT_PASSWORD = config.STUDENT_PASSWORD; // legacy fallback, unused if passwordHash exists
+const ADMIN_PASSWORD   = config.ADMIN_PASSWORD;   // legacy fallback, unused if passwordHash exists
+
+function sha256(s) {
+  return crypto.createHash('sha256').update(s, 'utf8').digest('hex');
+}
 
 let USERS = {};
 try {
@@ -280,8 +285,13 @@ app.post('/login', (req, res) => {
     return res.redirect('/?error=invalid');
   }
 
+  // Check password: compare SHA-256 hash if available, otherwise fallback to plaintext
   const expectedPassword = user.role === 'admin' ? ADMIN_PASSWORD : STUDENT_PASSWORD;
-  if (password !== expectedPassword) {
+  const inputHash = sha256(password);
+  const passwordOk = user.passwordHash
+    ? (inputHash === user.passwordHash)                              // hashed comparison
+    : (password === expectedPassword);                                // legacy plaintext fallback
+  if (!passwordOk) {
     recordFailure('bad_password');
     return res.redirect('/?error=invalid');
   }
@@ -330,6 +340,33 @@ app.get('/api/me', (req, res) => {
     return res.status(401).json({ error: 'unauthorized' });
   }
   return res.json({ user });
+});
+
+// ------------------------------------------------------------------
+// Demo accounts endpoint — returns demo usernames + passwords so the
+// login page can render demo account chips dynamically.
+// This is DEMO ONLY — never expose this in production!
+// ------------------------------------------------------------------
+app.get('/api/users/demo', (req, res) => {
+  const demoAccounts = [];
+  for (const [username, u] of Object.entries(USERS)) {
+    if (username.startsWith('__')) continue; // skip sentinel users
+    // Derive the plaintext password for the demo chips
+    let demoPassword = '';
+    if (u.role === 'admin') {
+      demoPassword = config.ADMIN_PASSWORD;
+    } else {
+      demoPassword = username + '@2024';
+    }
+    demoAccounts.push({
+      username,
+      name: u.name,
+      role: u.role,
+      branch: u.branch || '',
+      demoPassword,
+    });
+  }
+  res.json({ accounts: demoAccounts });
 });
 
 // ------------------------------------------------------------------

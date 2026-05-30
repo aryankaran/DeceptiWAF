@@ -306,7 +306,7 @@
         { label: "GET / (login page)",          desc: "Normal page load",
           method: 'GET', url: '/' },
         { label: "Valid login (aryan)",         desc: "Legitimate credentials",
-          method: 'POST', url: '/login', body: "studentId=aryan&password=kuce2024" },
+          method: 'POST', url: '/login', body: "studentId=aryan&password=aryan@2024" },
         { label: "Search 'Data Structures'",    desc: "Normal course search",
           method: 'GET', url: '/dashboard?q=Data+Structures' },
         { label: "Search 'CSE301'",             desc: "Normal course code",
@@ -431,17 +431,30 @@
     // ============================================================
     // Render attack buttons
     // ============================================================
+    // Escape HTML so attack labels like <img src=x onerror=alert(1)> render
+    // as visible TEXT, not as actual HTML elements. Without this, the XSS
+    // button labels self-execute on page load (causing the "1" popups and
+    // broken image icons).
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function renderButtons(containerId, attackList, accentColor) {
       const container = document.getElementById(containerId);
       for (const a of attackList) {
         const btn = document.createElement('button');
         btn.className = 'attack-btn text-left bg-slate-950/60 hover:bg-slate-900 border border-slate-800 hover:border-' + accentColor + '-700 rounded-lg px-3 py-2 group';
+        // CRITICAL: esc() the label and desc — they contain attack payloads
+        // like <img src=x onerror=alert(1)> that would otherwise render as
+        // real HTML elements (self-XSS in the test page itself).
         btn.innerHTML =
           '<div class="flex items-center justify-between">' +
-            '<span class="mono text-xs text-slate-200 group-hover:text-' + accentColor + '-300">' + a.label + '</span>' +
+            '<span class="mono text-xs text-slate-200 group-hover:text-' + accentColor + '-300">' + esc(a.label) + '</span>' +
             '<span class="mono text-[10px] text-slate-600 group-hover:text-' + accentColor + '-500">FIRE &rarr;</span>' +
           '</div>' +
-          '<p class="text-[10px] text-slate-500 mt-0.5">' + a.desc + '</p>';
+          '<p class="text-[10px] text-slate-500 mt-0.5">' + esc(a.desc) + '</p>';
         btn.addEventListener('click', () => fireAttack(a));
         container.appendChild(btn);
       }

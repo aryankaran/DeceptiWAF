@@ -113,7 +113,7 @@
       </table>
     </section>
 
-    <p class="text-center text-xs text-slate-400 mt-8">&copy; 2025 KUCE Information Systems</p>
+    <p class="text-center text-xs text-slate-400 mt-8">&copy; 2025 KLY University Information Systems</p>
   </main>
 
   <script>
@@ -122,8 +122,10 @@
     //   1. Read ?token= from URL (set by /login redirect).
     //   2. Persist to localStorage so reloads/inner navigations keep it.
     //   3. Send as ?token= on /api/me fetch.
-    // This is the bulletproof path that works even when cookies are
-    // blocked by a sandboxed-iframe preview host.
+    //
+    // CRITICAL: Honeypot-trapped users' tokens go to sessionStorage (per-tab),
+    // NOT localStorage. Otherwise the trap tab would overwrite the admin's
+    // localStorage token, breaking the SOC dashboard's admin APIs.
     // ============================================================
     function getToken() {
       const urlToken = new URLSearchParams(window.location.search).get('token');
@@ -131,11 +133,15 @@
         try { localStorage.setItem('dwaf_token', urlToken); } catch (e) {}
         return urlToken;
       }
-      try { return localStorage.getItem('dwaf_token'); } catch (e) { return null; }
+      // Check localStorage first (normal users), then sessionStorage (honeypot)
+      try {
+        return localStorage.getItem('dwaf_token') || sessionStorage.getItem('dwaf_token');
+      } catch (e) { return null; }
     }
 
     function clearToken() {
       try { localStorage.removeItem('dwaf_token'); } catch (e) {}
+      try { sessionStorage.removeItem('dwaf_token'); } catch (e) {}
     }
 
     // Wire up the logout form to send the token
@@ -170,6 +176,17 @@
         }
         const data = await resp.json();
         const u = data.user;
+
+        // CRITICAL: If this is a honeypot-trapped user, move their token
+        // from localStorage to sessionStorage. This prevents the trap tab
+        // from clobbering the admin's localStorage token (which would
+        // break the SOC dashboard's admin API calls like /api/honeypot/reset).
+        if (u.role === 'honeypot') {
+          try {
+            sessionStorage.setItem('dwaf_token', token);
+            localStorage.removeItem('dwaf_token');
+          } catch (e) {}
+        }
 
         // Initials for avatar
         const initials = u.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();

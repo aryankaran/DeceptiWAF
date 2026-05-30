@@ -65,20 +65,41 @@
           />
         </div>
 
-        <!-- Password -->
+        <!-- Password (with show/hide eye toggle) -->
         <div>
           <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">
             Password
           </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            autocomplete="current-password"
-            placeholder="Enter your password"
-            required
-            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-          />
+          <div class="relative">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              autocomplete="current-password"
+              placeholder="Enter your password"
+              required
+              class="w-full px-4 py-2.5 pr-11 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+            />
+            <button
+              type="button"
+              id="togglePassword"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              title="Show/Hide password"
+            >
+              <!-- Eye icon (show) -->
+              <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <!-- Eye-off icon (hide) -->
+              <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                <line x1="2" y1="2" x2="22" y2="22"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Remember + forgot -->
@@ -102,18 +123,11 @@
       <!-- Helper -->
       <div class="mt-6 pt-5 border-t border-slate-100">
         <p class="text-xs text-slate-500 mb-3 text-center">Demo accounts (click to autofill):</p>
-        <div class="flex flex-wrap gap-1.5 justify-center mb-3">
-          <button type="button" data-user="aryan"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">aryan</button>
-          <button type="button" data-user="sucheta"  class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">sucheta</button>
-          <button type="button" data-user="isha"     class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">isha</button>
-          <button type="button" data-user="sweet"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">sweet</button>
-          <button type="button" data-user="shaly"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">shaly</button>
-          <button type="button" data-user="demo1"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">demo1</button>
-          <button type="button" data-user="demo2"    class="demo-chip mono text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">demo2</button>
-          <button type="button" data-user="admin"    class="demo-chip mono text-[11px] bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 rounded font-medium">admin &rarr; /soc</button>
+        <div id="demoChips" class="flex flex-wrap gap-1.5 justify-center mb-3">
+          <span class="mono text-[11px] text-slate-400">Loading demo accounts...</span>
         </div>
         <p class="text-center text-xs text-slate-500">
-          Student password: <code class="mono bg-slate-100 px-1.5 py-0.5 rounded">kuce2024</code>
+          Student password: <code class="mono bg-slate-100 px-1.5 py-0.5 rounded">&lt;username&gt;@2024</code>
           &middot; Admin password: <code class="mono bg-slate-100 px-1.5 py-0.5 rounded">socadmin123</code>
         </p>
         <p class="text-center text-xs text-slate-500 mt-3">
@@ -125,7 +139,7 @@
 
     <!-- Footer -->
     <p class="text-center text-xs text-slate-500 mt-6">
-      &copy; 2025 KUCE Information Systems. All rights reserved.
+      &copy; 2025 KLY University Information Systems. All rights reserved.
     </p>
 
     <!-- Attack simulator link (demo utility) -->
@@ -134,10 +148,10 @@
     </p>
   </div>
 
-  <!-- Minimal client script: surface ?error=... from the redirect + demo chips -->
+  <!-- Client script: error banner + eye toggle + dynamic demo chips -->
   <script>
     (function () {
-      // Error banner
+      // ---- Error banner ----
       const params = new URLSearchParams(window.location.search);
       const err = params.get('error');
       const banner = document.getElementById('errorBanner');
@@ -150,19 +164,68 @@
         else                        text.textContent = 'Login failed. Please try again.';
       }
 
-      // Demo chip autofill
-      const userInput = document.getElementById('studentId');
+      // ---- Eye toggle (show/hide password) ----
       const passInput = document.getElementById('password');
-      const STUDENT_PASS = 'kuce2024';
-      const ADMIN_PASS   = 'socadmin123';
-      document.querySelectorAll('.demo-chip').forEach((chip) => {
-        chip.addEventListener('click', () => {
-          const u = chip.dataset.user;
-          userInput.value = u;
-          passInput.value = (u === 'admin') ? ADMIN_PASS : STUDENT_PASS;
-          userInput.focus();
-        });
+      const toggleBtn = document.getElementById('togglePassword');
+      const eyeOpen   = document.getElementById('eyeOpen');
+      const eyeClosed = document.getElementById('eyeClosed');
+      toggleBtn.addEventListener('click', () => {
+        if (passInput.type === 'password') {
+          passInput.type = 'text';
+          eyeOpen.style.display = 'none';
+          eyeClosed.style.display = 'block';
+        } else {
+          passInput.type = 'password';
+          eyeOpen.style.display = 'block';
+          eyeClosed.style.display = 'none';
+        }
       });
+
+      // ---- Dynamic demo chips (fetched from /api/users/demo) ----
+      // Grabs the user list from the server's user database (users.json)
+      // so the login page always shows the latest demo accounts without
+      // hardcoding them in HTML.
+      const userInput = document.getElementById('studentId');
+      const chipsContainer = document.getElementById('demoChips');
+
+      function esc(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      fetch('/api/users/demo')
+        .then((r) => r.json())
+        .then((data) => {
+          const accounts = data.accounts || [];
+          // Sort: students first, admin last
+          accounts.sort((a, b) => {
+            if (a.role === 'admin') return 1;
+            if (b.role === 'admin') return -1;
+            return a.username.localeCompare(b.username);
+          });
+          chipsContainer.innerHTML = '';
+          for (const a of accounts) {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            const isAdmin = a.role === 'admin';
+            chip.className = 'demo-chip mono text-[11px] px-2 py-1 rounded ' +
+              (isAdmin
+                ? 'bg-red-100 hover:bg-red-200 text-red-800 font-medium'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700');
+            chip.textContent = isAdmin ? (a.username + ' \u2192 /soc') : a.username;
+            chip.title = a.name + (a.branch ? ' \u00b7 ' + a.branch : '') + ' \u00b7 password: ' + a.demoPassword;
+            chip.addEventListener('click', () => {
+              userInput.value = a.username;
+              passInput.value = a.demoPassword;
+              userInput.focus();
+            });
+            chipsContainer.appendChild(chip);
+          }
+        })
+        .catch(() => {
+          chipsContainer.innerHTML = '<span class="mono text-[11px] text-red-400">Failed to load demo accounts</span>';
+        });
     })();
   </script>
 </body>
