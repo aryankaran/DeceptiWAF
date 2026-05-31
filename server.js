@@ -27,6 +27,7 @@ const { wafMiddleware } = require('./lib/waf');
 const credShield = require('./lib/credshield');
 const geo = require('./lib/geo');
 const eventStore = require('./lib/eventStore');
+const fakeProfile = require('./lib/fakeProfile');
 const config = require('./config');
 
 // ------------------------------------------------------------------
@@ -105,9 +106,15 @@ try {
 // ------------------------------------------------------------------
 const SESSIONS = {};
 
-function issueSession(username) {
+function issueSession(username, fakeUserProfile) {
   const token = crypto.randomBytes(24).toString('hex');
-  SESSIONS[token] = { username, issuedAt: Date.now() };
+  SESSIONS[token] = {
+    username,
+    issuedAt: Date.now(),
+    // If fakeUserProfile is set, this session is a honeypot trap.
+    // /api/me will return this fake profile instead of looking up USERS.
+    fakeUserProfile: fakeUserProfile || null,
+  };
   return token;
 }
 
@@ -121,7 +128,12 @@ function getUserFromSession(req) {
   if (!token && req.query && req.query.token) token = req.query.token;
 
   if (!token || !SESSIONS[token]) return null;
-  const username = SESSIONS[token].username;
+  const session = SESSIONS[token];
+
+  // Honeypot trap sessions return their unique fake profile
+  if (session.fakeUserProfile) return session.fakeUserProfile;
+
+  const username = session.username;
   return USERS[username] || null;
 }
 
@@ -195,7 +207,14 @@ app.post('/login', (req, res) => {
   // ------------------------------------------------------------------
   if (credShield.isHoneypotActive(ip)) {
     const trapInfo = credShield.noteTrappedAttempt(ip, username);
-    const fakeToken = issueSession('__honeypot__'); // sentinel session user
+
+    // CRITICAL: Generate a UNIQUE fake profile for this trap. Every trapped
+    // attacker sees different data — if two attackers compare notes and see
+    // the same "Shaly Sinha" profile, the deception is blown. Also, we NEVER
+    // use real user data in the honeypot — all names/CGPAs/courses are
+    // randomly generated and don't match any real student.
+    const profile = fakeProfile.generate();
+    const fakeToken = issueSession('__honeypot__', profile);
 
     // Phase 4: store + emit with geo
     const trapPayload = {
@@ -207,9 +226,19 @@ app.post('/login', (req, res) => {
       trapCount: trapInfo.trapCount,
       timestamp: new Date().toISOString(),
       geo: geo.lookupSync(ip),
+      // Include the fake identity the attacker will see (for SOC display)
+      fakeIdentity: { name: profile.name, username: profile.username, branch: profile.branch },
+      // Fingerprinting — capture browser metadata for the SOC dashboard
+      fingerprint: {
+        userAgent: req.get('user-agent') || '',
+        acceptLanguage: req.get('accept-language') || '',
+        secChUa: req.get('sec-ch-ua') || '',
+        secChUaPlatform: req.get('sec-ch-ua-platform') || '',
+        secChUaMobile: req.get('sec-ch-ua-mobile') || '',
+        referer: req.get('referer') || '',
+      },
     };
     eventStore.push(trapPayload);
-    // Async geo refresh (in case sync returned 'pending')
     geo.lookup(ip).then((g) => { trapPayload.geo = g; }).catch(() => {});
 
     if (io) io.emit('honeypot_event', trapPayload);
@@ -218,7 +247,7 @@ app.post('/login', (req, res) => {
     console.log(
       `${magenta}[HONEYPOT TRAP]${reset} ip=${ip}  ` +
       `attempt=${trapInfo.attempt}  trapCount=${trapInfo.trapCount}  ` +
-      `claimed_user=${username}  ${yellow}redirect -> /dashboard (honeypot served silently)${reset}`
+      `claimed_user=${username}  ${yellow}fake_identity=${profile.name} -> /dashboard${reset}`
     );
 
     const secure = isHttps(req);
@@ -227,10 +256,7 @@ app.post('/login', (req, res) => {
       sameSite: secure ? 'none' : 'lax', secure, path: '/',
     });
 
-    // CRITICAL: redirect to /dashboard (NOT /trap) so the attacker's URL bar
-    // shows a perfectly normal path. They think they cracked the password and
-    // landed on the real dashboard. The /dashboard route detects the honeypot
-    // role and silently serves honeypot.html instead of dashboard.html.
+    // Redirect to /dashboard (NOT /trap) so the URL bar looks normal.
     return res.redirect(`/dashboard?token=${fakeToken}`);
   }
 

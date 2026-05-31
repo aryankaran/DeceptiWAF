@@ -119,24 +119,38 @@
   <script>
     // ============================================================
     // Session token handling — works in any environment.
-    //   1. Read ?token= from URL (set by /login redirect).
-    //   2. Persist to localStorage so reloads/inner navigations keep it.
-    //   3. Send as ?token= on /api/me fetch.
     //
-    // CRITICAL: Honeypot-trapped users' tokens go to sessionStorage (per-tab),
-    // NOT localStorage. Otherwise the trap tab would overwrite the admin's
-    // localStorage token, breaking the SOC dashboard's admin APIs.
+    // CRITICAL: URL tokens are NOT stored in localStorage until we
+    // confirm via /api/me that this is a legit user. If we stored a
+    // honeypot trap token in localStorage, it would clobber the admin's
+    // token (same origin = same localStorage), breaking the SOC
+    // dashboard's admin API calls in other tabs.
+    //
+    // Flow:
+    //   1. Read ?token= from URL (don't store yet)
+    //   2. Call /api/me?token=...
+    //   3. If legit user → store in localStorage (persists across tabs)
+    //   4. If honeypot user → store in sessionStorage (per-tab only)
     // ============================================================
     function getToken() {
       const urlToken = new URLSearchParams(window.location.search).get('token');
-      if (urlToken) {
-        try { localStorage.setItem('dwaf_token', urlToken); } catch (e) {}
-        return urlToken;
-      }
-      // Check localStorage first (normal users), then sessionStorage (honeypot)
+      if (urlToken) return urlToken; // use directly, don't store yet
+      // Page reload (no URL token) — read from storage
       try {
         return localStorage.getItem('dwaf_token') || sessionStorage.getItem('dwaf_token');
       } catch (e) { return null; }
+    }
+
+    function storeTokenByRole(token, role) {
+      try {
+        if (role === 'honeypot') {
+          // Per-tab only — don't clobber admin's localStorage token
+          sessionStorage.setItem('dwaf_token', token);
+        } else {
+          // Legit user — persist across tabs
+          localStorage.setItem('dwaf_token', token);
+        }
+      } catch (e) {}
     }
 
     function clearToken() {
@@ -177,16 +191,11 @@
         const data = await resp.json();
         const u = data.user;
 
-        // CRITICAL: If this is a honeypot-trapped user, move their token
-        // from localStorage to sessionStorage. This prevents the trap tab
-        // from clobbering the admin's localStorage token (which would
-        // break the SOC dashboard's admin API calls like /api/honeypot/reset).
-        if (u.role === 'honeypot') {
-          try {
-            sessionStorage.setItem('dwaf_token', token);
-            localStorage.removeItem('dwaf_token');
-          } catch (e) {}
-        }
+        // NOW we know the role — store the token in the right place.
+        // Honeypot tokens go to sessionStorage (per-tab) so they don't
+        // clobber the admin's localStorage token. Legit tokens go to
+        // localStorage (persist across tabs/reloads).
+        storeTokenByRole(token, u.role);
 
         // Initials for avatar
         const initials = u.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();

@@ -357,17 +357,32 @@
         trappedAttackers.set(evt.ip, {
           ip: evt.ip, username: evt.username, attempt: evt.attempt,
           since: evt.timestamp, geo: evt.geo,
+          fakeIdentity: evt.fakeIdentity,
+          fingerprint: evt.fingerprint,
         });
+        const fakeName = evt.fakeIdentity ? evt.fakeIdentity.name : '?';
+        const fakeBranch = evt.fakeIdentity ? evt.fakeIdentity.branch : '';
         appendFeed(
           '<div class="text-fuchsia-300 font-bold">' +
           '<span class="text-slate-600">' + esc(t) + '</span> ' +
           '[HONEYPOT TRAP] ip=<span class="text-fuchsia-300">' + esc(evt.ip) + '</span> ' +
           (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
-          'claimed_user=<span class="text-amber-300">' + esc(evt.username) + '</span> ' +
-          'attempt=' + esc(evt.attempt) + ' — <span class="text-fuchsia-400">-> /trap</span>' +
+          'claimed=<span class="text-amber-300">' + esc(evt.username) + '</span> ' +
+          'served_fake=<span class="text-green-400">' + esc(fakeName) + '</span> ' +
+          '<span class="text-slate-600">(' + esc(fakeBranch) + ')</span> ' +
+          '— <span class="text-fuchsia-400">-> /dashboard</span>' +
           '</div>',
           'flash-fuchsia'
         );
+        // Show fingerprint if available
+        if (evt.fingerprint && evt.fingerprint.userAgent) {
+          appendFeed(
+            '<div class="text-slate-600 pl-6">  fp: ' + esc(evt.fingerprint.userAgent.slice(0, 80)) +
+            (evt.fingerprint.secChUaPlatform ? ' | platform=' + esc(evt.fingerprint.secChUaPlatform) : '') +
+            (evt.fingerprint.acceptLanguage ? ' | lang=' + esc(evt.fingerprint.acceptLanguage.split(',')[0]) : '') +
+            '</div>'
+          );
+        }
         renderTrappedAttackers();
       }
 
@@ -437,13 +452,15 @@
       for (const a of trappedAttackers.values()) {
         const since = new Date(a.since).toLocaleTimeString('en-GB');
         const geoStr = a.geo ? fmtGeo(a.geo) : '';
+        const fakeName = a.fakeIdentity ? a.fakeIdentity.name : '?';
         html +=
           '<div class="px-4 py-2 border-b border-fuchsia-900/30 last:border-0">' +
           '<div class="flex justify-between"><span class="text-fuchsia-300">' + esc(a.ip) + '</span><span class="text-slate-600">' + esc(since) + '</span></div>' +
           '<div class="text-slate-500 mt-0.5">' +
             (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
-            'user=<span class="text-amber-300">' + esc(a.username) + '</span> ' +
-            'attempts=<span class="text-red-300">' + esc(a.attempt) + '</span>' +
+            'tried=<span class="text-amber-300">' + esc(a.username) + '</span> ' +
+            'saw=<span class="text-green-400">' + esc(fakeName) + '</span> ' +
+            'att=<span class="text-red-300">' + esc(a.attempt) + '</span>' +
           '</div>' +
           '</div>';
       }

@@ -16,13 +16,11 @@
 <body class="bg-slate-100 min-h-screen">
 
   <!-- ============================================================
-       HONEYPOT DASHBOARD (Trap)
-       Phase 1: Looks visually identical to dashboard.html.
-       Renders a fake "shaly" account so the attacker believes
-       their brute-force succeeded against a real student.
-       Phase 3: Will only be served when CredShield has flagged
-                the requesting IP after 3+ failed logins.
-       NOTE: All student data on this page is FAKE.
+       HONEYPOT DASHBOARD (Trap) — DYNAMIC
+       Phase 5+ polish: now fetches /api/me and renders the per-trap
+       UNIQUE fake profile. Each trapped attacker sees different data
+       (random name, CGPA, courses). No real user data is ever exposed.
+       Visually identical to dashboard.html so the attacker can't tell.
        ============================================================ -->
 
   <!-- Top nav (identical styling to dashboard.html) -->
@@ -37,8 +35,8 @@
       </div>
       <div class="flex items-center gap-4 text-sm">
         <span class="text-blue-200">Welcome,</span>
-        <span class="font-semibold">Shaly Sinha</span>
-        <form action="/logout" method="POST">
+        <span id="navName" class="font-semibold">...</span>
+        <form action="/logout" method="POST" id="logoutForm">
           <button type="submit" class="ml-4 bg-blue-700 hover:bg-blue-600 px-3 py-1.5 rounded-md text-xs">Logout</button>
         </form>
       </div>
@@ -47,35 +45,35 @@
 
   <main class="max-w-6xl mx-auto px-6 py-8">
 
-    <!-- Student profile card (FAKE identity) -->
+    <!-- Student profile card -->
     <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
       <div class="flex items-center gap-5">
-        <div class="w-16 h-16 rounded-full bg-blue-100 text-blue-900 flex items-center justify-center text-2xl font-bold">SS</div>
+        <div id="avatar" class="w-16 h-16 rounded-full bg-blue-100 text-blue-900 flex items-center justify-center text-2xl font-bold">--</div>
         <div>
-          <h1 class="text-xl font-bold text-slate-800">Shaly Sinha</h1>
-          <p class="text-sm text-slate-500">Student ID: shaly &middot; B.Tech Computer Science &middot; Semester 5</p>
-          <p class="text-xs text-slate-400 mt-1">Email: shaly.s@klyuniv.ac.in &middot; Section: A</p>
+          <h1 id="profileName" class="text-xl font-bold text-slate-800">Loading...</h1>
+          <p id="profileMeta" class="text-sm text-slate-500"></p>
+          <p id="profileContact" class="text-xs text-slate-400 mt-1"></p>
         </div>
       </div>
     </section>
 
-    <!-- Quick stats (FAKE) -->
+    <!-- Quick stats -->
     <section class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <div class="bg-white rounded-xl border border-slate-200 p-5">
         <p class="text-xs uppercase tracking-wide text-slate-500">CGPA</p>
-        <p class="text-2xl font-bold text-slate-800 mt-1">8.88</p>
+        <p id="statCgpa" class="text-2xl font-bold text-slate-800 mt-1">--</p>
       </div>
       <div class="bg-white rounded-xl border border-slate-200 p-5">
         <p class="text-xs uppercase tracking-wide text-slate-500">Attendance</p>
-        <p class="text-2xl font-bold text-green-600 mt-1">90%</p>
+        <p id="statAttendance" class="text-2xl font-bold text-green-600 mt-1">--</p>
       </div>
       <div class="bg-white rounded-xl border border-slate-200 p-5">
         <p class="text-xs uppercase tracking-wide text-slate-500">Credits Earned</p>
-        <p class="text-2xl font-bold text-slate-800 mt-1">128 / 160</p>
+        <p id="statCredits" class="text-2xl font-bold text-slate-800 mt-1">--</p>
       </div>
       <div class="bg-white rounded-xl border border-slate-200 p-5">
         <p class="text-xs uppercase tracking-wide text-slate-500">Pending Dues</p>
-        <p class="text-2xl font-bold text-amber-600 mt-1">&#8377; 800</p>
+        <p id="statDues" class="text-2xl font-bold text-amber-600 mt-1">--</p>
       </div>
     </section>
 
@@ -96,10 +94,10 @@
       </form>
     </section>
 
-    <!-- Courses table (FAKE) -->
+    <!-- Courses table -->
     <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-200">
-        <h2 class="text-lg font-semibold text-slate-800">Registered Courses &mdash; Semester 5</h2>
+        <h2 id="coursesTitle" class="text-lg font-semibold text-slate-800">Registered Courses</h2>
       </div>
       <table class="w-full text-sm">
         <thead class="bg-slate-50 text-slate-600 text-left">
@@ -111,17 +109,114 @@
             <th class="px-6 py-3 font-medium">Grade</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr><td class="px-6 py-3">CSE301</td><td class="px-6 py-3">Data Structures &amp; Algorithms</td><td class="px-6 py-3">Dr. A. Khan</td><td class="px-6 py-3">4</td><td class="px-6 py-3 text-green-600 font-medium">A</td></tr>
-          <tr><td class="px-6 py-3">CSE305</td><td class="px-6 py-3">Database Management Systems</td><td class="px-6 py-3">Prof. M. Iqbal</td><td class="px-6 py-3">4</td><td class="px-6 py-3 text-green-600 font-medium">A</td></tr>
-          <tr><td class="px-6 py-3">CSE310</td><td class="px-6 py-3">Computer Networks</td><td class="px-6 py-3">Dr. S. Raina</td><td class="px-6 py-3">3</td><td class="px-6 py-3 text-green-600 font-medium">A</td></tr>
-          <tr><td class="px-6 py-3">CSE312</td><td class="px-6 py-3">Operating Systems</td><td class="px-6 py-3">Dr. P. Bhat</td><td class="px-6 py-3">4</td><td class="px-6 py-3 text-green-600 font-medium">A</td></tr>
-          <tr><td class="px-6 py-3">HUM201</td><td class="px-6 py-3">Technical Communication</td><td class="px-6 py-3">Ms. F. Ansari</td><td class="px-6 py-3">2</td><td class="px-6 py-3 text-green-600 font-medium">A+</td></tr>
+        <tbody id="coursesBody" class="divide-y divide-slate-100">
+          <tr><td colspan="5" class="px-6 py-6 text-center text-slate-400">Loading courses...</td></tr>
         </tbody>
       </table>
     </section>
 
     <p class="text-center text-xs text-slate-400 mt-8">&copy; 2025 KLY University Information Systems</p>
   </main>
+
+  <script>
+    // ============================================================
+    // Session token handling — same as dashboard.html
+    // Honeypot tokens go to sessionStorage (per-tab) so they don't
+    // clobber the admin's localStorage token.
+    // ============================================================
+    function getToken() {
+      const urlToken = new URLSearchParams(window.location.search).get('token');
+      if (urlToken) return urlToken;
+      try {
+        return localStorage.getItem('dwaf_token') || sessionStorage.getItem('dwaf_token');
+      } catch (e) { return null; }
+    }
+
+    function storeTokenByRole(token, role) {
+      try {
+        if (role === 'honeypot') {
+          sessionStorage.setItem('dwaf_token', token);
+        } else {
+          localStorage.setItem('dwaf_token', token);
+        }
+      } catch (e) {}
+    }
+
+    function clearToken() {
+      try { localStorage.removeItem('dwaf_token'); } catch (e) {}
+      try { sessionStorage.removeItem('dwaf_token'); } catch (e) {}
+    }
+
+    // Wire up logout
+    (function wireLogout() {
+      const form = document.getElementById('logoutForm');
+      if (!form) return;
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const token = getToken();
+        const url = token ? '/logout?token=' + encodeURIComponent(token) : '/logout';
+        fetch(url, { method: 'POST', credentials: 'same-origin' })
+          .then(() => { clearToken(); window.location.href = '/'; })
+          .catch(() => { clearToken(); window.location.href = '/'; });
+      });
+    })();
+
+    // Load the fake profile (unique per trap) and render it
+    (async function loadProfile() {
+      const token = getToken();
+      if (!token) {
+        window.location.href = '/?error=auth';
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/me?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+        if (!resp.ok) {
+          clearToken();
+          window.location.href = '/?error=auth';
+          return;
+        }
+        const data = await resp.json();
+        const u = data.user;
+
+        storeTokenByRole(token, u.role);
+
+        // Render the fake profile
+        const initials = u.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+        document.getElementById('avatar').textContent = initials;
+        document.getElementById('navName').textContent = u.name;
+        document.getElementById('profileName').textContent = u.name;
+        document.getElementById('profileMeta').textContent =
+          'Student ID: ' + u.username + '  \u00b7  ' + u.branch + '  \u00b7  Semester ' + u.semester;
+        document.getElementById('profileContact').textContent =
+          'Email: ' + u.email + '  \u00b7  Section: ' + u.section;
+
+        document.getElementById('statCgpa').textContent = u.cgpa.toFixed(2);
+        document.getElementById('statAttendance').textContent = u.attendance + '%';
+        document.getElementById('statCredits').textContent = u.credits + ' / 160';
+        document.getElementById('statDues').textContent = (u.dues === 0 ? '\u20b9 0' : '\u20b9 ' + u.dues.toLocaleString());
+
+        document.getElementById('coursesTitle').textContent =
+          'Registered Courses \u2014 Semester ' + u.semester;
+
+        const body = document.getElementById('coursesBody');
+        body.innerHTML = '';
+        for (const [code, title, instr, credits, grade] of u.courses) {
+          const tr = document.createElement('tr');
+          const gradeColor = grade.startsWith('A') ? 'text-green-600' : 'text-amber-600';
+          tr.innerHTML =
+            '<td class="px-6 py-3">' + code + '</td>' +
+            '<td class="px-6 py-3">' + title + '</td>' +
+            '<td class="px-6 py-3">' + instr + '</td>' +
+            '<td class="px-6 py-3">' + credits + '</td>' +
+            '<td class="px-6 py-3 ' + gradeColor + ' font-medium">' + grade + '</td>';
+          body.appendChild(tr);
+        }
+      } catch (e) {
+        console.error('[honeypot] Failed to load profile:', e);
+        window.location.href = '/?error=auth';
+      }
+    })();
+  </script>
 </body>
 </html>
