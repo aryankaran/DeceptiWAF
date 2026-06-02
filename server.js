@@ -208,12 +208,14 @@ app.post('/login', (req, res) => {
   if (credShield.isHoneypotActive(ip)) {
     const trapInfo = credShield.noteTrappedAttempt(ip, username);
 
-    // CRITICAL: Generate a UNIQUE fake profile for this trap. Every trapped
-    // attacker sees different data — if two attackers compare notes and see
-    // the same "Shaly Sinha" profile, the deception is blown. Also, we NEVER
-    // use real user data in the honeypot — all names/CGPAs/courses are
-    // randomly generated and don't match any real student.
-    const profile = fakeProfile.generate();
+    // CRITICAL: Generate a DETERMINISTIC fake profile keyed on the claimed
+    // username. Same username → same fake profile, every time. If an
+    // attacker logs in as "admin" twice, they see the same fake student
+    // both times. Different username → different fake profile. This is
+    // essential — if the data changed between logins, the deception would
+    // be immediately obvious. Also, we NEVER use real user data in the
+    // honeypot — all names/CGPAs/courses are randomly generated.
+    const profile = fakeProfile.getOrCreate(username);
     const fakeToken = issueSession('__honeypot__', profile);
 
     // Phase 4: store + emit with geo
