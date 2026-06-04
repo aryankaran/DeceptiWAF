@@ -823,56 +823,5 @@
     "username": "admin",
     "email": "soc@klyuniv.ac.in",
     "passwordHash": "a10580df7002e6388440a9de08df1270558ef92ca8b586660519d37d5adc4a16"
-  },
-  "__honeypot__": {
-    "role": "honeypot",
-    "name": "Aarav Mehta",
-    "username": "shaly",
-    "branch": "B.Tech Electronics & Communication",
-    "semester": 5,
-    "section": "B",
-    "email": "aarav.m2042@klyuniv.ac.in",
-    "cgpa": 9.12,
-    "attendance": 96,
-    "credits": 132,
-    "dues": 0,
-    "passwordHash": "5831e449d7115abb830f12c7f1bd5f206af90e189b9d671b529caaf5847bbbba",
-    "courses": [
-      [
-        "ECE301",
-        "Signals & Systems",
-        "Dr. R. Verma",
-        4,
-        "A"
-      ],
-      [
-        "ECE305",
-        "Analog Circuits",
-        "Prof. K. Joshi",
-        4,
-        "A"
-      ],
-      [
-        "ECE310",
-        "Digital Communication",
-        "Dr. N. Kaul",
-        3,
-        "B+"
-      ],
-      [
-        "ECE312",
-        "Microprocessors",
-        "Dr. V. Shah",
-        4,
-        "A"
-      ],
-      [
-        "HUM201",
-        "Technical Communication",
-        "Ms. F. Ansari",
-        2,
-        "A"
-      ]
-    ]
   }
 }

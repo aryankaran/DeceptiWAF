@@ -115,7 +115,8 @@ for (const s of STUDENTS) {
     credits: s.credits,
     dues: s.dues,
     passwordHash: sha256(pass),
-    courses: COURSES_BY_BRANCH[s.branch],
+    // Deep-copy each course tuple so students don't share array references
+    courses: COURSES_BY_BRANCH[s.branch].map(c => [...c]),
   };
 }
 
@@ -128,22 +129,9 @@ users.admin = {
   passwordHash: sha256('socadmin123'),
 };
 
-// Honeypot sentinel
-users.__honeypot__ = {
-  role: 'honeypot',
-  name: 'Aarav Mehta',
-  username: 'shaly',
-  branch: 'B.Tech Electronics & Communication',
-  semester: 5,
-  section: 'B',
-  email: 'aarav.m2042@klyuniv.ac.in',
-  cgpa: 9.12,
-  attendance: 96,
-  credits: 132,
-  dues: 0,
-  passwordHash: sha256('honeypot_no_login'), // honeypot users never log in legitimately
-  courses: COURSES_BY_BRANCH.ECE,
-};
+// NOTE: __honeypot__ sentinel user is intentionally NOT created here.
+// Trap profiles are generated on-the-fly by lib/fakeProfile.js using
+// deterministic seeding per claimed username. No backdoor user needed.
 
 // Write to file
 const outPath = path.join(__dirname, '..', 'data', 'users.json');
@@ -156,11 +144,13 @@ console.log('  Generated data/users.json');
 console.log('==================================================');
 console.log(`  Students : ${studentCount}`);
 console.log(`  Admin    : 1`);
-console.log(`  Honeypot : 1 (sentinel)`);
-console.log(`  Total    : ${studentCount + 2} users`);
+console.log(`  Total    : ${studentCount + 1} users`);
 console.log('');
 console.log('  Password scheme: <username>@2024 (SHA-256 hashed)');
 console.log('  Email domain   : @klyuniv.ac.in');
+console.log('');
+console.log('  Trap profiles are generated at runtime by lib/fakeProfile.js');
+console.log('  (no __honeypot__ sentinel user in the database)');
 console.log('');
 console.log('  Sample credentials (for demo chips):');
 for (const s of STUDENTS.slice(0, 5)) {

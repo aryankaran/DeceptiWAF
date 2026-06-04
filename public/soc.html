@@ -177,8 +177,11 @@
     // ============================================================
     function getToken() {
       const urlToken = new URLSearchParams(window.location.search).get('token');
-      if (urlToken) { try { localStorage.setItem('dwaf_token', urlToken); } catch (e) {} return urlToken; }
+      if (urlToken) return urlToken; // use directly, don't store yet
       try { return localStorage.getItem('dwaf_token'); } catch (e) { return null; }
+    }
+    function storeToken(token) {
+      try { localStorage.setItem('dwaf_token', token); } catch (e) {}
     }
     function clearToken() { try { localStorage.removeItem('dwaf_token'); } catch (e) {} }
     function esc(s) {
@@ -213,7 +216,12 @@
         const resp = await fetch('/api/me?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
         if (!resp.ok) { clearToken(); window.location.href = '/?error=auth'; return; }
         const data = await resp.json();
-        if (data.user.role !== 'admin') window.location.href = '/dashboard?token=' + encodeURIComponent(token);
+        if (data.user.role !== 'admin') {
+          window.location.href = '/dashboard?token=' + encodeURIComponent(token);
+          return;
+        }
+        // NOW we know it's an admin token — safe to persist to localStorage
+        storeToken(token);
       } catch (e) { console.error('[soc] session check failed:', e); }
     })();
 
@@ -289,10 +297,11 @@
       while (feed.children.length > 200) feed.removeChild(feed.firstChild);
     }
 
-    function renderWafEvent(evt) {
-      eventTimes.push(Date.now());
+    function renderWafEvent(evt, isHistory) {
+      if (!isHistory) eventTimes.push(Date.now()); // don't inflate EPM on history replay
       uniqueIps.add(evt.ip);
-      if (evt.type === 'block') blockedCount++;
+      // Don't bump blockedCount on history replay — /api/stats provides totals
+      if (!isHistory && evt.type === 'block') blockedCount++;
 
       const color = evt.type === 'block' ? 'text-red-400' : 'text-amber-400';
       const tag = evt.type === 'block' ? '[BLOCK] ' : '[FLAG]  ';
@@ -323,11 +332,11 @@
       }
 
       updateKpis();
-      updateAttackerCatalog(evt);
+      updateAttackerCatalog(evt, isHistory);
     }
 
-    function renderHoneypotEvent(evt) {
-      eventTimes.push(Date.now());
+    function renderHoneypotEvent(evt, isHistory) {
+      if (!isHistory) eventTimes.push(Date.now()); // don't inflate EPM on history replay
       uniqueIps.add(evt.ip);
       const t = fmtTime(evt.timestamp);
       const geoStr = fmtGeo(evt.geo);
@@ -353,13 +362,19 @@
           'flash-fuchsia'
         );
       } else if (evt.type === 'trapped') {
-        trappedCount++;
-        trappedAttackers.set(evt.ip, {
-          ip: evt.ip, username: evt.username, attempt: evt.attempt,
-          since: evt.timestamp, geo: evt.geo,
-          fakeIdentity: evt.fakeIdentity,
-          fingerprint: evt.fingerprint,
-        });
+        // Only update the trapped panel on LIVE events. When replaying
+        // history, the panel is driven by loadTrappedAttackers() which
+        // reads the live credShield state — otherwise old trap events
+        // would re-populate the panel after an admin reset.
+        if (!isHistory) {
+          trappedCount++;
+          trappedAttackers.set(evt.ip, {
+            ip: evt.ip, username: evt.username, attempt: evt.attempt,
+            since: evt.timestamp, geo: evt.geo,
+            fakeIdentity: evt.fakeIdentity,
+            fingerprint: evt.fingerprint,
+          });
+        }
         const fakeName = evt.fakeIdentity ? evt.fakeIdentity.name : '?';
         const fakeBranch = evt.fakeIdentity ? evt.fakeIdentity.branch : '';
         appendFeed(
@@ -387,14 +402,17 @@
       }
 
       updateKpis();
-      updateAttackerCatalog(evt);
+      updateAttackerCatalog(evt, isHistory);
     }
 
     // ============================================================
     // Attacker catalog (top attackers panel)
     // ============================================================
-    function updateAttackerCatalog(evt) {
+    function updateAttackerCatalog(evt, isHistory) {
       if (!evt.ip) return;
+      // On history replay, don't increment counts — /api/attackers/top
+      // provides the authoritative totals. Only update on LIVE events.
+      if (isHistory) return;
       let a = attackers.get(evt.ip);
       if (!a) {
         a = { ip: evt.ip, geo: evt.geo || null, total: 0, blocked: 0, flagged: 0, trapped: 0, failed: 0, lastSeen: evt.timestamp };
@@ -468,6 +486,37 @@
     }
 
     // ============================================================
+    // Load CURRENT trapped attackers from /api/honeypot/status
+    // (NOT from event history — history is an audit log, the panel
+    // must reflect the live credShield state so it clears on reset)
+    // ============================================================
+    async function loadTrappedAttackers() {
+      const token = getToken();
+      if (!token) return;
+      try {
+        const resp = await fetch('/api/honeypot/status?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        trappedAttackers.clear();
+        for (const t of (data.tracked || [])) {
+          if (t.honeypotActive) {
+            trappedAttackers.set(t.ip, {
+              ip: t.ip,
+              username: t.trappedUser || '?',
+              attempt: t.count || 0,
+              since: t.lastAttempt || new Date().toISOString(),
+              geo: null, // geo not stored in credShield; would need separate lookup
+              fakeIdentity: null,
+            });
+          }
+        }
+        renderTrappedAttackers();
+      } catch (e) {
+        console.error('[soc] loadTrappedAttackers error:', e);
+      }
+    }
+
+    // ============================================================
     // Load event history on boot
     // ============================================================
     async function loadHistory() {
@@ -488,9 +537,12 @@
             '<div class="text-slate-700 mt-4">[idle] listening...<span class="blink">_</span></div>';
         } else {
           feed.innerHTML = '<div class="text-slate-500">[history] loaded ' + events.length + ' recent events:</div>';
+          // CRITICAL: pass isHistory=true so renderHoneypotEvent does NOT
+          // re-add to trappedAttackers (that would undo the reset). The
+          // trapped panel is driven by loadTrappedAttackers() instead.
           for (const evt of events) {
-            if (evt.kind === 'waf') renderWafEvent(evt);
-            else if (evt.kind === 'honeypot') renderHoneypotEvent(evt);
+            if (evt.kind === 'waf') renderWafEvent(evt, true);
+            else if (evt.kind === 'honeypot') renderHoneypotEvent(evt, true);
           }
           appendFeed('<div class="text-green-500 mt-2">--- end of history, listening live ---</div>');
         }
@@ -523,6 +575,9 @@
           for (const ip of attackers.keys()) uniqueIps.add(ip);
           updateKpis();
         }
+
+        // Load CURRENT trapped attackers (from live credShield state)
+        await loadTrappedAttackers();
       } catch (e) {
         console.error('[soc] loadHistory error:', e);
         document.getElementById('histStatus').textContent = 'error';
@@ -531,9 +586,17 @@
     }
 
     // ============================================================
-    // Socket.io live events
+    // Socket.io live events — pass admin token for auth
     // ============================================================
-    const socket = io();
+    const token = getToken();
+    const socket = io({ auth: { token: token } });
+
+    socket.on('connect_error', (err) => {
+      document.getElementById('sockStatus').textContent = 'AUTH FAILED';
+      document.getElementById('sockStatus').className = 'text-red-400';
+      appendFeed('<div class="text-red-400 font-bold">[socket] connection rejected: ' + esc(err.message) + '</div>');
+    });
+
     socket.on('connect', () => {
       document.getElementById('sockStatus').textContent = 'ONLINE';
       document.getElementById('sockStatus').className = 'text-green-400';
@@ -551,16 +614,30 @@
     // Admin controls
     // ============================================================
     document.getElementById('resetHoneypot').addEventListener('click', async () => {
-      if (!confirm('Disarm ALL honeypot-trapped IPs?')) return;
+      if (!confirm('Disarm ALL honeypot-trapped IPs and clear trap history?')) return;
       const token = getToken();
       try {
+        // 1. Disarm all trapped IPs (CredShield server-side state)
         const resp = await fetch('/api/honeypot/reset?token=' + encodeURIComponent(token), { method: 'POST', credentials: 'same-origin' });
-        if (resp.ok) {
-          trappedAttackers.clear();
-          renderTrappedAttackers();
-          appendFeed('<div class="text-green-400 font-bold">[ADMIN] Honeypot reset — all IPs disarmed.</div>');
+        if (!resp.ok) {
+          appendFeed('<div class="text-red-400 font-bold">[ADMIN] Reset FAILED: HTTP ' + resp.status + '</div>');
+          return;
         }
-      } catch (e) {}
+        // 2. Also clear event history so loadHistory() doesn't re-populate
+        //    the panel on next page load/refresh
+        await fetch('/api/events/clear?token=' + encodeURIComponent(token), { method: 'POST', credentials: 'same-origin' });
+
+        // 3. Clear ALL client-side state (not just the Map)
+        trappedAttackers.clear();
+        trappedCount = 0;
+        updateKpis();
+        renderTrappedAttackers();
+        appendFeed('<div class="text-green-400 font-bold">[ADMIN] Honeypot reset — all IPs disarmed, history cleared.</div>');
+        // 4. Reload current trapped state from server to confirm it's empty
+        await loadTrappedAttackers();
+      } catch (e) {
+        appendFeed('<div class="text-red-400 font-bold">[ADMIN] Reset error: ' + esc(e.message) + '</div>');
+      }
     });
 
     document.getElementById('clearFeed').addEventListener('click', () => {
@@ -586,6 +663,9 @@
     tick();
     setInterval(tick, 1000);
     setInterval(updateKpis, 5000);
+    // Periodically refresh the trapped-attackers panel from the live
+    // credShield state — catches TTL auto-disarms and other-admin resets
+    setInterval(loadTrappedAttackers, 10000);
 
     // Kick off history load
     loadHistory();

@@ -198,7 +198,12 @@ app.post('/login', (req, res) => {
   const { studentId, password } = req.body || {};
   if (!studentId || !password) return res.redirect('/?error=missing');
 
-  const username = studentId.trim().toLowerCase();
+  const username = String(studentId).trim().toLowerCase();
+  // SECURITY: reject sentinel/internal usernames — these are reserved for
+  // the honeypot system and must never be used for real logins.
+  if (username.startsWith('__')) {
+    return res.redirect('/?error=invalid');
+  }
   const ip = req.ip;
   const io = req.app.get('io');
 
@@ -273,7 +278,7 @@ app.post('/login', (req, res) => {
     const yellow = '\x1b[33m', magenta = '\x1b[35m', dim = '\x1b[2m', reset = '\x1b[0m';
     console.log(
       `${yellow}[AUTH FAIL]${reset} user=${username}  reason=${reason}  ` +
-      `ip=${ip}  fails=${decision.attempt}/${credShield.HONEYPOT_THRESHOLD}  ${dim}(${reason})${reset}`
+      `ip=${ip}  fails=${decision.attempt}/${credShield.HONEYPOT_THRESHOLD}  ${dim}(user=${username})${reset}`
     );
 
     if (decision.action === 'activate') {
@@ -283,10 +288,17 @@ app.post('/login', (req, res) => {
         kind: 'honeypot',
         type: 'activated',
         ip,
+        username,
         attempt: decision.attempt,
         threshold: credShield.HONEYPOT_THRESHOLD,
         timestamp: new Date().toISOString(),
         geo: geo.lookupSync(ip),
+        fingerprint: {
+          userAgent: req.get('user-agent') || '',
+          acceptLanguage: req.get('accept-language') || '',
+          secChUaPlatform: req.get('sec-ch-ua-platform') || '',
+          referer: req.get('referer') || '',
+        },
       };
       eventStore.push(activatePayload);
       geo.lookup(ip).then((g) => { activatePayload.geo = g; }).catch(() => {});
@@ -301,6 +313,12 @@ app.post('/login', (req, res) => {
         threshold: credShield.HONEYPOT_THRESHOLD,
         timestamp: new Date().toISOString(),
         geo: geo.lookupSync(ip),
+        fingerprint: {
+          userAgent: req.get('user-agent') || '',
+          acceptLanguage: req.get('accept-language') || '',
+          secChUaPlatform: req.get('sec-ch-ua-platform') || '',
+          referer: req.get('referer') || '',
+        },
       };
       eventStore.push(failedPayload);
       geo.lookup(ip).then((g) => { failedPayload.geo = g; }).catch(() => {});
@@ -376,22 +394,30 @@ app.get('/api/me', (req, res) => {
 // This is DEMO ONLY — never expose this in production!
 // ------------------------------------------------------------------
 app.get('/api/users/demo', (req, res) => {
+  // Demo accounts endpoint — returns demo usernames + password HINTS
+  // so the login page can render demo account chips.
+  // SECURITY: we only return the password SCHEME (e.g. 'username@2024'),
+  // never the actual admin password. Admin password must be typed manually.
   const demoAccounts = [];
   for (const [username, u] of Object.entries(USERS)) {
     if (username.startsWith('__')) continue; // skip sentinel users
-    // Derive the plaintext password for the demo chips
     let demoPassword = '';
+    let demoPasswordHint = '';
     if (u.role === 'admin') {
-      demoPassword = config.ADMIN_PASSWORD;
+      // Don't expose the admin password — just say 'see config.js'
+      demoPassword = '';
+      demoPasswordHint = '(set in config.js)';
     } else {
       demoPassword = username + '@2024';
+      demoPasswordHint = demoPassword;
     }
     demoAccounts.push({
       username,
       name: u.name,
       role: u.role,
       branch: u.branch || '',
-      demoPassword,
+      demoPassword: demoPassword,
+      demoPasswordHint: demoPasswordHint,
     });
   }
   res.json({ accounts: demoAccounts });
@@ -437,7 +463,7 @@ app.post('/api/honeypot/reset', (req, res) => {
 app.get('/api/events/recent', (req, res) => {
   const user = getUserFromSession(req);
   if (!user || user.role !== 'admin') return res.status(403).json({ error: 'admin_only' });
-  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 500);
+  const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 50, 500));
   res.json({ events: eventStore.recent(limit) });
 });
 
@@ -445,7 +471,7 @@ app.get('/api/events/recent', (req, res) => {
 app.get('/api/attackers/top', (req, res) => {
   const user = getUserFromSession(req);
   if (!user || user.role !== 'admin') return res.status(403).json({ error: 'admin_only' });
-  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+  const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 20, 100));
   res.json({ attackers: eventStore.topAttackers(limit) });
 });
 
@@ -483,7 +509,11 @@ app.post('/api/events/clear', (req, res) => {
 app.get('/dashboard', (req, res) => {
   const user = getUserFromSession(req);
   if (!user)                      return res.redirect('/?error=auth');
-  if (user.role === 'admin')      return res.redirect('/soc');
+  if (user.role === 'admin') {
+    // Preserve the token so admin sessions using the ?token= fallback work
+    const token = getTokenFromRequest(req);
+    return res.redirect('/soc' + (token ? '?token=' + token : ''));
+  }
 
   if (user.role === 'honeypot') {
     // Silently serve the fake dashboard. URL bar still shows /dashboard.
@@ -541,16 +571,20 @@ app.get('/health', (req, res) => {
 // ------------------------------------------------------------------
 // Catch-all 404 — friendly page instead of Express's default "Cannot GET /"
 // ------------------------------------------------------------------
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 app.use((req, res) => {
-  // Don't override the WAF's 403s
-  if (res.statusCode === 403) return;
   res.status(404).type('html').send(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>404 - DeceptiWAF</title>
 <script src="https://cdn.tailwindcss.com"></script></head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
 <div class="text-center max-w-md">
 <div class="mono text-6xl font-bold text-red-500 mb-4">404</div>
-<p class="mono text-sm text-slate-400 mb-6">Route not found: ${req.method} ${req.path}</p>
+<p class="mono text-sm text-slate-400 mb-6">Route not found: ${escHtml(req.method)} ${escHtml(req.path)}</p>
 <div class="space-y-2">
 <a href="/" class="block bg-blue-900 hover:bg-blue-800 text-white mono text-xs py-2 rounded">Login Page</a>
 <a href="/test" class="block bg-red-900 hover:bg-red-800 text-red-100 mono text-xs py-2 rounded">Attack Simulator</a>
@@ -560,12 +594,36 @@ app.use((req, res) => {
 });
 
 // ------------------------------------------------------------------
-// Socket.io wiring (Phase 4 will emit events from WAF + CredShield)
+// Socket.io wiring — require admin auth before allowing event subscriptions
 // ------------------------------------------------------------------
+io.use((socket, next) => {
+  // Check for session token in the handshake auth or query
+  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+  if (!token) {
+    return next(new Error('unauthorized: no token'));
+  }
+  const session = SESSIONS[token];
+  if (!session) {
+    return next(new Error('unauthorized: invalid token'));
+  }
+  // Look up the user (could be a fake profile or a real user)
+  let user = null;
+  if (session.fakeUserProfile) {
+    user = session.fakeUserProfile;
+  } else {
+    user = USERS[session.username];
+  }
+  if (!user || user.role !== 'admin') {
+    return next(new Error('unauthorized: admin only'));
+  }
+  socket.adminUser = user;
+  next();
+});
+
 io.on('connection', (socket) => {
-  console.log(`[SOC] Dashboard client connected: ${socket.id}`);
+  console.log(`[SOC] Admin client connected: ${socket.id}  user=${socket.adminUser?.username}`);
   socket.on('disconnect', () => {
-    console.log(`[SOC] Dashboard client disconnected: ${socket.id}`);
+    console.log(`[SOC] Admin client disconnected: ${socket.id}`);
   });
 });
 
@@ -590,8 +648,9 @@ server.listen(PORT, config.HOST, () => {
   console.log('    [Phase 3] CredShield (brute-force honeypot, TTL)');
   console.log('    [Phase 4] SOC dashboard (geo, event history, catalog)');
   console.log('--------------------------------------------------');
-  console.log('  Demo students (password: kuce2024):');
-  console.log('    aryan, sucheta, isha, sweet, shaly, demo1, demo2');
+  console.log('  Demo students (password: <username>@2024):');
+  console.log('    aryan, sucheta, isha, sweet, shaly, rohan, priya, zoya, ...');
   console.log('  Admin (password: socadmin123): admin');
+  console.log('  Full user list: see data/users.json');
   console.log('==================================================');
 });
