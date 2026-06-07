@@ -214,19 +214,6 @@ app.get('/api/me', (req, res) => {
   res.json({ user });
 });
 
-// Demo accounts for login page chips (demo only — not for production)
-app.get('/api/users/demo', (req, res) => {
-  const accounts = [];
-  for (const [username, u] of Object.entries(USERS)) {
-    if (username.startsWith('__')) continue;
-    accounts.push({
-      username, name: u.name, role: u.role, branch: u.branch || '',
-      demoPassword: u.role === 'admin' ? '' : username + '@2024',
-    });
-  }
-  res.json({ accounts });
-});
-
 // Admin-only: CredShield management
 app.get('/api/honeypot/status', (req, res) => {
   const user = getUserFromSession(req);

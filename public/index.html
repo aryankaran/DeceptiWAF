@@ -3,47 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KUCE Student Portal - Sign In</title>
-
-  <!-- Tailwind CSS via CDN (no build step) -->
+  <title>KLY University Portal — Sign In</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
-    .mono { font-family: 'JetBrains Mono', monospace; }
+    h1, h2, h3, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .glass {
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+    .mesh-bg {
+      background-color: #fdf2f8;
+      background-image:
+        radial-gradient(at 20% 20%, rgba(196, 181, 253, 0.55) 0px, transparent 50%),
+        radial-gradient(at 80% 15%, rgba(254, 215, 170, 0.55) 0px, transparent 50%),
+        radial-gradient(at 75% 75%, rgba(167, 243, 208, 0.45) 0px, transparent 50%),
+        radial-gradient(at 25% 80%, rgba(186, 230, 253, 0.5) 0px, transparent 50%);
+    }
+    input:focus { box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); }
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+      box-shadow: 0 8px 20px -6px rgba(139, 92, 246, 0.5);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+      box-shadow: 0 12px 24px -6px rgba(139, 92, 246, 0.6);
+    }
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-100 via-blue-50 to-slate-200 min-h-screen flex items-center justify-center p-4">
+<body class="mesh-bg min-h-screen flex items-center justify-center p-4">
 
-  <!-- ============================================================
-       KUCE Student Portal - Login Page (Decoy Surface)
-       Phase 1: Plain credential form. POSTs to /login.
-       Phase 3: CredShield will wrap /login with brute-force logic.
-       ============================================================ -->
   <div class="w-full max-w-md">
 
     <!-- Brand header -->
     <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-900 text-white text-2xl font-bold shadow-lg mb-4">
-        K
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass shadow-lg mb-4">
+        <span class="font-display font-bold text-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 bg-clip-text text-transparent">K</span>
       </div>
-      <h1 class="text-2xl font-bold text-slate-800">KUCE Student Portal</h1>
-      <p class="text-sm text-slate-500 mt-1">Kashmir University College of Engineering</p>
+      <h1 class="font-display text-2xl font-bold text-slate-800">KLY University Portal</h1>
+      <p class="text-sm text-slate-500 mt-1">Kashmir Lingayat University</p>
     </div>
 
     <!-- Login card -->
-    <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+    <div class="glass rounded-3xl shadow-2xl shadow-violet-200/40 p-8">
 
-      <h2 class="text-lg font-semibold text-slate-700 mb-1">Sign in to your account</h2>
-      <p class="text-xs text-slate-500 mb-6">Use your student credentials to continue.</p>
+      <h2 class="font-display text-lg font-semibold text-slate-800 mb-1">Welcome back</h2>
+      <p class="text-xs text-slate-500 mb-6">Sign in to access your account.</p>
 
       <!-- Error banner -->
-      <div id="errorBanner" class="hidden mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+      <div id="errorBanner" class="hidden mb-4 bg-rose-50/80 border border-rose-200 text-rose-700 text-sm rounded-xl px-4 py-3 backdrop-blur-sm">
         <span id="errorText">Invalid credentials. Please try again.</span>
       </div>
 
@@ -51,52 +64,31 @@
 
         <!-- Student ID -->
         <div>
-          <label for="studentId" class="block text-sm font-medium text-slate-700 mb-1.5">
-            Student ID
-          </label>
+          <label for="studentId" class="block text-sm font-medium text-slate-700 mb-1.5">Student ID</label>
           <input
-            type="text"
-            id="studentId"
-            name="studentId"
-            autocomplete="username"
-            placeholder="e.g. S1001"
-            required
-            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+            type="text" id="studentId" name="studentId" autocomplete="username"
+            placeholder="Enter your student ID" required
+            class="w-full px-4 py-3 rounded-xl bg-white/70 border border-white/80 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 outline-none transition placeholder:text-slate-400"
           />
         </div>
 
         <!-- Password (with show/hide eye toggle) -->
         <div>
-          <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">
-            Password
-          </label>
+          <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
           <div class="relative">
             <input
-              type="password"
-              id="password"
-              name="password"
-              autocomplete="current-password"
-              placeholder="Enter your password"
-              required
-              class="w-full px-4 py-2.5 pr-11 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+              type="password" id="password" name="password" autocomplete="current-password"
+              placeholder="Enter your password" required
+              class="w-full px-4 py-3 pr-12 rounded-xl bg-white/70 border border-white/80 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 outline-none transition placeholder:text-slate-400"
             />
-            <button
-              type="button"
-              id="togglePassword"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              title="Show/Hide password"
-            >
-              <!-- Eye icon (show) -->
+            <button type="button" id="togglePassword"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-violet-500 transition"
+              title="Show/Hide password">
               <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                <circle cx="12" cy="12" r="3"/>
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
               </svg>
-              <!-- Eye-off icon (hide) -->
               <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
-                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
-                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
-                <line x1="2" y1="2" x2="22" y2="22"/>
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>
               </svg>
             </button>
           </div>
@@ -105,66 +97,49 @@
         <!-- Remember + forgot -->
         <div class="flex items-center justify-between text-sm">
           <label class="flex items-center text-slate-600 cursor-pointer">
-            <input type="checkbox" name="remember" class="mr-2 rounded border-slate-300" />
+            <input type="checkbox" name="remember" class="mr-2 rounded border-slate-300 text-violet-500 focus:ring-violet-300" />
             Remember me
           </label>
-          <a href="#" class="text-blue-700 hover:text-blue-900 hover:underline">Forgot password?</a>
+          <a href="#" class="text-violet-600 hover:text-violet-700 hover:underline font-medium">Forgot password?</a>
         </div>
 
         <!-- Submit -->
-        <button
-          type="submit"
-          class="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2.5 rounded-lg transition shadow-md"
-        >
+        <button type="submit" class="btn-primary w-full text-white font-semibold py-3 rounded-xl transition">
           Sign In
         </button>
       </form>
 
-      <!-- Helper -->
-      <div class="mt-6 pt-5 border-t border-slate-100">
-        <p class="text-xs text-slate-500 mb-3 text-center">Demo accounts (click to autofill):</p>
-        <div id="demoChips" class="flex flex-wrap gap-1.5 justify-center mb-3">
-          <span class="mono text-[11px] text-slate-400">Loading demo accounts...</span>
-        </div>
-        <p class="text-center text-xs text-slate-500">
-          Student password: <code class="mono bg-slate-100 px-1.5 py-0.5 rounded">&lt;username&gt;@2024</code>
-          &middot; Admin password: <code class="mono bg-slate-100 px-1.5 py-0.5 rounded">socadmin123</code>
-        </p>
-        <p class="text-center text-xs text-slate-500 mt-3">
-          Having trouble signing in? Contact the
-          <a href="#" class="text-blue-700 hover:underline">IT Helpdesk</a>.
-        </p>
-      </div>
+      <p class="text-center text-xs text-slate-500 mt-6 pt-5 border-t border-white/40">
+        Having trouble signing in? Contact the
+        <a href="#" class="text-violet-600 hover:underline">IT Helpdesk</a>.
+      </p>
     </div>
 
-    <!-- Footer -->
-    <p class="text-center text-xs text-slate-500 mt-6">
-      &copy; 2025 KLY University Information Systems. All rights reserved.
+    <p class="text-center text-xs text-slate-400 mt-6">
+      &copy; 2025 KLY University. All rights reserved.
     </p>
 
-    <!-- Attack simulator link (demo utility) -->
-    <p class="text-center text-xs mt-3">
-      <a href="/test" class="mono text-red-700 hover:text-red-900 hover:underline">&gt;&gt; Open Attack Simulator (Cyber Range) &lt;&lt;</a>
+    <!-- Cyber range link (small, bottom) -->
+    <p class="text-center text-[11px] mt-3">
+      <a href="/test" class="text-slate-400 hover:text-violet-500 transition">&rsaquo; Cyber Range</a>
     </p>
   </div>
 
-  <!-- Client script: error banner + eye toggle + dynamic demo chips -->
   <script>
     (function () {
-      // ---- Error banner ----
-      const params = new URLSearchParams(window.location.search);
-      const err = params.get('error');
+      // Error banner
+      const err = new URLSearchParams(window.location.search).get('error');
       const banner = document.getElementById('errorBanner');
       const text = document.getElementById('errorText');
       if (err) {
         banner.classList.remove('hidden');
-        if (err === 'invalid')      text.textContent = 'Invalid Student ID or password. Please try again.';
+        if (err === 'invalid')      text.textContent = 'Invalid Student ID or password.';
         else if (err === 'missing') text.textContent = 'Please provide both Student ID and password.';
         else if (err === 'auth')    text.textContent = 'Session expired. Please sign in again.';
         else                        text.textContent = 'Login failed. Please try again.';
       }
 
-      // ---- Eye toggle (show/hide password) ----
+      // Eye toggle
       const passInput = document.getElementById('password');
       const toggleBtn = document.getElementById('togglePassword');
       const eyeOpen   = document.getElementById('eyeOpen');
@@ -180,52 +155,6 @@
           eyeClosed.style.display = 'none';
         }
       });
-
-      // ---- Dynamic demo chips (fetched from /api/users/demo) ----
-      // Grabs the user list from the server's user database (users.json)
-      // so the login page always shows the latest demo accounts without
-      // hardcoding them in HTML.
-      const userInput = document.getElementById('studentId');
-      const chipsContainer = document.getElementById('demoChips');
-
-      function esc(s) {
-        return String(s == null ? '' : s)
-          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      }
-
-      fetch('/api/users/demo')
-        .then((r) => r.json())
-        .then((data) => {
-          const accounts = data.accounts || [];
-          // Sort: students first, admin last
-          accounts.sort((a, b) => {
-            if (a.role === 'admin') return 1;
-            if (b.role === 'admin') return -1;
-            return a.username.localeCompare(b.username);
-          });
-          chipsContainer.innerHTML = '';
-          for (const a of accounts) {
-            const chip = document.createElement('button');
-            chip.type = 'button';
-            const isAdmin = a.role === 'admin';
-            chip.className = 'demo-chip mono text-[11px] px-2 py-1 rounded ' +
-              (isAdmin
-                ? 'bg-red-100 hover:bg-red-200 text-red-800 font-medium'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700');
-            chip.textContent = isAdmin ? (a.username + ' \u2192 /soc') : a.username;
-            chip.title = a.name + (a.branch ? ' \u00b7 ' + a.branch : '') + ' \u00b7 password: ' + a.demoPassword;
-            chip.addEventListener('click', () => {
-              userInput.value = a.username;
-              passInput.value = a.demoPassword;
-              userInput.focus();
-            });
-            chipsContainer.appendChild(chip);
-          }
-        })
-        .catch(() => {
-          chipsContainer.innerHTML = '<span class="mono text-[11px] text-red-400">Failed to load demo accounts</span>';
-        });
     })();
   </script>
 </body>
