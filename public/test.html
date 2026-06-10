@@ -12,10 +12,14 @@
     body { font-family: 'Inter', system-ui, sans-serif; }
     h1, h2, h3, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
     .mono { font-family: 'JetBrains Mono', monospace; }
-    .glass { background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.6); }
-    .glass-soft { background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.5); }
-    .glass-dark { background: rgba(30, 27, 50, 0.75); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.08); }
-    .mesh-bg { background-color: #fdf2f8; background-image: radial-gradient(at 15% 15%, rgba(196, 181, 253, 0.45) 0px, transparent 50%), radial-gradient(at 85% 10%, rgba(254, 202, 202, 0.40) 0px, transparent 50%), radial-gradient(at 80% 80%, rgba(167, 243, 208, 0.30) 0px, transparent 50%), radial-gradient(at 20% 85%, rgba(186, 230, 253, 0.40) 0px, transparent 50%); }
+    .pastel-bg {
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, #ede9fe 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 100% 100%, #fce7f3 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 0% 80%, #dbeafe 0%, transparent 50%),
+        #faf5ff;
+    }
+    .feed-panel { background: #1e1932; }
     @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     .pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
     @keyframes flash-red { 0% { background-color: rgba(244, 63, 94, 0.20); } 100% { background-color: transparent; } }
@@ -27,10 +31,9 @@
     .attack-btn:active { transform: translateY(0); }
   </style>
 </head>
-<body class="mesh-bg min-h-screen">
+<body class="pastel-bg min-h-screen">
 
-  <!-- Top bar -->
-  <header class="glass-soft sticky top-0 z-20 border-b border-white/40">
+  <header class="bg-white/70 backdrop-blur-sm border-b border-violet-100/60 sticky top-0 z-20">
     <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-2.5 h-2.5 rounded-full bg-rose-500 pulse-dot"></div>
@@ -40,7 +43,7 @@
         </div>
       </div>
       <div class="flex items-center gap-3 text-xs">
-        <a href="/" class="bg-white/60 hover:bg-white/80 text-slate-600 px-2.5 py-1 rounded-lg transition">Login</a>
+        <a href="/" class="bg-white hover:bg-violet-50 text-slate-600 px-2.5 py-1 rounded-lg border border-violet-100 transition">Login</a>
         <a href="/soc" class="bg-violet-100 hover:bg-violet-200 text-violet-700 px-2.5 py-1 rounded-lg transition font-medium">SOC &rarr;</a>
       </div>
     </div>
@@ -49,7 +52,7 @@
   <main class="max-w-7xl mx-auto px-6 py-6">
 
     <!-- Hint -->
-    <div class="glass rounded-2xl p-4 mb-6 flex items-start gap-3">
+    <div class="bg-white rounded-2xl p-4 mb-6 border border-violet-100/50 shadow-sm flex items-start gap-3">
       <span class="text-violet-500 text-sm mt-0.5 mono">&gt;&gt;</span>
       <div class="text-xs text-slate-600 leading-relaxed">
         <span class="font-semibold text-violet-700">How to use:</span>
@@ -59,85 +62,68 @@
 
     <!-- KPI strip -->
     <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="glass-soft rounded-2xl p-4"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Attacks launched</p><p id="kpiTotal" class="font-display text-2xl font-bold text-slate-800 mt-1">0</p></div>
-      <div class="glass-soft rounded-2xl p-4"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Blocked (403)</p><p id="kpiBlocked" class="font-display text-2xl font-bold text-rose-500 mt-1">0</p></div>
-      <div class="glass-soft rounded-2xl p-4"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Passed through</p><p id="kpiPassed" class="font-display text-2xl font-bold text-emerald-500 mt-1">0</p></div>
-      <div class="glass-soft rounded-2xl p-4"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Block rate</p><p id="kpiRate" class="font-display text-2xl font-bold text-amber-500 mt-1">0%</p></div>
+      <div class="bg-white rounded-2xl p-4 border border-violet-100/50 shadow-sm"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Attacks launched</p><p id="kpiTotal" class="font-display text-2xl font-bold text-slate-800 mt-1">0</p></div>
+      <div class="bg-white rounded-2xl p-4 border border-violet-100/50 shadow-sm"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Blocked (403)</p><p id="kpiBlocked" class="font-display text-2xl font-bold text-rose-500 mt-1">0</p></div>
+      <div class="bg-white rounded-2xl p-4 border border-violet-100/50 shadow-sm"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Passed through</p><p id="kpiPassed" class="font-display text-2xl font-bold text-emerald-500 mt-1">0</p></div>
+      <div class="bg-white rounded-2xl p-4 border border-violet-100/50 shadow-sm"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Block rate</p><p id="kpiRate" class="font-display text-2xl font-bold text-amber-500 mt-1">0%</p></div>
     </section>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      <!-- LEFT: attack categories -->
       <div class="space-y-6">
-
-        <section class="glass rounded-2xl shadow-lg shadow-violet-200/20 overflow-hidden">
-          <div class="px-4 py-3 border-b border-white/40"><h2 class="font-display text-sm font-semibold text-rose-500 tracking-wide">SQL INJECTION</h2></div>
+        <section class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100"><h2 class="font-display text-sm font-semibold text-rose-500 tracking-wide">SQL INJECTION</h2></div>
           <div id="sqli-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
         </section>
-
-        <section class="glass rounded-2xl shadow-lg shadow-violet-200/20 overflow-hidden">
-          <div class="px-4 py-3 border-b border-white/40"><h2 class="font-display text-sm font-semibold text-orange-500 tracking-wide">XSS</h2></div>
+        <section class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100"><h2 class="font-display text-sm font-semibold text-orange-500 tracking-wide">XSS</h2></div>
           <div id="xss-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
         </section>
-
-        <section class="glass rounded-2xl shadow-lg shadow-violet-200/20 overflow-hidden">
-          <div class="px-4 py-3 border-b border-white/40"><h2 class="font-display text-sm font-semibold text-amber-500 tracking-wide">PATH TRAVERSAL</h2></div>
+        <section class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100"><h2 class="font-display text-sm font-semibold text-amber-500 tracking-wide">PATH TRAVERSAL</h2></div>
           <div id="pt-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
         </section>
-
-        <section class="glass rounded-2xl shadow-lg shadow-violet-200/20 overflow-hidden">
-          <div class="px-4 py-3 border-b border-white/40"><h2 class="font-display text-sm font-semibold text-cyan-500 tracking-wide">ANTI-EVASION</h2></div>
+        <section class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100"><h2 class="font-display text-sm font-semibold text-cyan-500 tracking-wide">ANTI-EVASION</h2></div>
           <div id="evasion-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
         </section>
-
       </div>
 
-      <!-- RIGHT: more + log -->
       <div class="space-y-6">
-
-        <section class="glass rounded-2xl shadow-lg shadow-violet-200/20 overflow-hidden">
-          <div class="px-4 py-3 border-b border-white/40"><h2 class="font-display text-sm font-semibold text-fuchsia-500 tracking-wide">MALICIOUS USER-AGENTS</h2></div>
+        <section class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100"><h2 class="font-display text-sm font-semibold text-fuchsia-500 tracking-wide">MALICIOUS USER-AGENTS</h2></div>
           <div id="ua-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
         </section>
-
-        <section class="glass rounded-2xl shadow-lg shadow-violet-200/20 overflow-hidden">
-          <div class="px-4 py-3 border-b border-white/40"><h2 class="font-display text-sm font-semibold text-emerald-500 tracking-wide">BENIGN (CONTROL)</h2></div>
+        <section class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100"><h2 class="font-display text-sm font-semibold text-emerald-500 tracking-wide">BENIGN (CONTROL)</h2></div>
           <div id="benign-buttons" class="p-4 grid grid-cols-1 gap-2"></div>
         </section>
-
-        <section class="glass rounded-2xl shadow-lg shadow-violet-200/20 overflow-hidden">
-          <div class="px-4 py-3 border-b border-white/40"><h2 class="font-display text-sm font-semibold text-rose-600 tracking-wide">CHAOS MODE</h2></div>
+        <section class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100"><h2 class="font-display text-sm font-semibold text-rose-600 tracking-wide">CHAOS MODE</h2></div>
           <div class="p-4 space-y-2">
-            <button id="fireAll" class="attack-btn w-full bg-gradient-to-r from-rose-500 to-fuchsia-500 hover:from-rose-600 hover:to-fuchsia-600 text-white font-display text-sm font-bold py-3 rounded-xl transition shadow-lg shadow-rose-200">FIRE ALL ATTACKS</button>
-            <button id="clearLog" class="attack-btn w-full bg-white/60 hover:bg-white/80 text-slate-600 mono text-xs py-2 rounded-xl border border-white/60 transition">CLEAR LOG</button>
+            <button id="fireAll" class="attack-btn w-full bg-rose-500 hover:bg-rose-600 text-white font-display text-sm font-bold py-3 rounded-xl transition shadow-md shadow-rose-200">FIRE ALL ATTACKS</button>
+            <button id="clearLog" class="attack-btn w-full bg-slate-100 hover:bg-slate-200 text-slate-600 mono text-xs py-2 rounded-xl border border-slate-200 transition">CLEAR LOG</button>
           </div>
         </section>
-
-        <!-- CredShield honeypot simulator -->
-        <section class="glass rounded-2xl shadow-lg shadow-fuchsia-200/30 overflow-hidden">
-          <div class="px-4 py-3 border-b border-white/40 flex items-center justify-between">
-            <h2 class="font-display text-sm font-semibold text-fuchsia-600 tracking-wide">CRED SHIELD — BRUTE-FORCE HONEYPOT</h2>
-          </div>
+        <section class="bg-white rounded-2xl shadow-sm border border-fuchsia-100 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100"><h2 class="font-display text-sm font-semibold text-fuchsia-600 tracking-wide">CRED SHIELD — BRUTE-FORCE HONEYPOT</h2></div>
           <div class="p-4 space-y-2">
-            <p class="text-[11px] text-slate-500 leading-relaxed mb-3">
-              Simulates a brute-force attacker. After 3 failed logins the honeypot arms, then the 4th attempt is "successful" and redirects to a fake dashboard. Watch the SOC for purple alerts.
-            </p>
-            <button id="bruteForce" class="attack-btn w-full bg-gradient-to-r from-fuchsia-500 to-violet-500 hover:from-fuchsia-600 hover:to-violet-600 text-white font-display text-sm font-bold py-3 rounded-xl transition shadow-lg shadow-fuchsia-200">SIMULATE BRUTE-FORCE (4 logins)</button>
+            <p class="text-[11px] text-slate-500 leading-relaxed mb-3">Simulates a brute-force attacker. After 3 failed logins the honeypot arms, then the 4th attempt is "successful" and redirects to a fake dashboard.</p>
+            <button id="bruteForce" class="attack-btn w-full bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-display text-sm font-bold py-3 rounded-xl transition shadow-md shadow-fuchsia-200">SIMULATE BRUTE-FORCE (4 logins)</button>
             <div class="grid grid-cols-2 gap-2">
-              <button id="bruteStep1" class="attack-btn bg-white/60 hover:bg-white/80 text-slate-600 mono text-xs py-2 rounded-lg border border-white/60 transition">STEP 1</button>
-              <button id="bruteStep2" class="attack-btn bg-white/60 hover:bg-white/80 text-slate-600 mono text-xs py-2 rounded-lg border border-white/60 transition">STEP 2</button>
-              <button id="bruteStep3" class="attack-btn bg-white/60 hover:bg-white/80 text-slate-600 mono text-xs py-2 rounded-lg border border-white/60 transition">STEP 3 (arm)</button>
+              <button id="bruteStep1" class="attack-btn bg-slate-100 hover:bg-slate-200 text-slate-600 mono text-xs py-2 rounded-lg border border-slate-200 transition">STEP 1</button>
+              <button id="bruteStep2" class="attack-btn bg-slate-100 hover:bg-slate-200 text-slate-600 mono text-xs py-2 rounded-lg border border-slate-200 transition">STEP 2</button>
+              <button id="bruteStep3" class="attack-btn bg-slate-100 hover:bg-slate-200 text-slate-600 mono text-xs py-2 rounded-lg border border-slate-200 transition">STEP 3 (arm)</button>
               <button id="bruteStep4" class="attack-btn bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-700 mono text-xs py-2 rounded-lg border border-fuchsia-200 transition font-medium">STEP 4 (trap)</button>
             </div>
-            <div id="bruteStatus" class="mt-2 mono text-[11px] text-slate-500 px-2 py-1 bg-white/40 rounded">[idle] No brute-force yet.</div>
+            <div id="bruteStatus" class="mt-2 mono text-[11px] text-slate-500 px-2 py-1 bg-slate-50 rounded">[idle] No brute-force yet.</div>
           </div>
         </section>
-
       </div>
     </div>
 
-    <!-- Live result log (dark glass) -->
-    <section class="glass-dark rounded-3xl shadow-xl shadow-violet-300/20 overflow-hidden mt-6">
+    <!-- Result log (dark panel) -->
+    <section class="feed-panel rounded-2xl shadow-xl shadow-violet-300/20 overflow-hidden mt-6">
       <div class="px-4 py-3 border-b border-white/10 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-rose-400 pulse-dot"></span>
@@ -235,8 +221,7 @@
         const resp = await fetch(attack.url, opts);
         const isBlock = (resp.status === 403);
         if (isBlock) blocked++; else passed++;
-        updateKpis();
-        logResult(attack.label, attack.desc, resp.status, isBlock);
+        updateKpis(); logResult(attack.label, attack.desc, resp.status, isBlock);
       } catch (e) { passed++; updateKpis(); logResult(attack.label, attack.desc, 'ERR', false); }
     }
 
@@ -244,7 +229,7 @@
       const container = document.getElementById(containerId);
       for (const a of attackList) {
         const btn = document.createElement('button');
-        btn.className = 'attack-btn text-left bg-white/50 hover:bg-white/70 border border-white/60 hover:border-' + accentColor + '-300 rounded-xl px-3 py-2 group transition';
+        btn.className = 'attack-btn text-left bg-slate-50 border border-slate-200 hover:border-' + accentColor + '-300 rounded-xl px-3 py-2 group transition';
         btn.innerHTML = '<div class="flex items-center justify-between"><span class="mono text-xs text-slate-700 group-hover:text-' + accentColor + '-600">' + esc(a.label) + '</span><span class="mono text-[10px] text-slate-400 group-hover:text-' + accentColor + '-400">FIRE &rarr;</span></div><p class="text-[10px] text-slate-500 mt-0.5">' + esc(a.desc) + '</p>';
         btn.addEventListener('click', () => fireAttack(a));
         container.appendChild(btn);
@@ -263,27 +248,18 @@
       for (const a of all) { fireAttack(a); await new Promise((r) => setTimeout(r, 150)); }
     });
 
-    document.getElementById('clearLog').addEventListener('click', () => {
-      logEl.innerHTML = '<div class="text-slate-500">[waiting] Log cleared.</div>';
-      total = 0; blocked = 0; passed = 0; updateKpis();
-    });
+    document.getElementById('clearLog').addEventListener('click', () => { logEl.innerHTML = '<div class="text-slate-500">[waiting] Log cleared.</div>'; total = 0; blocked = 0; passed = 0; updateKpis(); });
 
-    // CredShield brute-force simulator
     let bruteAttempt = 0;
     const bruteStatusEl = document.getElementById('bruteStatus');
-    function bruteStatus(msg, color) { bruteStatusEl.className = 'mt-2 mono text-[11px] ' + (color || 'text-slate-500') + ' px-2 py-1 bg-white/40 rounded'; bruteStatusEl.textContent = msg; }
+    function bruteStatus(msg, color) { bruteStatusEl.className = 'mt-2 mono text-[11px] ' + (color || 'text-slate-500') + ' px-2 py-1 bg-slate-50 rounded'; bruteStatusEl.textContent = msg; }
 
     function bruteFollow() {
       return new Promise((resolve) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/login');
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4) {
-            const finalUrl = xhr.responseURL || '';
-            resolve({ endedOnTrap: finalUrl.includes('/dashboard'), finalUrl });
-          }
-        };
+        xhr.onreadystatechange = function () { if (xhr.readyState === 4) { const finalUrl = xhr.responseURL || ''; resolve({ endedOnTrap: finalUrl.includes('/dashboard'), finalUrl }); } };
         xhr.send('studentId=attacker' + bruteAttempt + '&password=wrongpass' + bruteAttempt);
       });
     }
@@ -293,7 +269,7 @@
       const result = await bruteFollow();
       if (result.endedOnTrap) {
         logResult('Login #' + stepNum + ' (wrong creds)', 'Honeypot TRAP (served fake /dashboard)', '302→/dashboard', false);
-        bruteStatus('[TRAPPED] Attempt #' + stepNum + ' — URL shows /dashboard (looks normal to attacker).', 'text-fuchsia-600 font-bold');
+        bruteStatus('[TRAPPED] Attempt #' + stepNum + ' — URL shows /dashboard.', 'text-fuchsia-600 font-bold');
         const token = result.finalUrl.split('token=')[1] || '';
         window.open('/dashboard' + (token ? '?token=' + token : ''), '_blank');
       } else if (stepNum >= 3) {
@@ -309,10 +285,7 @@
     document.getElementById('bruteStep2').addEventListener('click', () => doBruteStep(2));
     document.getElementById('bruteStep3').addEventListener('click', () => doBruteStep(3));
     document.getElementById('bruteStep4').addEventListener('click', () => doBruteStep(4));
-    document.getElementById('bruteForce').addEventListener('click', async () => {
-      bruteStatus('[RUNNING] Simulating 4 brute-force attempts...', 'text-fuchsia-600');
-      for (let i = 1; i <= 4; i++) { await doBruteStep(i); await new Promise((r) => setTimeout(r, 400)); }
-    });
+    document.getElementById('bruteForce').addEventListener('click', async () => { bruteStatus('[RUNNING] Simulating 4 brute-force attempts...', 'text-fuchsia-600'); for (let i = 1; i <= 4; i++) { await doBruteStep(i); await new Promise((r) => setTimeout(r, 400)); } });
   </script>
 </body>
 </html>

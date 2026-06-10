@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KLY University Portal — Sign In</title>
+  <title>Kalyani University Portal — Sign In</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,90 +11,69 @@
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
     h1, h2, h3, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .glass {
-      background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.6);
+    .pastel-bg {
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, #ede9fe 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 100% 100%, #fce7f3 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 0% 80%, #dbeafe 0%, transparent 50%),
+        #faf5ff;
     }
-    .mesh-bg {
-      background-color: #fdf2f8;
-      background-image:
-        radial-gradient(at 20% 20%, rgba(196, 181, 253, 0.55) 0px, transparent 50%),
-        radial-gradient(at 80% 15%, rgba(254, 215, 170, 0.55) 0px, transparent 50%),
-        radial-gradient(at 75% 75%, rgba(167, 243, 208, 0.45) 0px, transparent 50%),
-        radial-gradient(at 25% 80%, rgba(186, 230, 253, 0.5) 0px, transparent 50%);
-    }
-    input:focus { box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); }
+    input:focus { box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12); }
     .btn-primary {
-      background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
-      box-shadow: 0 8px 20px -6px rgba(139, 92, 246, 0.5);
+      background: #7c3aed;
+      transition: all 0.2s;
     }
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-      box-shadow: 0 12px 24px -6px rgba(139, 92, 246, 0.6);
-    }
+    .btn-primary:hover { background: #6d28d9; transform: translateY(-1px); box-shadow: 0 10px 25px -8px rgba(124, 58, 237, 0.5); }
   </style>
 </head>
-<body class="mesh-bg min-h-screen flex items-center justify-center p-4">
+<body class="pastel-bg min-h-screen flex items-center justify-center p-4">
 
   <div class="w-full max-w-md">
 
-    <!-- Brand header -->
+    <!-- Brand -->
     <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass shadow-lg mb-4">
-        <span class="font-display font-bold text-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 bg-clip-text text-transparent">K</span>
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-md shadow-violet-200/50 mb-4">
+        <span class="font-display font-bold text-2xl text-violet-600">K</span>
       </div>
-      <h1 class="font-display text-2xl font-bold text-slate-800">KLY University Portal</h1>
-      <p class="text-sm text-slate-500 mt-1">Kashmir Lingayat University</p>
+      <h1 class="font-display text-2xl font-bold text-slate-800">Kalyani University</h1>
+      <p class="text-sm text-slate-500 mt-1">Student Portal</p>
     </div>
 
-    <!-- Login card -->
-    <div class="glass rounded-3xl shadow-2xl shadow-violet-200/40 p-8">
+    <!-- Login card (solid white, soft shadow — no glass) -->
+    <div class="bg-white rounded-2xl shadow-xl shadow-violet-200/40 p-8 border border-violet-100/60">
 
       <h2 class="font-display text-lg font-semibold text-slate-800 mb-1">Welcome back</h2>
       <p class="text-xs text-slate-500 mb-6">Sign in to access your account.</p>
 
       <!-- Error banner -->
-      <div id="errorBanner" class="hidden mb-4 bg-rose-50/80 border border-rose-200 text-rose-700 text-sm rounded-xl px-4 py-3 backdrop-blur-sm">
-        <span id="errorText">Invalid credentials. Please try again.</span>
+      <div id="errorBanner" class="hidden mb-4 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl px-4 py-3">
+        <span id="errorText">Invalid credentials.</span>
       </div>
 
       <form action="/login" method="POST" class="space-y-5">
 
-        <!-- Student ID -->
         <div>
           <label for="studentId" class="block text-sm font-medium text-slate-700 mb-1.5">Student ID</label>
-          <input
-            type="text" id="studentId" name="studentId" autocomplete="username"
+          <input type="text" id="studentId" name="studentId" autocomplete="username"
             placeholder="Enter your student ID" required
-            class="w-full px-4 py-3 rounded-xl bg-white/70 border border-white/80 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 outline-none transition placeholder:text-slate-400"
-          />
+            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none transition placeholder:text-slate-400" />
         </div>
 
-        <!-- Password (with show/hide eye toggle) -->
         <div>
           <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
           <div class="relative">
-            <input
-              type="password" id="password" name="password" autocomplete="current-password"
+            <input type="password" id="password" name="password" autocomplete="current-password"
               placeholder="Enter your password" required
-              class="w-full px-4 py-3 pr-12 rounded-xl bg-white/70 border border-white/80 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 outline-none transition placeholder:text-slate-400"
-            />
+              class="w-full px-4 py-3 pr-12 rounded-xl bg-slate-50 border border-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none transition placeholder:text-slate-400" />
             <button type="button" id="togglePassword"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-violet-500 transition"
               title="Show/Hide password">
-              <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
-              <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>
-              </svg>
+              <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
             </button>
           </div>
         </div>
 
-        <!-- Remember + forgot -->
         <div class="flex items-center justify-between text-sm">
           <label class="flex items-center text-slate-600 cursor-pointer">
             <input type="checkbox" name="remember" class="mr-2 rounded border-slate-300 text-violet-500 focus:ring-violet-300" />
@@ -103,31 +82,22 @@
           <a href="#" class="text-violet-600 hover:text-violet-700 hover:underline font-medium">Forgot password?</a>
         </div>
 
-        <!-- Submit -->
-        <button type="submit" class="btn-primary w-full text-white font-semibold py-3 rounded-xl transition">
+        <button type="submit" class="btn-primary w-full text-white font-semibold py-3 rounded-xl">
           Sign In
         </button>
       </form>
 
-      <p class="text-center text-xs text-slate-500 mt-6 pt-5 border-t border-white/40">
-        Having trouble signing in? Contact the
-        <a href="#" class="text-violet-600 hover:underline">IT Helpdesk</a>.
+      <p class="text-center text-xs text-slate-500 mt-6 pt-5 border-t border-slate-100">
+        Having trouble? Contact the <a href="#" class="text-violet-600 hover:underline">IT Helpdesk</a>.
       </p>
     </div>
 
-    <p class="text-center text-xs text-slate-400 mt-6">
-      &copy; 2025 KLY University. All rights reserved.
-    </p>
-
-    <!-- Cyber range link (small, bottom) -->
-    <p class="text-center text-[11px] mt-3">
-      <a href="/test" class="text-slate-400 hover:text-violet-500 transition">&rsaquo; Cyber Range</a>
-    </p>
+    <p class="text-center text-xs text-slate-400 mt-6">&copy; 2025 Kalyani University. All rights reserved.</p>
+    <p class="text-center text-[11px] mt-3"><a href="/test" class="text-slate-400 hover:text-violet-500 transition">&rsaquo; Cyber Range</a></p>
   </div>
 
   <script>
     (function () {
-      // Error banner
       const err = new URLSearchParams(window.location.search).get('error');
       const banner = document.getElementById('errorBanner');
       const text = document.getElementById('errorText');
@@ -139,20 +109,15 @@
         else                        text.textContent = 'Login failed. Please try again.';
       }
 
-      // Eye toggle
       const passInput = document.getElementById('password');
       const toggleBtn = document.getElementById('togglePassword');
-      const eyeOpen   = document.getElementById('eyeOpen');
+      const eyeOpen = document.getElementById('eyeOpen');
       const eyeClosed = document.getElementById('eyeClosed');
       toggleBtn.addEventListener('click', () => {
         if (passInput.type === 'password') {
-          passInput.type = 'text';
-          eyeOpen.style.display = 'none';
-          eyeClosed.style.display = 'block';
+          passInput.type = 'text'; eyeOpen.style.display = 'none'; eyeClosed.style.display = 'block';
         } else {
-          passInput.type = 'password';
-          eyeOpen.style.display = 'block';
-          eyeClosed.style.display = 'none';
+          passInput.type = 'password'; eyeOpen.style.display = 'block'; eyeClosed.style.display = 'none';
         }
       });
     })();
