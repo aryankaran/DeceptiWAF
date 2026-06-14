@@ -54,10 +54,10 @@
   },
   "sucheta": {
     "role": "student",
-    "name": "Sucheta Nair",
+    "name": "Sucheta Das",
     "username": "sucheta",
     "branch": "B.Tech Computer Science",
-    "semester": 5,
+    "semester": 6,
     "section": "A",
     "email": "sucheta@klyuniv.ac.in",
     "cgpa": 9.12,
@@ -105,7 +105,7 @@
   },
   "isha": {
     "role": "student",
-    "name": "Isha Gupta",
+    "name": "Isha Sinha",
     "username": "isha",
     "branch": "B.Tech Information Technology",
     "semester": 5,

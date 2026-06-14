@@ -3,123 +3,165 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DeceptiWAF — SOC Dashboard</title>
+  <title>DeceptiWAF — SOC Command Center</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: 'Inter', system-ui, sans-serif; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', system-ui, sans-serif; background-color: #020617; }
     h1, h2, h3, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
     .mono { font-family: 'JetBrains Mono', monospace; }
-    .pastel-bg {
-      background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, #ede9fe 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 100% 100%, #fce7f3 0%, transparent 50%),
-        radial-gradient(ellipse 60% 50% at 0% 80%, #dbeafe 0%, transparent 50%),
-        #faf5ff;
-    }
-    .feed-panel { background: #1e1932; }
-    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .feed-panel { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(51, 65, 85, 0.6); }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
     .pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
-    @keyframes flash-red { 0% { background-color: rgba(244, 63, 94, 0.20); } 100% { background-color: transparent; } }
-    @keyframes flash-fuchsia { 0% { background-color: rgba(217, 70, 239, 0.20); } 100% { background-color: transparent; } }
-    .flash-red { animation: flash-red 0.6s ease-out; }
-    .flash-fuchsia { animation: flash-fuchsia 0.6s ease-out; }
+    @keyframes flash-red { 0% { background-color: rgba(244, 63, 94, 0.25); } 100% { background-color: transparent; } }
+    @keyframes flash-fuchsia { 0% { background-color: rgba(217, 70, 239, 0.25); } 100% { background-color: transparent; } }
+    @keyframes flash-amber { 0% { background-color: rgba(245, 158, 11, 0.25); } 100% { background-color: transparent; } }
+    .flash-red { animation: flash-red 0.8s ease-out; }
+    .flash-fuchsia { animation: flash-fuchsia 0.8s ease-out; }
+    .flash-amber { animation: flash-amber 0.8s ease-out; }
     .feed-scroll::-webkit-scrollbar { width: 6px; }
-    .feed-scroll::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 3px; }
+    .feed-scroll::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 3px; }
     .feed-scroll::-webkit-scrollbar-track { background: transparent; }
+    .tab-btn.active { background-color: rgba(99, 102, 241, 0.2); color: #a5b4fc; border-color: #6366f1; }
   </style>
 </head>
-<body class="pastel-bg min-h-screen">
+<body class="min-h-screen text-slate-100 selection:bg-indigo-500 selection:text-white">
 
-  <!-- Top bar -->
-  <header class="bg-white/70 backdrop-blur-sm border-b border-violet-100/60 sticky top-0 z-20">
+  <!-- Header Bar -->
+  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-md">
     <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-2.5 h-2.5 rounded-full bg-rose-500 pulse-dot"></div>
+        <div class="w-3 h-3 rounded-full bg-emerald-500 pulse-dot shadow-lg shadow-emerald-500/50"></div>
         <div>
-          <p class="font-display font-bold tracking-wide text-slate-800 text-sm">DECEPTIWAF <span class="text-violet-500">SOC</span></p>
-          <p class="text-[10px] text-slate-500">command center</p>
+          <p class="font-display font-extrabold tracking-wider text-slate-100 text-sm flex items-center gap-2">
+            DECEPTIWAF <span class="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 text-xs border border-indigo-500/30">SOC COMMAND CENTER</span>
+          </p>
+          <p class="text-[10px] text-slate-400 mono">real-time threat intelligence & deception dashboard</p>
         </div>
       </div>
+
       <div class="flex items-center gap-4 mono text-xs">
-        <span class="text-slate-500">SESSION: <span id="clock" class="text-violet-600 font-medium">--:--:--</span></span>
-        <span class="text-slate-300">|</span>
-        <span class="text-slate-500">OPERATOR: <span class="text-violet-600 font-medium">admin</span></span>
-        <button id="refreshBtn" class="bg-violet-100 hover:bg-violet-200 text-violet-700 px-2.5 py-1 rounded-lg transition">Refresh</button>
+        <span class="text-slate-400 hidden sm:inline">SYS TIME: <span id="clock" class="text-indigo-400 font-bold">--:--:--</span></span>
+        <span class="text-slate-700 hidden sm:inline">|</span>
+        <span class="text-slate-400">OPERATOR: <span class="text-emerald-400 font-bold">admin</span></span>
+        <button id="refreshBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+          Refresh
+        </button>
         <form action="/logout" method="POST" id="logoutForm">
-          <button type="submit" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2.5 py-1 rounded-lg transition">Disconnect</button>
+          <button type="submit" class="bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800/60 px-3 py-1.5 rounded-lg transition font-medium">
+            Disconnect
+          </button>
         </form>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-6 py-6">
+  <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
 
-    <!-- KPI strip -->
-    <section class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-      <div class="bg-white rounded-2xl p-4 border border-violet-100/50 shadow-sm"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Events / min</p><p id="kpiEpm" class="font-display text-2xl font-bold text-violet-600 mt-1">0.0</p></div>
-      <div class="bg-white rounded-2xl p-4 border border-violet-100/50 shadow-sm"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Blocked</p><p id="kpiBlocked" class="font-display text-2xl font-bold text-rose-500 mt-1">0</p></div>
-      <div class="bg-white rounded-2xl p-4 border border-violet-100/50 shadow-sm"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Trapped</p><p id="kpiTrapped" class="font-display text-2xl font-bold text-fuchsia-500 mt-1">0</p></div>
-      <div class="bg-white rounded-2xl p-4 border border-violet-100/50 shadow-sm"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Unique IPs</p><p id="kpiIps" class="font-display text-2xl font-bold text-amber-500 mt-1">0</p></div>
-      <div class="bg-white rounded-2xl p-4 border border-violet-100/50 shadow-sm"><p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Geo lookups</p><p id="kpiGeo" class="font-display text-2xl font-bold text-sky-500 mt-1">0</p></div>
+    <!-- KPI Strip -->
+    <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 shadow-xl">
+        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mono">Events / min</p>
+        <p id="kpiEpm" class="font-display text-3xl font-extrabold text-indigo-400 mt-1">0.0</p>
+      </div>
+      <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 shadow-xl">
+        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mono">WAF Blocked</p>
+        <p id="kpiBlocked" class="font-display text-3xl font-extrabold text-rose-400 mt-1">0</p>
+      </div>
+      <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 shadow-xl">
+        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mono">Honeypot Trapped</p>
+        <p id="kpiTrapped" class="font-display text-3xl font-extrabold text-fuchsia-400 mt-1">0</p>
+      </div>
+      <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 shadow-xl">
+        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mono">Rate Limited (429)</p>
+        <p id="kpiRateLimited" class="font-display text-3xl font-extrabold text-amber-400 mt-1">0</p>
+      </div>
+      <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 shadow-xl">
+        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mono">Unique Attackers</p>
+        <p id="kpiIps" class="font-display text-3xl font-extrabold text-cyan-400 mt-1">0</p>
+      </div>
     </section>
 
+    <!-- Main Grid: Live Feed + Side Catalog -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-      <!-- Live feed (dark panel for contrast) -->
-      <section class="lg:col-span-2 feed-panel rounded-2xl shadow-xl shadow-violet-300/20 overflow-hidden">
-        <div class="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
-            <h2 class="mono text-sm text-violet-300 tracking-widest">LIVE ATTACK FEED</h2>
+      <!-- Live Attack Feed -->
+      <section class="lg:col-span-2 feed-panel rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div class="px-5 py-3.5 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot"></span>
+            <h2 class="mono text-xs font-bold text-indigo-300 tracking-widest uppercase">LIVE ATTACK TELEMETRY FEED</h2>
           </div>
-          <div class="flex items-center gap-3">
-            <label class="mono text-[10px] text-slate-400 flex items-center gap-1.5"><input id="autoScroll" type="checkbox" checked class="rounded bg-white/10 border-white/20 text-violet-500" /> autoscroll</label>
-            <button id="clearFeed" class="mono text-[10px] text-rose-300 hover:text-rose-200 border border-rose-500/30 hover:border-rose-500/50 px-2 py-0.5 rounded transition">CLEAR</button>
+
+          <!-- Feed Controls & Filter Tabs -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="setFilter('all')" id="tab-all" class="tab-btn active mono text-[10px] px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:text-white transition">ALL</button>
+            <button onclick="setFilter('waf')" id="tab-waf" class="tab-btn mono text-[10px] px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:text-white transition">WAF BLOCKS</button>
+            <button onclick="setFilter('honeypot')" id="tab-honeypot" class="tab-btn mono text-[10px] px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:text-white transition">HONEYPOT</button>
+            <button onclick="setFilter('ratelimit')" id="tab-ratelimit" class="tab-btn mono text-[10px] px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:text-white transition">RATE LIMITS</button>
+            
+            <label class="mono text-[10px] text-slate-400 flex items-center gap-1.5 ml-2">
+              <input id="autoScroll" type="checkbox" checked class="rounded bg-slate-800 border-slate-700 text-indigo-500" /> autoscroll
+            </label>
+            <button id="clearFeed" class="mono text-[10px] text-rose-400 hover:text-rose-300 border border-rose-900/50 px-2.5 py-1 rounded-lg transition ml-1">CLEAR</button>
           </div>
         </div>
-        <div id="feed" class="feed-scroll p-4 mono text-xs space-y-1 min-h-[420px] max-h-[60vh] overflow-y-auto text-slate-200">
-          <div class="text-slate-500">[boot] initializing...</div>
+
+        <!-- Terminal Feed Container -->
+        <div id="feed" class="feed-scroll p-4 mono text-xs space-y-1.5 min-h-[480px] max-h-[65vh] overflow-y-auto text-slate-200">
+          <div class="text-slate-500">[boot] Initializing DeceptiWAF telemetry stream...</div>
         </div>
       </section>
 
-      <!-- Side panels -->
+      <!-- Side Panels -->
       <aside class="space-y-6">
-        <div class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
-          <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="font-display text-sm font-semibold text-amber-600 tracking-wide">TOP ATTACKERS</h3>
-            <span id="topCount" class="mono text-[10px] text-slate-400">0</span>
+
+        <!-- Top Attackers Catalog -->
+        <div class="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-display text-xs font-bold text-amber-400 tracking-wider uppercase">TOP ATTACKERS CATALOG</h3>
+            <span id="topCount" class="mono text-[10px] text-slate-500">0 total</span>
           </div>
-          <div id="topAttackers" class="text-xs max-h-72 overflow-y-auto"><div class="p-4 text-slate-400">No attackers yet.</div></div>
+          <div id="topAttackers" class="text-xs max-h-72 overflow-y-auto divide-y divide-slate-800/60">
+            <div class="p-4 text-slate-500 mono">No attacker telemetry recorded.</div>
+          </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
-          <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="font-display text-sm font-semibold text-fuchsia-600 tracking-wide">TRAPPED</h3>
+        <!-- Active Honeypot Trapped IPs -->
+        <div class="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-display text-xs font-bold text-fuchsia-400 tracking-wider uppercase">TRAPPED ATTACKERS</h3>
             <div class="flex items-center gap-2">
-              <span id="trappedBadge" class="mono text-[10px] text-slate-400">0 active</span>
-              <button id="resetHoneypot" class="mono text-[10px] text-rose-500 hover:text-rose-400 border border-rose-300 hover:border-rose-400 px-2 py-0.5 rounded transition">RESET</button>
+              <span id="trappedBadge" class="mono text-[10px] text-slate-500">0 active</span>
+              <button id="resetHoneypot" class="mono text-[10px] bg-rose-950 text-rose-300 hover:bg-rose-900 border border-rose-800/80 px-2 py-0.5 rounded transition">
+                RESET ALL
+              </button>
             </div>
           </div>
-          <div id="trappedPanel" class="text-xs max-h-60 overflow-y-auto"><div class="p-4 text-slate-400">No attackers trapped.</div></div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-violet-100/50 overflow-hidden">
-          <div class="px-4 py-3 border-b border-slate-100"><h3 class="font-display text-sm font-semibold text-emerald-600 tracking-wide">SYSTEM</h3></div>
-          <div class="p-4 text-xs space-y-1.5">
-            <div class="flex justify-between"><span class="text-slate-500">WAF engine</span><span class="text-emerald-600 font-medium">ONLINE</span></div>
-            <div class="flex justify-between"><span class="text-slate-500">CredShield</span><span class="text-emerald-600 font-medium">ONLINE</span></div>
-            <div class="flex justify-between"><span class="text-slate-500">Socket.io</span><span id="sockStatus" class="text-amber-500">connecting...</span></div>
-            <div class="flex justify-between"><span class="text-slate-500">IP geo</span><span class="text-emerald-600 font-medium">ONLINE</span></div>
-            <div class="flex justify-between"><span class="text-slate-500">Event history</span><span id="histStatus" class="text-amber-500">loading...</span></div>
+          <div id="trappedPanel" class="text-xs max-h-60 overflow-y-auto divide-y divide-slate-800/60">
+            <div class="p-4 text-slate-500 mono">No active honeypot traps.</div>
           </div>
         </div>
+
+        <!-- System Architecture Health -->
+        <div class="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl p-4 text-xs space-y-2">
+          <h3 class="font-display text-xs font-bold text-emerald-400 tracking-wider uppercase mb-3">SYSTEM HEALTH</h3>
+          <div class="flex justify-between text-slate-400"><span class="mono">WAF Engine (Regex + AST)</span><span class="text-emerald-400 font-bold">ONLINE</span></div>
+          <div class="flex justify-between text-slate-400"><span class="mono">CredShield Honeypot</span><span class="text-emerald-400 font-bold">ONLINE</span></div>
+          <div class="flex justify-between text-slate-400"><span class="mono">Rate Limiter (Sliding)</span><span class="text-emerald-400 font-bold">ONLINE</span></div>
+          <div class="flex justify-between text-slate-400"><span class="mono">SQLite Persistence</span><span class="text-emerald-400 font-bold">ACTIVE</span></div>
+          <div class="flex justify-between text-slate-400"><span class="mono">Socket.io Telemetry</span><span id="sockStatus" class="text-amber-400 font-bold">connecting...</span></div>
+        </div>
       </aside>
+
     </div>
 
-    <p class="mono text-[10px] text-slate-400 text-center mt-6">deceptiWAF soc · ip geolocation by ip-api.com · events cached in-memory (last 500)</p>
+    <p class="mono text-[10px] text-slate-500 text-center">
+      DeceptiWAF v1.4 SOC &middot; SQLite Persistent Database &middot; IP Geolocation by ip-api.com
+    </p>
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -147,7 +189,22 @@
       } catch (e) {}
     })();
 
-    let blockedCount = 0, trappedCount = 0, geoCacheSize = 0;
+    let currentFilter = 'all';
+    function setFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const activeTab = document.getElementById('tab-' + f);
+      if (activeTab) activeTab.classList.add('active');
+
+      const feed = document.getElementById('feed');
+      feed.querySelectorAll('[data-kind]').forEach(el => {
+        const kind = el.dataset.kind;
+        if (f === 'all' || kind === f) el.style.display = 'block';
+        else el.style.display = 'none';
+      });
+    }
+
+    let blockedCount = 0, trappedCount = 0, rateLimitedCount = 0;
     let uniqueIps = new Set(), eventTimes = [];
     let trappedAttackers = new Map(), attackers = new Map();
     const feed = document.getElementById('feed');
@@ -159,20 +216,22 @@
     function updateKpis() {
       document.getElementById('kpiBlocked').textContent = blockedCount;
       document.getElementById('kpiTrapped').textContent = trappedCount;
+      document.getElementById('kpiRateLimited').textContent = rateLimitedCount;
       document.getElementById('kpiIps').textContent = uniqueIps.size;
-      document.getElementById('kpiGeo').textContent = geoCacheSize;
       const cutoff = Date.now() - 60000;
       eventTimes = eventTimes.filter((t) => t > cutoff);
       document.getElementById('kpiEpm').textContent = eventTimes.length.toFixed(1);
     }
 
-    function appendFeed(html, flash) {
+    function appendFeed(html, flash, kind = 'waf') {
       const div = document.createElement('div');
+      div.dataset.kind = kind;
       div.innerHTML = html;
       if (flash) div.className = flash + ' px-2 py-1 rounded';
+      if (currentFilter !== 'all' && currentFilter !== kind) div.style.display = 'none';
       feed.appendChild(div);
       if (document.getElementById('autoScroll').checked) feed.scrollTop = feed.scrollHeight;
-      while (feed.children.length > 200) feed.removeChild(feed.firstChild);
+      while (feed.children.length > 300) feed.removeChild(feed.firstChild);
     }
 
     function renderWafEvent(evt, isHistory) {
@@ -180,11 +239,19 @@
       uniqueIps.add(evt.ip);
       if (!isHistory && evt.type === 'block') blockedCount++;
       const color = evt.type === 'block' ? 'text-rose-400' : 'text-amber-400';
-      const tag = evt.type === 'block' ? '[BLOCK] ' : '[FLAG]  ';
+      const tag = evt.type === 'block' ? '[WAF BLOCK] ' : '[FLAG]      ';
       const flash = evt.type === 'block' ? 'flash-red' : '';
       const geoStr = fmtGeo(evt.geo);
-      appendFeed('<div class="' + color + '"><span class="text-slate-500">' + esc(fmtTime(evt.timestamp)) + '</span> ' + tag + '<span class="text-fuchsia-300">' + esc(evt.attackType) + '</span> score=<span class="text-rose-300">' + esc(evt.score) + '</span>/' + esc(evt.threshold) + ' ip=<span class="text-amber-300">' + esc(evt.ip) + '</span> ' + (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') + esc(evt.method) + ' ' + esc(evt.path) + '</div>', flash);
-      if (evt.type === 'block' && evt.hits) { for (const h of evt.hits) { appendFeed('<div class="text-slate-500 pl-6">  - ' + esc(h.family) + '/' + esc(h.id) + ' (' + esc(h.score) + 'pt) <span class="text-slate-600">[' + esc(h.source) + ']</span> <span class="text-slate-700">' + esc(h.label) + '</span></div>'); } }
+      appendFeed('<div class="' + color + '"><span class="text-slate-500">' + esc(fmtTime(evt.timestamp)) + '</span> ' + tag + '<span class="text-indigo-300 font-bold">' + esc(evt.attackType || 'WAF Attack') + '</span> score=<span class="text-rose-300 font-bold">' + esc(evt.score) + '</span>/' + esc(evt.threshold) + ' ip=<span class="text-amber-300">' + esc(evt.ip) + '</span> ' + (geoStr ? '<span class="text-cyan-400">' + esc(geoStr) + '</span> ' : '') + esc(evt.method) + ' ' + esc(evt.path) + '</div>', flash, 'waf');
+      if (evt.hits) { for (const h of evt.hits) { appendFeed('<div class="text-slate-500 pl-6">  - ' + esc(h.family) + '/' + esc(h.id) + ' (' + esc(h.score) + 'pt) <span class="text-slate-600">[' + esc(h.source) + ']</span> <span class="text-slate-400">' + esc(h.label) + '</span></div>', '', 'waf'); } }
+      updateKpis(); updateAttackerCatalog(evt, isHistory);
+    }
+
+    function renderRateLimitEvent(evt, isHistory) {
+      if (!isHistory) { eventTimes.push(Date.now()); rateLimitedCount++; }
+      uniqueIps.add(evt.ip);
+      const geoStr = fmtGeo(evt.geo);
+      appendFeed('<div class="text-amber-400 font-bold"><span class="text-slate-500">' + esc(fmtTime(evt.timestamp)) + '</span> [RATE LIMIT 429] ip=<span class="text-amber-300">' + esc(evt.ip) + '</span> ' + (geoStr ? '<span class="text-cyan-400">' + esc(geoStr) + '</span> ' : '') + 'reason=<span class="text-fuchsia-300">' + esc(evt.reason) + '</span> (' + esc(evt.count) + '/' + esc(evt.limit) + ' reqs) ' + esc(evt.method) + ' ' + esc(evt.path) + '</div>', 'flash-amber', 'ratelimit');
       updateKpis(); updateAttackerCatalog(evt, isHistory);
     }
 
@@ -193,14 +260,13 @@
       uniqueIps.add(evt.ip);
       const t = fmtTime(evt.timestamp); const geoStr = fmtGeo(evt.geo);
       if (evt.type === 'failed') {
-        appendFeed('<div class="text-amber-400"><span class="text-slate-500">' + esc(t) + '</span> [BRUTE] ip=<span class="text-amber-300">' + esc(evt.ip) + '</span> ' + (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') + 'user=<span class="text-amber-300">' + esc(evt.username) + '</span> fails=<span class="text-rose-300">' + esc(evt.attempt) + '</span>/' + esc(evt.threshold) + '</div>');
+        appendFeed('<div class="text-amber-400"><span class="text-slate-500">' + esc(t) + '</span> [BRUTE FAIL] ip=<span class="text-amber-300">' + esc(evt.ip) + '</span> ' + (geoStr ? '<span class="text-cyan-400">' + esc(geoStr) + '</span> ' : '') + 'user=<span class="text-amber-300">' + esc(evt.username) + '</span> fails=<span class="text-rose-300">' + esc(evt.attempt) + '</span>/' + esc(evt.threshold) + '</div>', '', 'honeypot');
       } else if (evt.type === 'activated') {
-        appendFeed('<div class="text-fuchsia-400 font-bold"><span class="text-slate-500">' + esc(t) + '</span> [HONEYPOT ARMED] ip=<span class="text-fuchsia-300">' + esc(evt.ip) + '</span> ' + (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') + 'after ' + esc(evt.attempt) + ' fails — next login trapped</div>', 'flash-fuchsia');
+        appendFeed('<div class="text-fuchsia-400 font-bold"><span class="text-slate-500">' + esc(t) + '</span> [HONEYPOT ARMED] ip=<span class="text-fuchsia-300">' + esc(evt.ip) + '</span> ' + (geoStr ? '<span class="text-cyan-400">' + esc(geoStr) + '</span> ' : '') + 'after ' + esc(evt.attempt) + ' fails — next attempt traps</div>', 'flash-fuchsia', 'honeypot');
       } else if (evt.type === 'trapped') {
-        if (!isHistory) { trappedCount++; trappedAttackers.set(evt.ip, { ip: evt.ip, username: evt.username, attempt: evt.attempt, since: evt.timestamp, geo: evt.geo, fakeIdentity: evt.fakeIdentity, fingerprint: evt.fingerprint }); }
+        if (!isHistory) { trappedCount++; trappedAttackers.set(evt.ip, { ip: evt.ip, username: evt.username, attempt: evt.attempt, since: evt.timestamp, geo: evt.geo, fakeIdentity: evt.fakeIdentity }); }
         const fakeName = evt.fakeIdentity ? evt.fakeIdentity.name : '?'; const fakeBranch = evt.fakeIdentity ? evt.fakeIdentity.branch : '';
-        appendFeed('<div class="text-fuchsia-300 font-bold"><span class="text-slate-500">' + esc(t) + '</span> [HONEYPOT TRAP] ip=<span class="text-fuchsia-300">' + esc(evt.ip) + '</span> ' + (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') + 'claimed=<span class="text-amber-300">' + esc(evt.username) + '</span> served_fake=<span class="text-emerald-400">' + esc(fakeName) + '</span> <span class="text-slate-500">(' + esc(fakeBranch) + ')</span> — <span class="text-fuchsia-400">-> /dashboard</span></div>', 'flash-fuchsia');
-        if (evt.fingerprint && evt.fingerprint.userAgent) { appendFeed('<div class="text-slate-600 pl-6">  fp: ' + esc(evt.fingerprint.userAgent.slice(0, 80)) + (evt.fingerprint.secChUaPlatform ? ' | platform=' + esc(evt.fingerprint.secChUaPlatform) : '') + (evt.fingerprint.acceptLanguage ? ' | lang=' + esc(evt.fingerprint.acceptLanguage.split(',')[0]) : '') + '</div>'); }
+        appendFeed('<div class="text-fuchsia-300 font-bold"><span class="text-slate-500">' + esc(t) + '</span> [HONEYPOT TRAP] ip=<span class="text-fuchsia-300">' + esc(evt.ip) + '</span> ' + (geoStr ? '<span class="text-cyan-400">' + esc(geoStr) + '</span> ' : '') + 'claimed=<span class="text-amber-300">' + esc(evt.username) + '</span> served_fake=<span class="text-emerald-400">' + esc(fakeName) + '</span> <span class="text-slate-400">(' + esc(fakeBranch) + ')</span> — <span class="text-fuchsia-400">&rarr; /dashboard</span></div>', 'flash-fuchsia', 'honeypot');
         renderTrappedAttackers();
       }
       updateKpis(); updateAttackerCatalog(evt, isHistory);
@@ -209,9 +275,11 @@
     function updateAttackerCatalog(evt, isHistory) {
       if (!evt.ip || isHistory) return;
       let a = attackers.get(evt.ip);
-      if (!a) { a = { ip: evt.ip, geo: evt.geo || null, total: 0, blocked: 0, flagged: 0, trapped: 0, failed: 0, lastSeen: evt.timestamp }; attackers.set(evt.ip, a); }
+      if (!a) { a = { ip: evt.ip, geo: evt.geo || null, total: 0, blocked: 0, trapped: 0, ratelimited: 0, lastSeen: evt.timestamp }; attackers.set(evt.ip, a); }
       a.total++; a.lastSeen = evt.timestamp; if (evt.geo) a.geo = evt.geo;
-      if (evt.kind === 'waf' && evt.type === 'block') a.blocked++; else if (evt.kind === 'waf' && evt.type === 'flag') a.flagged++; else if (evt.kind === 'honeypot' && evt.type === 'trapped') a.trapped++; else if (evt.kind === 'honeypot' && evt.type === 'failed') a.failed++;
+      if (evt.kind === 'waf' && evt.type === 'block') a.blocked++;
+      else if (evt.kind === 'honeypot' && evt.type === 'trapped') a.trapped++;
+      else if (evt.kind === 'ratelimit') a.ratelimited++;
       renderTopAttackers();
     }
 
@@ -219,20 +287,20 @@
       const panel = document.getElementById('topAttackers'); const count = document.getElementById('topCount');
       const list = Array.from(attackers.values()).sort((a, b) => b.total - a.total).slice(0, 10);
       count.textContent = attackers.size + ' total';
-      if (list.length === 0) { panel.innerHTML = '<div class="p-4 text-slate-400">No attackers yet.</div>'; return; }
+      if (list.length === 0) { panel.innerHTML = '<div class="p-4 text-slate-500 mono">No attacker telemetry recorded.</div>'; return; }
       let html = '';
       for (const a of list) { const geoStr = fmtGeo(a.geo); const flag = a.geo ? flagEmoji(a.geo.countryCode) : '';
-        html += '<div class="px-4 py-2 border-b border-slate-100 last:border-0"><div class="flex justify-between items-center"><span class="text-amber-600 font-medium">' + flag + esc(a.ip) + '</span><span class="text-slate-400 text-[10px]">' + esc(fmtTime(a.lastSeen)) + '</span></div><div class="text-slate-500 mt-0.5 text-[11px]"><span class="text-sky-600">' + esc(geoStr) + '</span> events=<span class="text-slate-700">' + a.total + '</span> blk=<span class="text-rose-500">' + a.blocked + '</span> trp=<span class="text-fuchsia-500">' + a.trapped + '</span></div></div>'; }
+        html += '<div class="px-4 py-2.5 border-b border-slate-800/60 last:border-0"><div class="flex justify-between items-center"><span class="text-amber-400 font-bold mono text-xs">' + flag + esc(a.ip) + '</span><span class="text-slate-500 text-[10px] mono">' + esc(fmtTime(a.lastSeen)) + '</span></div><div class="text-slate-400 mt-0.5 text-[11px] mono"><span class="text-cyan-400">' + esc(geoStr) + '</span> total=<span class="text-slate-200 font-bold">' + a.total + '</span> blk=<span class="text-rose-400 font-bold">' + a.blocked + '</span> trp=<span class="text-fuchsia-400 font-bold">' + a.trapped + '</span></div></div>'; }
       panel.innerHTML = html;
     }
 
     function renderTrappedAttackers() {
       const panel = document.getElementById('trappedPanel'); const badge = document.getElementById('trappedBadge');
       if (badge) badge.textContent = trappedAttackers.size + ' active';
-      if (trappedAttackers.size === 0) { panel.innerHTML = '<div class="p-4 text-slate-400">No attackers trapped.</div>'; return; }
+      if (trappedAttackers.size === 0) { panel.innerHTML = '<div class="p-4 text-slate-500 mono">No active honeypot traps.</div>'; return; }
       let html = '';
       for (const a of trappedAttackers.values()) { const since = new Date(a.since).toLocaleTimeString('en-GB'); const geoStr = a.geo ? fmtGeo(a.geo) : ''; const fakeName = a.fakeIdentity ? a.fakeIdentity.name : '?';
-        html += '<div class="px-4 py-2 border-b border-slate-100 last:border-0"><div class="flex justify-between"><span class="text-fuchsia-600 font-medium">' + esc(a.ip) + '</span><span class="text-slate-400 text-[10px]">' + esc(since) + '</span></div><div class="text-slate-500 mt-0.5 text-[11px]">' + (geoStr ? '<span class="text-sky-600">' + esc(geoStr) + '</span> ' : '') + 'tried=<span class="text-amber-600">' + esc(a.username) + '</span> saw=<span class="text-emerald-600">' + esc(fakeName) + '</span> att=<span class="text-rose-500">' + esc(a.attempt) + '</span></div></div>'; }
+        html += '<div class="px-4 py-2.5 border-b border-slate-800/60 last:border-0"><div class="flex justify-between"><span class="text-fuchsia-400 font-bold mono text-xs">' + esc(a.ip) + '</span><span class="text-slate-500 text-[10px] mono">' + esc(since) + '</span></div><div class="text-slate-400 mt-0.5 text-[11px] mono">' + (geoStr ? '<span class="text-cyan-400">' + esc(geoStr) + '</span> ' : '') + 'user=<span class="text-amber-300">' + esc(a.username) + '</span> fake=<span class="text-emerald-400 font-semibold">' + esc(fakeName) + '</span></div></div>'; }
       panel.innerHTML = html;
     }
 
@@ -249,37 +317,48 @@
       const token = getToken(); if (!token) return;
       try {
         const r = await fetch('/api/events/recent?limit=50&token=' + encodeURIComponent(token), { credentials: 'same-origin' });
-        if (!r.ok) { document.getElementById('histStatus').textContent = 'failed'; return; }
+        if (!r.ok) return;
         const d = await r.json(); const events = (d.events || []).slice().reverse();
-        if (events.length === 0) { feed.innerHTML = '<div class="text-slate-500">[boot] No events yet.</div><div class="text-slate-600 mt-2">>> Open <a href="/test" class="text-violet-400 underline">/test</a> to fire attacks.</div>'; }
-        else { feed.innerHTML = '<div class="text-slate-500">[history] loaded ' + events.length + ' events:</div>'; for (const e of events) { if (e.kind === 'waf') renderWafEvent(e, true); else if (e.kind === 'honeypot') renderHoneypotEvent(e, true); } appendFeed('<div class="text-emerald-400 mt-2">--- end of history, listening live ---</div>'); }
-        document.getElementById('histStatus').textContent = 'loaded (' + events.length + ')'; document.getElementById('histStatus').className = 'text-emerald-600 font-medium';
+        feed.innerHTML = '<div class="text-slate-500">[history] Loaded ' + events.length + ' events from SQLite database:</div>';
+        for (const e of events) {
+          if (e.kind === 'waf') renderWafEvent(e, true);
+          else if (e.kind === 'honeypot') renderHoneypotEvent(e, true);
+          else if (e.kind === 'ratelimit') renderRateLimitEvent(e, true);
+        }
+        appendFeed('<div class="text-emerald-400 mt-2 font-bold">[socket] Connected & listening live telemetry stream...</div>', '', 'waf');
+        
         const ar = await fetch('/api/attackers/top?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
-        if (ar.ok) { const ad = await ar.json(); for (const a of (ad.attackers || [])) attackers.set(a.ip, { ip: a.ip, geo: a.geo, total: a.totalEvents, blocked: a.blockedCount, flagged: a.flaggedCount, trapped: a.trappedCount, failed: a.failedCount, lastSeen: a.lastSeen }); renderTopAttackers(); }
+        if (ar.ok) { const ad = await ar.json(); for (const a of (ad.attackers || [])) attackers.set(a.ip, { ip: a.ip, geo: a.geo, total: a.totalEvents, blocked: a.blockedCount, trapped: a.trappedCount, ratelimited: a.ratelimitCount || 0, lastSeen: a.lastSeen }); renderTopAttackers(); }
+        
         const sr = await fetch('/api/stats?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
-        if (sr.ok) { const sd = await sr.json(); blockedCount = sd.blocked || 0; trappedCount = sd.trapped || 0; geoCacheSize = sd.geo?.cacheSize || 0; for (const ip of attackers.keys()) uniqueIps.add(ip); updateKpis(); }
+        if (sr.ok) { const sd = await sr.json(); blockedCount = sd.blocked || 0; trappedCount = sd.trapped || 0; rateLimitedCount = sd.ratelimited || 0; for (const ip of attackers.keys()) uniqueIps.add(ip); updateKpis(); }
         await loadTrappedAttackers();
-      } catch (e) { document.getElementById('histStatus').textContent = 'error'; }
+      } catch (e) {}
     }
 
     const token = getToken();
     const socket = io({ auth: { token } });
-    socket.on('connect', () => { document.getElementById('sockStatus').textContent = 'ONLINE'; document.getElementById('sockStatus').className = 'text-emerald-600 font-medium'; appendFeed('<div class="text-emerald-400">[socket] connected</div>'); });
-    socket.on('disconnect', () => { document.getElementById('sockStatus').textContent = 'OFFLINE'; document.getElementById('sockStatus').className = 'text-rose-500'; appendFeed('<div class="text-rose-400">[socket] disconnected</div>'); });
-    socket.on('connect_error', (err) => { document.getElementById('sockStatus').textContent = 'AUTH FAIL'; appendFeed('<div class="text-rose-400">[socket] rejected: ' + esc(err.message) + '</div>'); });
-    socket.on('waf_event', (e) => renderWafEvent(e, false));
+    socket.on('connect', () => { document.getElementById('sockStatus').textContent = 'ONLINE'; document.getElementById('sockStatus').className = 'text-emerald-400 font-bold'; });
+    socket.on('disconnect', () => { document.getElementById('sockStatus').textContent = 'OFFLINE'; document.getElementById('sockStatus').className = 'text-rose-500 font-bold'; });
+    socket.on('waf_event', (e) => {
+      if (e.kind === 'ratelimit') renderRateLimitEvent(e, false);
+      else renderWafEvent(e, false);
+    });
     socket.on('honeypot_event', (e) => renderHoneypotEvent(e, false));
 
     document.getElementById('resetHoneypot').addEventListener('click', async () => {
-      if (!confirm('Disarm ALL honeypot-trapped IPs and clear history?')) return;
+      if (!confirm('Disarm ALL honeypot-trapped IPs and clear incident history?')) return;
       const token = getToken();
-      try { await fetch('/api/honeypot/reset?token=' + encodeURIComponent(token), { method: 'POST', credentials: 'same-origin' }); await fetch('/api/events/clear?token=' + encodeURIComponent(token), { method: 'POST', credentials: 'same-origin' });
-        trappedAttackers.clear(); trappedCount = 0; updateKpis(); renderTrappedAttackers(); appendFeed('<div class="text-emerald-400 font-bold">[ADMIN] Honeypot reset.</div>'); await loadTrappedAttackers();
-      } catch (e) { appendFeed('<div class="text-rose-400">[ADMIN] Reset error: ' + esc(e.message) + '</div>'); }
+      try {
+        await fetch('/api/honeypot/reset?token=' + encodeURIComponent(token), { method: 'POST', credentials: 'same-origin' });
+        await fetch('/api/events/clear?token=' + encodeURIComponent(token), { method: 'POST', credentials: 'same-origin' });
+        trappedAttackers.clear(); trappedCount = 0; blockedCount = 0; rateLimitedCount = 0; updateKpis(); renderTrappedAttackers();
+        appendFeed('<div class="text-emerald-400 font-bold">[ADMIN] Honeypot state disarmed & database history cleared.</div>', '', 'waf');
+      } catch (e) {}
     });
 
-    document.getElementById('clearFeed').addEventListener('click', () => { feed.innerHTML = '<div class="text-slate-500">[feed] cleared.</div>'; });
-    document.getElementById('refreshBtn').addEventListener('click', () => { feed.innerHTML = '<div class="text-slate-500">[boot] refreshing...</div>'; blockedCount = 0; trappedCount = 0; uniqueIps.clear(); eventTimes = []; attackers.clear(); trappedAttackers.clear(); updateKpis(); renderTopAttackers(); renderTrappedAttackers(); loadHistory(); });
+    document.getElementById('clearFeed').addEventListener('click', () => { feed.innerHTML = '<div class="text-slate-500">[feed] Cleared.</div>'; });
+    document.getElementById('refreshBtn').addEventListener('click', () => { feed.innerHTML = '<div class="text-slate-500">[boot] Refreshing telemetry...</div>'; blockedCount = 0; trappedCount = 0; rateLimitedCount = 0; uniqueIps.clear(); eventTimes = []; attackers.clear(); trappedAttackers.clear(); updateKpis(); renderTopAttackers(); renderTrappedAttackers(); loadHistory(); });
 
     function tick() { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); document.getElementById('clock').textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()); }
     tick(); setInterval(tick, 1000); setInterval(updateKpis, 5000); setInterval(loadTrappedAttackers, 10000); loadHistory();

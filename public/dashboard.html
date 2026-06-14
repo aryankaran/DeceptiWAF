@@ -7,99 +7,161 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
+    * { -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Inter', system-ui, sans-serif; }
     h1, h2, h3, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .pastel-bg {
+    .font-comic { font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .dashboard-bg {
       background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, #ede9fe 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 100% 100%, #fce7f3 0%, transparent 50%),
-        radial-gradient(ellipse 60% 50% at 0% 80%, #dbeafe 0%, transparent 50%),
-        #faf5ff;
+        radial-gradient(circle at 10% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 100%, rgba(217, 70, 239, 0.08) 0%, transparent 40%),
+        #f8fafc;
     }
-    .row-fade { transition: background-color 0.15s ease; }
     .row-hidden { display: none; }
   </style>
 </head>
-<body class="pastel-bg min-h-screen">
+<body class="dashboard-bg min-h-screen">
 
-  <!-- Nav -->
-  <nav class="bg-white/70 backdrop-blur-sm border-b border-violet-100/60 sticky top-0 z-20">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+  <!-- Top Navigation -->
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center font-display font-bold text-violet-600">K</div>
+        <div class="p-1 rounded-xl bg-white shadow-sm border border-slate-200/90 flex items-center justify-center">
+          <img src="/logo.png" alt="Kalyani University" class="h-8 w-auto object-contain" />
+        </div>
         <div>
-          <p class="font-display font-semibold leading-tight text-slate-800">Kalyani University</p>
-          <p class="text-[11px] text-slate-500">Student Portal</p>
+          <p class="font-comic font-bold text-slate-900 leading-tight text-base">Kalyani University</p>
+          <p class="text-[11px] text-slate-500 font-medium">Student Academic Portal</p>
         </div>
       </div>
-      <div class="flex items-center gap-4 text-sm">
-        <span class="text-slate-500">Welcome,</span>
-        <span id="navName" class="font-semibold text-slate-800">...</span>
+
+      <div class="flex items-center gap-4 text-xs">
+        <div class="hidden sm:flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span class="text-slate-600">Authenticated:</span>
+          <span id="navName" class="font-bold text-slate-800">...</span>
+        </div>
         <form action="/logout" method="POST" id="logoutForm">
-          <button type="submit" class="ml-2 bg-violet-100 hover:bg-violet-200 text-violet-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">Logout</button>
+          <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3.5 py-1.5 rounded-xl font-semibold active:bg-rose-200">
+            Sign Out
+          </button>
         </form>
       </div>
     </div>
   </nav>
 
-  <main class="max-w-6xl mx-auto px-6 py-8">
+  <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
 
-    <!-- Profile -->
-    <section class="bg-white rounded-2xl shadow-sm shadow-violet-200/30 p-6 mb-6 border border-violet-100/50">
-      <div class="flex items-center gap-5">
-        <div id="avatar" class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-400 to-fuchsia-400 text-white flex items-center justify-center text-xl font-display font-bold shadow-md">--</div>
-        <div>
-          <h1 id="profileName" class="font-display text-xl font-bold text-slate-800">Loading...</h1>
-          <p id="profileMeta" class="text-sm text-slate-500"></p>
-          <p id="profileContact" class="text-xs text-slate-400 mt-1"></p>
+    <!-- Profile Header Card -->
+    <section class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div class="flex items-center gap-5">
+          <div id="avatar" class="w-20 h-20 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl font-display font-extrabold shadow-lg">
+            --
+          </div>
+          <div>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <h1 id="profileName" class="font-display text-2xl font-extrabold text-slate-900">Loading Student...</h1>
+              <span id="roleBadge" class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-200">
+                STUDENT
+              </span>
+            </div>
+            <p id="profileMeta" class="text-sm font-medium text-slate-500 mt-1"></p>
+            <p id="profileContact" class="text-xs text-slate-400 mt-1"></p>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-right shrink-0 w-full sm:w-auto">
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Academic Status</p>
+          <p class="font-display font-extrabold text-emerald-600 text-sm mt-0.5">ACTIVE ENROLLED</p>
+          <p class="text-[11px] text-slate-500 mt-1">Academic Year 2025–2026</p>
         </div>
       </div>
     </section>
 
-    <!-- Stats -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white rounded-2xl p-5 border border-violet-100/50 shadow-sm"><p class="text-[11px] uppercase tracking-wide text-slate-500 font-medium">CGPA</p><p id="statCgpa" class="font-display text-2xl font-bold text-slate-800 mt-1">--</p></div>
-      <div class="bg-white rounded-2xl p-5 border border-violet-100/50 shadow-sm"><p class="text-[11px] uppercase tracking-wide text-slate-500 font-medium">Attendance</p><p id="statAttendance" class="font-display text-2xl font-bold text-emerald-600 mt-1">--</p></div>
-      <div class="bg-white rounded-2xl p-5 border border-violet-100/50 shadow-sm"><p class="text-[11px] uppercase tracking-wide text-slate-500 font-medium">Credits</p><p id="statCredits" class="font-display text-2xl font-bold text-slate-800 mt-1">--</p></div>
-      <div class="bg-white rounded-2xl p-5 border border-violet-100/50 shadow-sm"><p class="text-[11px] uppercase tracking-wide text-slate-500 font-medium">Dues</p><p id="statDues" class="font-display text-2xl font-bold text-amber-600 mt-1">--</p></div>
-    </section>
+    <!-- Key Metrics Grid -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <p class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Cumulative GPA</p>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="statCgpa" class="font-display text-3xl font-extrabold text-slate-900">--</p>
+          <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">/ 10.0</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">First Class Distinction</p>
+      </div>
 
-    <!-- Search -->
-    <section class="bg-white rounded-2xl shadow-sm shadow-violet-200/30 p-6 mb-6 border border-violet-100/50">
-      <h2 class="font-display text-lg font-semibold text-slate-800 mb-1">Course Catalog</h2>
-      <p class="text-xs text-slate-500 mb-4">Search across course code, title, or instructor.</p>
-      <div class="relative">
-        <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <input id="searchInput" type="text" placeholder="e.g. Data Structures, CSE301, Dr. Khan..."
-          class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none transition placeholder:text-slate-400" />
-        <span id="searchCount" class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400"></span>
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <p class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Attendance</p>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="statAttendance" class="font-display text-3xl font-extrabold text-emerald-600">--</p>
+          <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Eligible</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-1.5 mt-3 overflow-hidden">
+          <div id="attBar" class="bg-emerald-500 h-1.5 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <p class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Credits Completed</p>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="statCredits" class="font-display text-3xl font-extrabold text-indigo-600">--</p>
+          <span class="text-xs text-slate-400">/ 160</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Degree Progress: 80%</p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <p class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Pending Dues</p>
+        <div class="flex items-baseline gap-2 mt-2">
+          <p id="statDues" class="font-display text-3xl font-extrabold text-amber-600">--</p>
+        </div>
+        <p id="duesStatus" class="text-xs text-slate-500 mt-2">Clear balance</p>
       </div>
     </section>
 
-    <!-- Courses -->
-    <section class="bg-white rounded-2xl shadow-sm shadow-violet-200/30 overflow-hidden border border-violet-100/50">
-      <div class="px-6 py-4 border-b border-slate-100">
-        <h2 id="coursesTitle" class="font-display text-lg font-semibold text-slate-800">Registered Courses</h2>
+    <!-- Course Catalog Section -->
+    <section class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+      
+      <!-- Catalog Search Header -->
+      <div class="p-6 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 id="coursesTitle" class="font-display text-xl font-bold text-slate-900">Enrolled Courses</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Filter by course code, title, or instructor name.</p>
+        </div>
+
+        <div class="relative w-full md:w-80">
+          <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="searchInput" type="text" placeholder="Search courses..."
+            class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none placeholder:text-slate-400" />
+          <span id="searchCount" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400"></span>
+        </div>
       </div>
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50 text-slate-600 text-left">
-          <tr>
-            <th class="px-6 py-3 font-medium">Code</th>
-            <th class="px-6 py-3 font-medium">Course Title</th>
-            <th class="px-6 py-3 font-medium">Instructor</th>
-            <th class="px-6 py-3 font-medium">Credits</th>
-            <th class="px-6 py-3 font-medium">Grade</th>
-          </tr>
-        </thead>
-        <tbody id="coursesBody" class="divide-y divide-slate-100">
-          <tr><td colspan="5" class="px-6 py-6 text-center text-slate-400">Loading courses...</td></tr>
-        </tbody>
-      </table>
+
+      <!-- Course Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200">
+            <tr>
+              <th class="px-6 py-3.5">Course Code</th>
+              <th class="px-6 py-3.5">Title</th>
+              <th class="px-6 py-3.5">Instructor</th>
+              <th class="px-6 py-3.5">Credits</th>
+              <th class="px-6 py-3.5 text-right">Grade Received</th>
+            </tr>
+          </thead>
+          <tbody id="coursesBody" class="divide-y divide-slate-100">
+            <tr><td colspan="5" class="px-6 py-8 text-center text-slate-400 font-medium">Loading course schedule...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
-    <p class="text-center text-xs text-slate-400 mt-8">&copy; 2025 Kalyani University</p>
+    <footer class="text-center text-xs text-slate-400 py-4">
+      &copy; 2025 Kalyani University Academic Portal &middot; Secured by DeceptiWAF
+    </footer>
   </main>
 
   <script>
@@ -133,26 +195,33 @@
         document.getElementById('avatar').textContent = u.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
         document.getElementById('navName').textContent = u.name;
         document.getElementById('profileName').textContent = u.name;
-        document.getElementById('profileMeta').textContent = 'ID: ' + u.username + '  ·  ' + u.branch + '  ·  Semester ' + u.semester;
-        document.getElementById('profileContact').textContent = 'Email: ' + u.email + '  ·  Section: ' + u.section;
-        document.getElementById('statCgpa').textContent = u.cgpa.toFixed(2);
-        document.getElementById('statAttendance').textContent = u.attendance + '%';
-        document.getElementById('statCredits').textContent = u.credits + ' / 160';
-        document.getElementById('statDues').textContent = (u.dues === 0 ? '₹ 0' : '₹ ' + u.dues.toLocaleString());
-        document.getElementById('coursesTitle').textContent = 'Registered Courses — Semester ' + u.semester;
+        document.getElementById('profileMeta').textContent = 'Student ID: ' + u.username + '  ·  ' + u.branch + '  ·  Semester ' + u.semester;
+        document.getElementById('profileContact').textContent = 'Email: ' + u.email + '  ·  Section: ' + (u.section || 'A');
+        
+        document.getElementById('statCgpa').textContent = (u.cgpa ? u.cgpa.toFixed(2) : '8.50');
+        document.getElementById('statAttendance').textContent = (u.attendance || 90) + '%';
+        document.getElementById('attBar').style.width = (u.attendance || 90) + '%';
+        document.getElementById('statCredits').textContent = (u.credits || 120);
+        
+        const duesVal = u.dues || 0;
+        document.getElementById('statDues').textContent = (duesVal === 0 ? '₹ 0' : '₹ ' + duesVal.toLocaleString());
+        document.getElementById('duesStatus').textContent = duesVal === 0 ? 'No outstanding fees' : 'Payment due soon';
+        document.getElementById('coursesTitle').textContent = 'Enrolled Courses — Semester ' + u.semester;
 
         const body = document.getElementById('coursesBody');
         body.innerHTML = '';
-        u.courses.forEach(([code, title, instr, credits, grade]) => {
+        (u.courses || []).forEach(([code, title, instr, credits, grade]) => {
           const tr = document.createElement('tr');
-          tr.className = 'row-fade hover:bg-violet-50/40';
-          const gradeColor = grade.startsWith('A') ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50';
+          tr.className = 'hover:bg-slate-50';
+          const gradeColor = grade.startsWith('A')
+            ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+            : 'text-amber-700 bg-amber-50 border-amber-200';
           tr.innerHTML =
-            '<td class="px-6 py-3 font-mono text-xs text-violet-600 font-medium">' + code + '</td>' +
-            '<td class="px-6 py-3 text-slate-700">' + title + '</td>' +
-            '<td class="px-6 py-3 text-slate-500">' + instr + '</td>' +
-            '<td class="px-6 py-3 text-slate-600">' + credits + '</td>' +
-            '<td class="px-6 py-3"><span class="inline-block px-2.5 py-0.5 rounded-lg text-xs font-semibold ' + gradeColor + '">' + grade + '</span></td>';
+            '<td class="px-6 py-4 mono font-semibold text-xs text-indigo-600">' + code + '</td>' +
+            '<td class="px-6 py-4 font-semibold text-slate-800">' + title + '</td>' +
+            '<td class="px-6 py-4 text-slate-500">' + instr + '</td>' +
+            '<td class="px-6 py-4 font-medium text-slate-600">' + credits + ' Credits</td>' +
+            '<td class="px-6 py-4 text-right"><span class="inline-block px-3 py-1 rounded-lg text-xs font-bold border ' + gradeColor + '">' + grade + '</span></td>';
           tr.dataset.search = (code + ' ' + title + ' ' + instr).toLowerCase();
           body.appendChild(tr);
         });

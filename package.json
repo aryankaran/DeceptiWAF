@@ -1,7 +1,7 @@
 {
   "name": "deceptiwaf",
-  "version": "1.0.0",
-  "description": "DeceptiWAF - A deception-based Web Application Firewall with brute-force honeypot and live SOC dashboard",
+  "version": "1.4.0",
+  "description": "DeceptiWAF - A deception-based Web Application Firewall with brute-force honeypot and live SOC dashboard (Phase 1-4 complete)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -19,6 +19,7 @@
   "author": "DeceptiWAF Project",
   "license": "MIT",
   "dependencies": {
+    "better-sqlite3": "^13.0.1",
     "cookie-parser": "^1.4.7",
     "express": "^4.19.2",
     "socket.io": "^4.7.5"

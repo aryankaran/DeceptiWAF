@@ -12,10 +12,12 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cookieParser = require('cookie-parser');
 const { wafMiddleware } = require('./lib/waf');
+const { rateLimitMiddleware } = require('./lib/ratelimit');
 const credShield = require('./lib/credshield');
 const geo = require('./lib/geo');
 const eventStore = require('./lib/eventStore');
 const fakeProfile = require('./lib/fakeProfile');
+const db = require('./lib/db');
 const config = require('./config');
 
 // Crash resistance — log errors but keep running
@@ -31,10 +33,11 @@ const io = new Server(server);
 app.set('trust proxy', true); // trust X-Forwarded-For for accurate req.ip behind proxies
 app.set('io', io);
 
-// Body parsers must run before WAF so it can inspect req.body
+// Body parsers must run before WAF & RateLimit so they can inspect req.body
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(rateLimitMiddleware);
 app.use(wafMiddleware);
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -53,12 +56,14 @@ try {
   process.exit(1);
 }
 
-// In-memory session store: token -> { username, issuedAt, fakeUserProfile? }
+// In-memory session cache backed by SQLite
 const SESSIONS = {};
 
 function issueSession(username, fakeUserProfile) {
   const token = crypto.randomBytes(24).toString('hex');
-  SESSIONS[token] = { username, issuedAt: Date.now(), fakeUserProfile: fakeUserProfile || null };
+  const sess = { username, issuedAt: Date.now(), fakeUserProfile: fakeUserProfile || null };
+  SESSIONS[token] = sess;
+  try { db.saveSession(token, username, fakeUserProfile || null); } catch (e) {}
   return token;
 }
 
@@ -69,15 +74,23 @@ function getTokenFromRequest(req) {
 
 function getUserFromSession(req) {
   const token = getTokenFromRequest(req);
-  if (!token || !SESSIONS[token]) return null;
-  const session = SESSIONS[token];
+  if (!token) return null;
+  let session = SESSIONS[token];
+  if (!session) {
+    session = db.getSession(token);
+    if (session) SESSIONS[token] = session;
+  }
+  if (!session) return null;
   if (session.fakeUserProfile) return session.fakeUserProfile; // honeypot trap
   return USERS[session.username] || null;
 }
 
 function destroySession(req) {
   const token = getTokenFromRequest(req);
-  if (token) delete SESSIONS[token];
+  if (token) {
+    delete SESSIONS[token];
+    try { db.deleteSession(token); } catch (e) {}
+  }
 }
 
 function isHttps(req) {
@@ -225,8 +238,13 @@ app.post('/api/honeypot/reset', (req, res) => {
   const user = getUserFromSession(req);
   if (!user || user.role !== 'admin') return res.status(403).json({ error: 'admin_only' });
   const targetIp = req.query.ip || req.body?.ip;
-  if (targetIp) { credShield.clear(targetIp); return res.json({ ok: true, reset: targetIp }); }
+  if (targetIp) {
+    credShield.clear(targetIp);
+    console.log(`\x1b[32m[ADMIN ACTION]\x1b[0m Honeypot trap disarmed for IP: ${targetIp}`);
+    return res.json({ ok: true, reset: targetIp });
+  }
   credShield.clearAll();
+  console.log(`\x1b[32m[ADMIN ACTION]\x1b[0m Honeypot state disarmed & all traps cleared by admin.`);
   res.json({ ok: true, reset: 'all' });
 });
 
@@ -264,6 +282,7 @@ app.post('/api/events/clear', (req, res) => {
   const user = getUserFromSession(req);
   if (!user || user.role !== 'admin') return res.status(403).json({ error: 'admin_only' });
   eventStore.clear();
+  console.log(`\x1b[32m[ADMIN ACTION]\x1b[0m SQLite database event history cleared by admin.`);
   res.json({ ok: true });
 });
 

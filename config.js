@@ -20,8 +20,8 @@ module.exports = {
   HONEYPOT_THRESHOLD: 3,
   HONEYPOT_TTL_MS: 30 * 60 * 1000,
 
-  // WAF
-  WAF_BLOCK_THRESHOLD: 4,
+  // Rate limit
+  ENABLE_RATE_LIMIT: process.env.ENABLE_RATE_LIMIT !== 'false',
 
   // Event store
   EVENT_HISTORY_MAX: 500,
