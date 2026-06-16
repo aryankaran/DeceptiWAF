@@ -7,11 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     * { -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Inter', system-ui, sans-serif; background-color: #020617; }
     h1, h2, h3, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-comic { font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif; }
     .mono { font-family: 'JetBrains Mono', monospace; }
     .feed-panel { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(51, 65, 85, 0.6); }
     @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
@@ -36,8 +37,8 @@
       <div class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-emerald-500 pulse-dot shadow-lg shadow-emerald-500/50"></div>
         <div>
-          <p class="font-display font-extrabold tracking-wider text-slate-100 text-sm flex items-center gap-2">
-            DECEPTIWAF <span class="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 text-xs border border-indigo-500/30">SOC COMMAND CENTER</span>
+          <p class="font-comic font-bold tracking-wider text-slate-100 text-sm flex items-center gap-2">
+            DECEPTIWAF <span class="font-sans px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 text-xs border border-indigo-500/30">SOC COMMAND CENTER</span>
           </p>
           <p class="text-[10px] text-slate-400 mono">real-time threat intelligence & deception dashboard</p>
         </div>
@@ -93,7 +94,7 @@
         <div class="px-5 py-3.5 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot"></span>
-            <h2 class="mono text-xs font-bold text-indigo-300 tracking-widest uppercase">LIVE ATTACK TELEMETRY FEED</h2>
+            <h2 class="font-comic text-xs font-bold text-indigo-300 tracking-widest uppercase">LIVE ATTACK TELEMETRY FEED</h2>
           </div>
 
           <!-- Feed Controls & Filter Tabs -->
@@ -122,7 +123,7 @@
         <!-- Top Attackers Catalog -->
         <div class="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
           <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-            <h3 class="font-display text-xs font-bold text-amber-400 tracking-wider uppercase">TOP ATTACKERS CATALOG</h3>
+            <h3 class="font-comic text-xs font-bold text-amber-400 tracking-wider uppercase">TOP ATTACKERS CATALOG</h3>
             <span id="topCount" class="mono text-[10px] text-slate-500">0 total</span>
           </div>
           <div id="topAttackers" class="text-xs max-h-72 overflow-y-auto divide-y divide-slate-800/60">
@@ -133,7 +134,7 @@
         <!-- Active Honeypot Trapped IPs -->
         <div class="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
           <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-            <h3 class="font-display text-xs font-bold text-fuchsia-400 tracking-wider uppercase">TRAPPED ATTACKERS</h3>
+            <h3 class="font-comic text-xs font-bold text-fuchsia-400 tracking-wider uppercase">TRAPPED ATTACKERS</h3>
             <div class="flex items-center gap-2">
               <span id="trappedBadge" class="mono text-[10px] text-slate-500">0 active</span>
               <button id="resetHoneypot" class="mono text-[10px] bg-rose-950 text-rose-300 hover:bg-rose-900 border border-rose-800/80 px-2 py-0.5 rounded transition">
@@ -148,7 +149,7 @@
 
         <!-- System Architecture Health -->
         <div class="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl p-4 text-xs space-y-2">
-          <h3 class="font-display text-xs font-bold text-emerald-400 tracking-wider uppercase mb-3">SYSTEM HEALTH</h3>
+          <h3 class="font-comic text-xs font-bold text-emerald-400 tracking-wider uppercase mb-3">SYSTEM HEALTH</h3>
           <div class="flex justify-between text-slate-400"><span class="mono">WAF Engine (Regex + AST)</span><span class="text-emerald-400 font-bold">ONLINE</span></div>
           <div class="flex justify-between text-slate-400"><span class="mono">CredShield Honeypot</span><span class="text-emerald-400 font-bold">ONLINE</span></div>
           <div class="flex justify-between text-slate-400"><span class="mono">Rate Limiter (Sliding)</span><span class="text-emerald-400 font-bold">ONLINE</span></div>
