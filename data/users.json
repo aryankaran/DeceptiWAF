@@ -6,49 +6,42 @@
     "name": "Aryan Karan",
     "username": "aryan",
     "branch": "B.Tech Computer Science",
-    "semester": 5,
+    "semester": 6,
     "section": "A",
     "email": "aryankaran@klyuniv.ac.in",
-    "cgpa": 8.74,
+    "cgpa": 9.14,
     "attendance": 92,
     "credits": 124,
     "dues": 2500,
     "passwordHash": "ef04f3831769ca18970c5d4eeee311f0c282feb79accde226f30d361937ee6fa",
     "courses": [
       [
-        "CSE301",
-        "Data Structures & Algorithms",
-        "Dr. A. Khan",
-        4,
-        "A"
-      ],
-      [
-        "CSE305",
-        "Database Management Systems",
-        "Prof. M. Iqbal",
+        "PEC601",
+        "Data Mining",
+        "Prof. Anirban M.",
         4,
         "A+"
       ],
       [
-        "CSE310",
-        "Computer Networks",
-        "Dr. S. Raina",
-        3,
-        "B+"
-      ],
-      [
-        "CSE312",
-        "Operating Systems",
-        "Dr. P. Bhat",
+        "CSE601",
+        "Compiler Design",
+        "Prof. Sukanta Majumder",
         4,
         "A"
       ],
       [
-        "HUM201",
-        "Technical Communication",
-        "Ms. F. Ansari",
-        2,
+        "CS602",
+        "Java",
+        "Dr. Shambu Chatterjee",
+        4,
         "A"
+      ],
+      [
+        "PEC602",
+        "Computer Networks",
+        "Dr. Manash",
+        3,
+        "A+"
       ]
     ]
   },
@@ -156,12 +149,12 @@
   },
   "sweet": {
     "role": "student",
-    "name": "Sweet Patel",
+    "name": "Sweety Sinha",
     "username": "sweet",
     "branch": "B.Tech Electronics & Communication",
     "semester": 5,
     "section": "B",
-    "email": "sweet@klyuniv.ac.in",
+    "email": "sweety@klyuniv.ac.in",
     "cgpa": 7.92,
     "attendance": 84,
     "credits": 116,
