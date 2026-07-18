@@ -1,0 +1,159 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>SOC Dashboard — Live Command Center · DeceptiWAF</title>
+<script src="https://artifacts-cdn.chatglm.site/https://cdn.tailwindcss.com" data-z-original-src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://artifacts-cdn.chatglm.site/https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" data-z-original-href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<style>
+  .feed-panel {
+    background: var(--dark-panel);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(30, 25, 50, .25);
+  }
+  .feed-line { color: #c4c0d8; }
+  .feed-ts   { color: #6b6586; }
+  .feed-tag-block    { color: #f9a8d4; background: rgba(244,63,94,.15); }
+  .feed-tag-brute    { color: #fcd34d; background: rgba(245,158,11,.16); }
+  .feed-tag-armed    { color: #c4b5fd; background: rgba(124,58,237,.20); }
+  .feed-tag-trap     { color: #6ee7b7; background: rgba(16,185,129,.18); }
+  .feed-sub    { color: #8a87a0; }
+  .feed-flag   { color: #fbbf24; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="grid grid-cols-12 gap-7 h-full">
+    <!-- LEFT: feature list -->
+    <div class="col-span-5 flex flex-col">
+      <span class="pill" style="background: var(--emerald-100); color: #047857;">
+        <i class="material-icons" style="font-size:13px;">monitoring</i>
+        Module 4 · SOC Dashboard
+      </span>
+      <h2 class="mt-3" style="font-family: var(--font-heading); font-size: 28px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em;">
+        Real-time attack visibility
+      </h2>
+      <p class="text-slate-500 mt-1" style="font-size: 14px;">
+        Every block, every brute-force, every trap — streamed live over Socket.io.
+      </p>
+
+      <ul class="mt-5 space-y-3.5">
+        <li class="flex items-start gap-3">
+          <span class="dot mt-1.5 shrink-0" style="background: #10b981;"></span>
+          <div>
+            <div class="font-semibold text-slate-800" style="font-size: 14px;">Live WAF block feed via Socket.io</div>
+            <div class="text-slate-500" style="font-size: 12.5px;">IP, attack type, score, payload, hit breakdown</div>
+          </div>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="dot mt-1.5 shrink-0" style="background: #a855f7;"></span>
+          <div>
+            <div class="font-semibold text-slate-800" style="font-size: 14px;">Purple honeypot trap alerts</div>
+            <div class="text-slate-500" style="font-size: 12.5px;">fake identity served + attacker fingerprint</div>
+          </div>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="dot mt-1.5 shrink-0" style="background: #0ea5e9;"></span>
+          <div>
+            <div class="font-semibold text-slate-800" style="font-size: 14px;">IP geolocation via ip-api.com</div>
+            <div class="text-slate-500" style="font-size: 12.5px;">city, country, ISP, flag emoji</div>
+          </div>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="dot mt-1.5 shrink-0" style="background: #f59e0b;"></span>
+          <div>
+            <div class="font-semibold text-slate-800" style="font-size: 14px;">Top attackers catalog + trapped panel</div>
+            <div class="text-slate-500" style="font-size: 12.5px;">admin reset controls</div>
+          </div>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="dot mt-1.5 shrink-0" style="background: #64748b;"></span>
+          <div>
+            <div class="font-semibold text-slate-800" style="font-size: 14px;">Admin APIs</div>
+            <div class="mono text-slate-500" style="font-size: 11.5px;">/api/stats · /api/events/recent · /api/honeypot/reset</div>
+          </div>
+        </li>
+      </ul>
+
+      <div class="mt-auto pt-4 flex items-center gap-2 text-slate-400" style="font-size: 11.5px;">
+        <i class="material-icons" style="font-size: 14px;">bolt</i>
+        500-event in-memory ring buffer · zero polling
+      </div>
+    </div>
+
+    <!-- RIGHT: dark feed mockup -->
+    <div class="col-span-7 flex flex-col">
+      <div class="feed-panel p-5 flex-1 flex flex-col">
+        <!-- panel header -->
+        <div class="flex items-center justify-between pb-3 border-b border-white/5">
+          <div class="flex items-center gap-2">
+            <div class="flex gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full" style="background:#f87171;"></span>
+              <span class="w-2.5 h-2.5 rounded-full" style="background:#fbbf24;"></span>
+              <span class="w-2.5 h-2.5 rounded-full" style="background:#34d399;"></span>
+            </div>
+            <span class="mono text-slate-400 ml-2" style="font-size: 11.5px;">soc — live feed</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full" style="background:#34d399; box-shadow:0 0 6px #34d399;"></span>
+            <span class="mono text-emerald-300" style="font-size: 11px;">connected</span>
+          </div>
+        </div>
+
+        <!-- feed lines -->
+        <div class="mt-3 mono space-y-2.5 flex-1" style="font-size: 12px; line-height: 1.55;">
+          <div class="feed-line">
+            <span class="feed-ts">[14:23:01]</span>
+            <span class="feed-tag-block mono px-1.5 py-0.5 rounded ml-1" style="font-size: 10.5px;">BLOCK</span>
+            <span class="ml-1">SQLi score=<span style="color:#fbbf24;">5</span>/4 ip=<span style="color:#93c5fd;">10.0.0.7</span> <span class="feed-flag">🇺🇸</span> Ashburn, US</span>
+            <div class="feed-sub pl-4" style="font-size: 11px;">— sqli_or_tautology (4pt) [body.studentId]</div>
+          </div>
+          <div class="feed-line">
+            <span class="feed-ts">[14:23:08]</span>
+            <span class="feed-tag-brute mono px-1.5 py-0.5 rounded ml-1" style="font-size: 10.5px;">BRUTE</span>
+            <span class="ml-1">ip=<span style="color:#93c5fd;">203.0.113.9</span> user=<span style="color:#fcd34d;">admin</span> fails=<span style="color:#fbbf24;">2</span>/3</span>
+          </div>
+          <div class="feed-line">
+            <span class="feed-ts">[14:23:15]</span>
+            <span class="feed-tag-armed mono px-1.5 py-0.5 rounded ml-1" style="font-size: 10.5px;">HONEYPOT ARMED</span>
+            <span class="ml-1">ip=<span style="color:#93c5fd;">203.0.113.9</span> after 3 fails</span>
+          </div>
+          <div class="feed-line">
+            <span class="feed-ts">[14:23:22]</span>
+            <span class="feed-tag-trap mono px-1.5 py-0.5 rounded ml-1" style="font-size: 10.5px;">HONEYPOT TRAP</span>
+            <span class="ml-1">ip=<span style="color:#93c5fd;">203.0.113.9</span> served_fake=<span style="color:#6ee7b7;">Dev Raina</span></span>
+          </div>
+          <div class="feed-line">
+            <span class="feed-ts">[14:23:36]</span>
+            <span class="feed-tag-block mono px-1.5 py-0.5 rounded ml-1" style="font-size: 10.5px;">BLOCK</span>
+            <span class="ml-1">XSS score=<span style="color:#fbbf24;">6</span>/4 ip=<span style="color:#93c5fd;">10.0.0.7</span> <span class="feed-flag">🇺🇸</span> Ashburn, US</span>
+            <div class="feed-sub pl-4" style="font-size: 11px;">— xss_script_tag (5pt) + xss_event_handler (1pt)</div>
+          </div>
+          <div class="feed-line">
+            <span class="feed-ts">[14:23:48]</span>
+            <span class="feed-tag-trap mono px-1.5 py-0.5 rounded ml-1" style="font-size: 10.5px;">HONEYPOT TRAP</span>
+            <span class="ml-1">ip=<span style="color:#93c5fd;">203.0.113.9</span> clicked "/courses" (logged)</span>
+          </div>
+        </div>
+
+        <!-- footer -->
+        <div class="pt-3 mt-3 border-t border-white/5 flex items-center justify-between">
+          <span class="mono text-slate-500" style="font-size: 10.5px;">events cached: 487 / 500</span>
+          <span class="mono text-slate-500" style="font-size: 10.5px;">uptime 00:14:22</span>
+        </div>
+      </div>
+
+      <div class="text-slate-400 mt-2 text-center" style="font-size: 11.5px;">
+        <i class="material-icons align-middle" style="font-size: 12px;">image</i>
+        Dark feed panel · real Socket.io events
+      </div>
+    </div>
+  </div>
+</div>
+
+<aside data-notes="">
+The SOC dashboard is where everything comes together for the defender. Through Socket.io, every WAF block, every brute-force attempt, every honeypot trap surfaces in real time — no refresh needed. Each block event shows the attacker’s IP, the attack family, the score, the matched rules with their point values, and the offending payload. Honeypot traps are highlighted in purple and include the fake identity we served — so admins can verify the deception is working as intended. We resolve every attacker IP through ip-api.com to get city, country, ISP, and a flag emoji, which makes attribution tangible: “this attack came from a datacenter in Ashburn, Virginia” is far more actionable than “10.0.0.7 hit us”. The top-attackers catalog and trapped-attackers panel let admins reset honeypot state on demand. Three admin-only REST APIs expose the same data programmatically.
+</aside>
+
+
+</body></html>

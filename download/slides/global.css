@@ -1,0 +1,99 @@
+/* DeceptiWAF — Global Slide Styles (Pastel Violet) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --bg: #faf5ff;
+  --primary: #7c3aed;
+  --accent: #ec4899;
+  --ink: #1e1932;
+  --ink-soft: #4c4a5f;
+  --ink-mute: #8a87a0;
+  --card: #ffffff;
+  --card-border: rgba(124, 58, 237, 0.12);
+  --violet-50: #f5f3ff;
+  --violet-100: #ede9fe;
+  --violet-200: #ddd6fe;
+  --pink-50: #fdf2f8;
+  --pink-100: #fce7f3;
+  --emerald-50: #ecfdf5;
+  --emerald-100: #d1fae5;
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --rose-50: #fff1f2;
+  --rose-100: #ffe4e6;
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --dark-panel: #1e1932;
+
+  --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-num: 'JetBrains Mono', monospace;
+
+  --fs-display: 56px;
+  --fs-h1: 40px;
+  --fs-h2: 30px;
+  --fs-h3: 22px;
+  --fs-body: 16px;
+  --fs-small: 13px;
+  --fs-micro: 11px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg);
+}
+
+.slide {
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+  padding: 56px 64px;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, var(--violet-100) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, var(--pink-100) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 0% 85%, #dbeafe 0%, transparent 50%),
+    var(--bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.06);
+}
+
+.card-soft {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.mono { font-family: var(--font-num); }
+
+[data-notes] { display: none !important; }

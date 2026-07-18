@@ -1,0 +1,124 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>CredShield — The Honeypot · DeceptiWAF</title>
+<script src="https://artifacts-cdn.chatglm.site/https://cdn.tailwindcss.com" data-z-original-src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://artifacts-cdn.chatglm.site/https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" data-z-original-href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<style>
+  .node-amber   { background: #f59e0b; box-shadow: 0 0 0 5px var(--bg), 0 6px 16px rgba(245,158,11,.45); }
+  .node-orange  { background: #fb7185; box-shadow: 0 0 0 5px var(--bg), 0 6px 16px rgba(251,113,133,.45); }
+  .node-fuchsia { background: #d946ef; box-shadow: 0 0 0 5px var(--bg), 0 6px 16px rgba(217,70,239,.45); }
+  .node-violet  { background: #7c3aed; box-shadow: 0 0 0 5px var(--bg), 0 6px 16px rgba(124,58,237,.45); }
+  .meta-amber   { background: var(--amber-50);  color: #b45309; }
+  .meta-orange  { background: var(--rose-50);   color: #be123c; }
+  .meta-fuchsia { background: var(--pink-50);   color: #a21caf; }
+  .meta-violet  { background: var(--violet-50); color: #6d28d9; }
+  .timeline-line {
+    background: linear-gradient(to right, #f59e0b 0%, #f59e0b 18%, #fb7185 38%, #d946ef 60%, #7c3aed 100%);
+  }
+  .stage-label {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <!-- Header -->
+  <div class="flex items-start justify-between">
+    <div>
+      <span class="pill" style="background: var(--rose-100); color: var(--accent);">
+        <i class="material-icons" style="font-size:13px;">bug_report</i>
+        Module 3 · CredShield
+      </span>
+      <h1 class="gradient-text mt-3" style="font-family: var(--font-heading); font-size: 32px; font-weight: 800; letter-spacing: -0.01em;">
+        CredShield — Brute-Force Honeypot
+      </h1>
+      <p class="text-slate-500 mt-1" style="font-size: 14px;">
+        Three failures arm the trap. The fourth attempt is rewarded with a lie.
+      </p>
+    </div>
+    <div class="text-right pt-1">
+      <div class="mono text-slate-400" style="font-size: 11px;">STATE MACHINE</div>
+      <div class="mono font-semibold mt-0.5" style="color: var(--primary); font-size: 13px;">3 fails → arm → trap → /dashboard</div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="relative mt-10 px-6" style="height: 230px;">
+    <!-- horizontal gradient line behind the nodes -->
+    <div class="absolute timeline-line rounded-full" data-decor="" style="top: 30px; left: 12%; right: 12%; height: 5px;"></div>
+
+    <div class="grid grid-cols-5 gap-3 relative">
+      <!-- Node 1 -->
+      <div class="flex flex-col items-center text-center">
+        <div class="node-amber w-16 h-16 rounded-full flex items-center justify-center text-white mono font-bold" style="font-size: 22px;">1</div>
+        <div class="stage-label mt-4" style="font-size: 16px;">Attempt 1</div>
+        <div class="text-slate-500 mt-1" style="font-size: 13px;">Failed login</div>
+        <div class="mono mt-3 px-3 py-1 rounded-full meta-amber" style="font-size: 11px; font-weight: 600;">count = 1</div>
+      </div>
+      <!-- Node 2 -->
+      <div class="flex flex-col items-center text-center">
+        <div class="node-amber w-16 h-16 rounded-full flex items-center justify-center text-white mono font-bold" style="font-size: 22px;">2</div>
+        <div class="stage-label mt-4" style="font-size: 16px;">Attempt 2</div>
+        <div class="text-slate-500 mt-1" style="font-size: 13px;">Failed login</div>
+        <div class="mono mt-3 px-3 py-1 rounded-full meta-amber" style="font-size: 11px; font-weight: 600;">count = 2</div>
+      </div>
+      <!-- Node 3 -->
+      <div class="flex flex-col items-center text-center">
+        <div class="node-orange w-16 h-16 rounded-full flex items-center justify-center text-white mono font-bold" style="font-size: 22px;">3</div>
+        <div class="stage-label mt-4" style="font-size: 16px;">Attempt 3</div>
+        <div class="font-semibold mt-1" style="font-size: 13px; color: #be123c;">HONEYPOT ARMED</div>
+        <div class="mono mt-3 px-3 py-1 rounded-full meta-orange" style="font-size: 11px; font-weight: 600;">threshold crossed</div>
+      </div>
+      <!-- Node 4 -->
+      <div class="flex flex-col items-center text-center">
+        <div class="node-fuchsia w-16 h-16 rounded-full flex items-center justify-center text-white mono font-bold" style="font-size: 22px;">4</div>
+        <div class="stage-label mt-4" style="font-size: 16px;">Attempt 4</div>
+        <div class="font-semibold mt-1" style="font-size: 13px; color: #a21caf;">“Login Successful”</div>
+        <div class="mono mt-3 px-3 py-1 rounded-full meta-fuchsia" style="font-size: 11px; font-weight: 600;">TRAP SPRINGS</div>
+      </div>
+      <!-- Node 5 -->
+      <div class="flex flex-col items-center text-center">
+        <div class="node-violet w-16 h-16 rounded-full flex items-center justify-center text-white mono font-bold" style="font-size: 22px;">5</div>
+        <div class="stage-label mt-4" style="font-size: 15px; line-height: 1.2;">Attacker lands on /dashboard</div>
+        <div class="text-slate-500 mt-1" style="font-size: 13px;">served fake profile</div>
+        <div class="mono mt-3 px-3 py-1 rounded-full meta-violet" style="font-size: 11px; font-weight: 600;">silent deception</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Callout cards -->
+  <div class="grid grid-cols-2 gap-5 mt-auto">
+    <div class="card p-5 flex items-start gap-4">
+      <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style="background: var(--violet-100);">
+        <i class="material-icons" style="color: var(--primary); font-size: 24px;">fingerprint</i>
+      </div>
+      <div>
+        <div class="font-semibold" style="font-family: var(--font-heading); font-size: 15px; color: var(--ink);">Deterministic fake profiles</div>
+        <p class="text-slate-600 mt-1" style="font-size: 13.5px; line-height: 1.5;">
+          Same username = same fake student, every time. No real user data ever exposed.
+        </p>
+      </div>
+    </div>
+    <div class="card p-5 flex items-start gap-4">
+      <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style="background: var(--pink-100);">
+        <i class="material-icons" style="color: var(--accent); font-size: 24px;">schedule</i>
+      </div>
+      <div>
+        <div class="font-semibold" style="font-family: var(--font-heading); font-size: 15px; color: var(--ink);">Auto-disarm after 30 min</div>
+        <p class="text-slate-600 mt-1" style="font-size: 13.5px; line-height: 1.5;">
+          Trap expires after 30 minutes of inactivity. Legit users on shared IPs aren’t locked out forever.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<aside data-notes="">
+CredShield is the heart of DeceptiWAF’s deception strategy. We track failed login attempts per IP address. The first two failures return a normal 401 — exactly what an attacker’s brute-force script expects to see. On the third failure, the honeypot silently arms: we now know this IP is malicious, but we never tell them that. On the fourth attempt, instead of another 401, we lie. We return 200 OK with “Login Successful” and serve a fake dashboard populated with a deterministic fake profile. The attacker thinks they cracked the password — but every click, every form submission, every API call they make is now logged and fingerprinted on the SOC feed. Two design choices matter: deterministic profiles mean the same username always yields the same fake student, so no real user data is ever exposed. And after 30 minutes of inactivity, the trap auto-disarms — so legitimate users sharing a NAT IP aren’t locked out forever.
+</aside>
+
+
+</body></html>

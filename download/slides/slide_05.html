@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <title>DeceptiWAF — WAF Engine</title>
+  <script src="https://artifacts-cdn.chatglm.site/https://cdn.tailwindcss.com" data-z-original-src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="global.css">
+  <link href="https://artifacts-cdn.chatglm.site/https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" data-z-original-href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+  <section class="slide">
+    <!-- top-right shield echo -->
+    <div class="absolute top-7 right-7 w-11 h-11 rounded-full flex items-center justify-center" style="background: var(--violet-100)">
+      <i class="material-icons" style="color: var(--primary); font-size: 24px">security</i>
+    </div>
+
+    <div class="flex-1 grid grid-cols-2 gap-8 mt-1">
+      <!-- LEFT 50% -->
+      <div class="flex flex-col">
+        <span class="pill self-start" style="background: var(--rose-100); color: #be123c">MODULE 2 · WAF ENGINE</span>
+
+        <h2 class="mt-3 font-bold text-slate-800" style="font-family: var(--font-heading); font-size: 28px; line-height: 1.15; letter-spacing: -0.015em">
+          Scoring engine, not hard blocks
+        </h2>
+
+        <p class="mt-3 text-slate-600" style="font-size: 15px; line-height: 1.55">
+          Each regex rule has a point value. The request score is the sum of all matched rules. Block threshold = 4. This lets benign traffic with a single low-score indicator (like a <span class="mono">--</span> in a legitimate comment) pass through, while real attacks trigger multiple high-score rules.
+        </p>
+
+        <div class="card mt-4 overflow-hidden">
+          <table class="w-full mono" style="font-size: 12px">
+            <thead>
+              <tr style="background: var(--slate-100); color: #475569">
+                <th class="text-left px-3 py-2 font-semibold">Payload</th>
+                <th class="text-left px-3 py-2 font-semibold">Rules hit</th>
+                <th class="text-left px-3 py-2 font-semibold">Score</th>
+                <th class="text-left px-3 py-2 font-semibold">Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t" style="border-color: var(--slate-100)">
+                <td class="px-3 py-2 text-slate-700">UNION SELECT</td>
+                <td class="px-3 py-2 text-slate-500">sqli_union_select (4)</td>
+                <td class="px-3 py-2 text-slate-700">4</td>
+                <td class="px-3 py-2" style="color: #d97706">✗ flagged</td>
+              </tr>
+              <tr class="border-t" style="border-color: var(--slate-100)">
+                <td class="px-3 py-2 text-slate-700">' UNION SELECT 1,2,3 --</td>
+                <td class="px-3 py-2 text-slate-500">union(4) + comment(1)</td>
+                <td class="px-3 py-2 font-bold" style="color: var(--accent)">5</td>
+                <td class="px-3 py-2 font-bold" style="color: #059669">✓ BLOCKED</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RIGHT 50% — pipeline -->
+      <div class="flex flex-col">
+        <h3 class="font-bold text-slate-800" style="font-family: var(--font-heading); font-size: 18px; letter-spacing: -0.01em">
+          De-obfuscation pipeline
+        </h3>
+
+        <div class="flex flex-col items-stretch mt-3">
+          <div class="card px-4 py-2 text-center mono text-slate-600" style="font-size: 13px">
+            Raw input
+          </div>
+          <div class="flex justify-center my-1">
+            <i class="material-icons" style="font-size: 16px; color: var(--ink-mute)">arrow_downward</i>
+          </div>
+          <div class="card px-4 py-2 mono" style="font-size: 13px">
+            <span style="color: var(--primary); font-weight: 600">decodeURIComponent × 3</span>
+            <span class="text-slate-400 ml-2">— catches %27, %2527</span>
+          </div>
+          <div class="flex justify-center my-1">
+            <i class="material-icons" style="font-size: 16px; color: var(--ink-mute)">arrow_downward</i>
+          </div>
+          <div class="card px-4 py-2 mono" style="font-size: 13px">
+            <span style="color: var(--primary); font-weight: 600">decodeHtmlEntities</span>
+            <span class="text-slate-400 ml-2">— catches &lt; &lt; &lt;</span>
+          </div>
+          <div class="flex justify-center my-1">
+            <i class="material-icons" style="font-size: 16px; color: var(--ink-mute)">arrow_downward</i>
+          </div>
+          <div class="card px-4 py-2 mono" style="font-size: 13px">
+            <span style="color: var(--primary); font-weight: 600">normalize("NFKC")</span>
+            <span class="text-slate-400 ml-2">— catches ＵＮＩＯＮ</span>
+          </div>
+          <div class="flex justify-center my-1">
+            <i class="material-icons" style="font-size: 16px; color: var(--ink-mute)">arrow_downward</i>
+          </div>
+          <div class="card px-4 py-2 mono" style="font-size: 13px">
+            <span style="color: var(--primary); font-weight: 600">strip /* comments */</span>
+            <span class="text-slate-400 ml-2">— catches UNION/**/SELECT</span>
+          </div>
+          <div class="flex justify-center my-1">
+            <i class="material-icons" style="font-size: 16px; color: var(--ink-mute)">arrow_downward</i>
+          </div>
+          <div class="px-4 py-2 mono font-bold text-center" style="font-size: 13px; color: var(--accent); background: var(--pink-50); border: 1px solid var(--pink-100); border-radius: 14px">
+            Pattern match (50+ rules) — final detection
+          </div>
+        </div>
+
+        <p class="mt-3 text-right text-slate-500" style="font-size: 12px">
+          50+ rules · 4 attack families · 8 evasion techniques defeated
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <aside data-notes="" class="hidden">
+The WAF engine is built around two ideas: scoring and de-obfuscation. First, scoring. Every regex rule carries a point value, and a request's score is just the sum of every rule it triggers. The block threshold is four. This is deliberately forgiving — a single low-score indicator like a double dash in a legitimate comment won't trip the WAF, because real attacks almost always fire multiple high-score rules simultaneously. The table on the left shows this in action: plain UNION SELECT scores four and gets flagged, but adding a SQL comment pushes it to five and triggers a hard block. Second, de-obfuscation. Before any pattern matching runs, the input flows through a five-stage pipeline: triple URL decoding, HTML entity decoding, Unicode NFKC normalization, SQL comment stripping, and only then the fifty-plus rule pattern matcher. Together, these stages defeat eight known evasion techniques — double-encoded payloads, full-width Unicode, inline comments, and more.
+</aside>
+
+
+</body></html>

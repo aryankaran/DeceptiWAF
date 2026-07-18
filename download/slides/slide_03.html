@@ -1,0 +1,53 @@
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <title>DeceptiWAF — Our Approach</title>
+  <script src="https://artifacts-cdn.chatglm.site/https://cdn.tailwindcss.com" data-z-original-src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="global.css">
+  <link href="https://artifacts-cdn.chatglm.site/https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" data-z-original-href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+  <section class="slide">
+    <!-- decorative bleed -->
+    <div data-decor="" aria-hidden="true" class="absolute -top-24 right-10 w-72 h-72 rounded-full" style="background: radial-gradient(circle, rgba(236,72,153,0.12), transparent 70%)"></div>
+    <div data-decor="" aria-hidden="true" class="absolute -bottom-32 -left-20 w-96 h-96 rounded-full" style="background: radial-gradient(circle, rgba(124,58,237,0.10), transparent 70%)"></div>
+
+    <!-- top-right shield echo -->
+    <div class="absolute top-7 right-7 w-11 h-11 rounded-full flex items-center justify-center" style="background: var(--violet-100)">
+      <i class="material-icons" style="color: var(--primary); font-size: 24px">security</i>
+    </div>
+
+    <div class="flex-1 flex flex-col items-center justify-center text-center">
+      <span class="pill" style="background: var(--violet-100); color: var(--primary)">OUR APPROACH</span>
+
+      <h1 class="mt-7 font-bold text-slate-800" style="font-family: var(--font-heading); font-size: 48px; line-height: 1.12; letter-spacing: -0.02em">
+        Don't just block attackers —<br>
+        <span class="gradient-text font-extrabold">trap them.</span>
+      </h1>
+
+      <p class="mt-7 text-slate-600" style="font-size: 20px; line-height: 1.55; max-width: 800px">
+        DeceptiWAF combines a scoring WAF with a deception honeypot. Instead of rejecting brute-forcers with a 401, we lie "Login Successful" and serve a fake dashboard — then watch every move they make on the SOC feed.
+      </p>
+
+      <div class="flex gap-3 mt-9">
+        <span class="pill" style="background: var(--rose-100); color: #be123c; font-size: 13px; padding: 9px 18px">
+          <i class="material-icons" style="font-size: 18px">shield</i>
+          WAF blocks
+        </span>
+        <span class="pill" style="background: var(--pink-100); color: #be185d; font-size: 13px; padding: 9px 18px">
+          <i class="material-icons" style="font-size: 18px">bug_report</i>
+          Honeypot traps
+        </span>
+        <span class="pill" style="background: var(--violet-100); color: var(--primary); font-size: 13px; padding: 9px 18px">
+          <i class="material-icons" style="font-size: 18px">visibility</i>
+          SOC watches
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <aside data-notes="" class="hidden">
+    Here's the philosophy that shapes everything else in this deck. A traditional WAF blocks an attacker and moves on — the attacker simply retries from a new IP, a new payload, a new tool. We don't want that loop. So DeceptiWAF runs a scoring WAF in parallel with a deception honeypot. When a brute-forcer fails three times, the fourth attempt is told "Login Successful" and they're served a fully-rendered fake dashboard with a deterministic fake student profile. They think they're in. Meanwhile, every click, every form submission, every API call they make is streamed live to the SOC dashboard with their IP, geolocation, and fingerprint. Block, trap, and watch — three defenses working together instead of one alone.
+  </aside>
+
+
+</body></html>
