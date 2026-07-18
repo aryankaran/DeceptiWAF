@@ -1,0 +1,77 @@
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <title>DeceptiWAF — The Problem</title>
+  <script src="https://artifacts-cdn.chatglm.site/https://cdn.tailwindcss.com" data-z-original-src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="global.css">
+  <link href="https://artifacts-cdn.chatglm.site/https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" data-z-original-href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+  <section class="slide">
+    <!-- top-right shield (echo of cover) -->
+    <div class="absolute top-7 right-7 w-11 h-11 rounded-full flex items-center justify-center" style="background: var(--violet-100)">
+      <i class="material-icons" style="color: var(--primary); font-size: 24px">security</i>
+    </div>
+
+    <div class="flex-1 grid grid-cols-12 gap-10 items-center">
+      <!-- LEFT 55% (7/12) -->
+      <div class="col-span-7 flex flex-col">
+        <span class="pill self-start" style="background: var(--rose-100); color: #be123c">THE PROBLEM</span>
+
+        <h1 class="mt-4 font-extrabold text-slate-800" style="font-family: var(--font-heading); font-size: 36px; line-height: 1.15; letter-spacing: -0.015em">
+          Web apps face relentless automated attacks
+        </h1>
+
+        <ul class="mt-7 space-y-5">
+          <li class="flex items-start gap-3">
+            <i class="material-icons mt-0.5" style="color: var(--accent); font-size: 22px">bug_report</i>
+            <span class="text-slate-600" style="font-size: 16px; line-height: 1.5">
+              SQL injection, XSS, and path traversal target every web form
+            </span>
+          </li>
+          <li class="flex items-start gap-3">
+            <i class="material-icons mt-0.5" style="color: var(--accent); font-size: 22px">lock_open</i>
+            <span class="text-slate-600" style="font-size: 16px; line-height: 1.5">
+              Brute-force login attacks are automated, parallel, and cheap to run
+            </span>
+          </li>
+          <li class="flex items-start gap-3">
+            <i class="material-icons mt-0.5" style="color: var(--accent); font-size: 22px">visibility_off</i>
+            <span class="text-slate-600" style="font-size: 16px; line-height: 1.5">
+              Traditional WAFs block-and-forget — they never learn who the attacker is
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- RIGHT 45% (5/12) -->
+      <div class="col-span-5 flex flex-col gap-4">
+        <div class="card p-5">
+          <div class="mono font-bold" style="color: var(--primary); font-size: 44px; line-height: 1">83%</div>
+          <p class="mt-2 text-slate-600" style="font-size: 14px; line-height: 1.4">
+            of web apps have vulnerabilities (OWASP)
+          </p>
+        </div>
+
+        <div class="card p-5">
+          <div class="mono font-bold" style="color: var(--accent); font-size: 44px; line-height: 1">#1</div>
+          <p class="mt-2 text-slate-600" style="font-size: 14px; line-height: 1.4">
+            SQL injection in web attack rankings
+          </p>
+        </div>
+
+        <div class="card p-5">
+          <div class="mono font-bold" style="color: #d97706; font-size: 44px; line-height: 1">177</div>
+          <p class="mt-2 text-slate-600" style="font-size: 14px; line-height: 1.4">
+            avg days to detect a breach (IBM)
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside data-notes="" class="hidden">
+    Let's set the stage. Every public web form is a target. SQL injection, cross-site scripting, and path traversal are automated, scripted, and routinely fired at every endpoint on the internet — and they top the OWASP rankings year after year, with SQLi sitting at number one. Brute-force login attacks are even cheaper: parallel credential stuffing runs cost pennies and hammer auth endpoints around the clock. The numbers tell the rest of the story: eighty-three percent of web apps ship with at least one vulnerability, and the average breach goes undetected for one hundred and seventy-seven days. Traditional WAFs block-and-forget — they drop the request and move on, never learning who is behind it or what they're after. That intelligence gap is exactly what DeceptiWAF was built to close.
+  </aside>
+
+
+</body></html>

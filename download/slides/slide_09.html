@@ -1,0 +1,135 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>Results &amp; Test Coverage · DeceptiWAF</title>
+<script src="https://artifacts-cdn.chatglm.site/https://cdn.tailwindcss.com" data-z-original-src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://artifacts-cdn.chatglm.site/https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" data-z-original-href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<style>
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(124, 58, 237, .06);
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 4px 0 0 4px;
+  }
+  .stat-violet::before  { background: #7c3aed; }
+  .stat-pink::before    { background: #ec4899; }
+  .stat-emerald::before { background: #10b981; }
+  .stat-amber::before   { background: #f59e0b; }
+  .stat-sky::before     { background: #0ea5e9; }
+  .stat-rose::before    { background: #f43f5e; }
+  .num-violet  { color: #7c3aed; }
+  .num-pink    { color: #ec4899; }
+  .num-emerald { color: #10b981; }
+  .num-amber   { color: #f59e0b; }
+  .num-sky     { color: #0ea5e9; }
+  .num-rose    { color: #f43f5e; }
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--emerald-50);
+    border: 1px solid var(--emerald-100);
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <!-- Header -->
+  <div class="flex items-start justify-between">
+    <div>
+      <span class="pill" style="background: var(--violet-100); color: var(--primary);">
+        <i class="material-icons" style="font-size:13px;">analytics</i>
+        Phase 6 · Results
+      </span>
+      <h1 class="gradient-text mt-3" style="font-family: var(--font-heading); font-size: 32px; font-weight: 800; letter-spacing: -0.01em;">
+        Results
+      </h1>
+    </div>
+    <div class="text-right pt-1">
+      <div class="mono text-slate-400" style="font-size: 11px;">TEST SUITE</div>
+      <div class="mono font-semibold mt-0.5" style="color: #10b981; font-size: 13px;">28 / 28 passing</div>
+    </div>
+  </div>
+
+  <!-- Stats grid 3x2 -->
+  <div class="grid grid-cols-3 gap-4 mt-5">
+    <div class="stat-card stat-violet" style="height: 118px;">
+      <div class="mono num-violet font-bold" style="font-size: 44px; line-height: 1;">50+</div>
+      <div class="text-slate-600 mt-1.5" style="font-size: 12.5px;">regex rules across <span class="font-semibold text-slate-700">4 attack families</span></div>
+    </div>
+    <div class="stat-card stat-pink" style="height: 118px;">
+      <div class="mono num-pink font-bold" style="font-size: 44px; line-height: 1;">8</div>
+      <div class="text-slate-600 mt-1.5" style="font-size: 12.5px;">evasion techniques defeated</div>
+    </div>
+    <div class="stat-card stat-emerald" style="height: 118px;">
+      <div class="mono num-emerald font-bold" style="font-size: 44px; line-height: 1;">28/28</div>
+      <div class="text-slate-600 mt-1.5" style="font-size: 12.5px;">automated tests passing</div>
+    </div>
+    <div class="stat-card stat-amber" style="height: 118px;">
+      <div class="mono num-amber font-bold" style="font-size: 44px; line-height: 1;">18</div>
+      <div class="text-slate-600 mt-1.5" style="font-size: 12.5px;">demo users <span class="text-slate-500">(SHA-256 hashed)</span></div>
+    </div>
+    <div class="stat-card stat-sky" style="height: 118px;">
+      <div class="mono num-sky font-bold" style="font-size: 44px; line-height: 1;">500</div>
+      <div class="text-slate-600 mt-1.5" style="font-size: 12.5px;">events cached in-memory ring buffer</div>
+    </div>
+    <div class="stat-card stat-rose" style="height: 118px;">
+      <div class="mono num-rose font-bold" style="font-size: 44px; line-height: 1;">5</div>
+      <div class="text-slate-600 mt-1.5" style="font-size: 12.5px;">admin-only REST APIs</div>
+    </div>
+  </div>
+
+  <!-- End-to-end verified -->
+  <div class="mt-5 flex items-center gap-2.5">
+    <i class="material-icons" style="color: #10b981; font-size: 18px;">task_alt</i>
+    <h3 style="font-family: var(--font-heading); font-size: 17px; font-weight: 700; color: var(--ink);">End-to-end verified</h3>
+    <div class="flex-1 h-px" style="background: linear-gradient(to right, var(--violet-100), transparent);"></div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3 mt-3">
+    <div class="check-item">
+      <i class="material-icons" style="color: #10b981; font-size: 18px;">check_circle</i>
+      <span style="font-size: 13px; color: var(--ink);">WAF blocks SQLi / XSS / PathTraversal / UAs <span class="mono text-slate-500">(403)</span></span>
+    </div>
+    <div class="check-item">
+      <i class="material-icons" style="color: #10b981; font-size: 18px;">check_circle</i>
+      <span style="font-size: 13px; color: var(--ink);">Honeypot traps after <span class="font-semibold">3 fails</span> → <span class="mono">/dashboard</span></span>
+    </div>
+    <div class="check-item">
+      <i class="material-icons" style="color: #10b981; font-size: 18px;">check_circle</i>
+      <span style="font-size: 13px; color: var(--ink);">Deterministic fake profiles per username</span>
+    </div>
+    <div class="check-item">
+      <i class="material-icons" style="color: #10b981; font-size: 18px;">check_circle</i>
+      <span style="font-size: 13px; color: var(--ink);">SOC live feed with geo + fingerprinting</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center text-slate-400 mt-auto pt-4" style="font-size: 12px;">
+    Built with <span class="font-semibold text-slate-500">Node.js · Express · Socket.io · cookie-parser</span>
+    — <span class="mono">3 dependencies, zero build tools</span>
+  </div>
+</div>
+
+<aside data-notes="">
+Let’s quantify what we built. The WAF engine ships with over 50 regex rules covering four attack families: SQL injection, cross-site scripting, path traversal, and malicious user agents. The de-obfuscation pipeline defeats eight distinct evasion techniques. Our automated test suite is 28 out of 28 passing — every block rule, every evasion variant, every honeypot transition is verified. We seeded 18 demo users, all passwords SHA-256 hashed. The SOC dashboard caches the last 500 events in an in-memory ring buffer for instant history. And five admin-only REST APIs expose stats, recent events, and honeypot reset. End-to-end, we verified that the WAF blocks every attack family with a 403, the honeypot traps after three failures and lands attackers on /dashboard, fake profiles are deterministic per username, and the live SOC feed shows geo and fingerprinting data.
+</aside>
+
+
+</body></html>

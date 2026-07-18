@@ -1,0 +1,145 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>Anti-Evasion — Catching the Sneaky Stuff · DeceptiWAF</title>
+<script src="https://artifacts-cdn.chatglm.site/https://cdn.tailwindcss.com" data-z-original-src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://artifacts-cdn.chatglm.site/https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" data-z-original-href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<style>
+  .col-naive  { background: var(--rose-50); }
+  .col-decept { background: var(--emerald-50); }
+  .row-divider { border-top: 1px solid rgba(124, 58, 237, .08); }
+  .icon-x { color: #e11d48; }
+  .icon-check { color: #059669; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <!-- Header -->
+  <div class="flex items-start justify-between">
+    <div>
+      <span class="pill" style="background: var(--violet-100); color: var(--primary);">
+        <i class="material-icons" style="font-size:13px;">layers</i>
+        Phase 5 · Anti-Evasion
+      </span>
+      <h1 class="gradient-text mt-3" style="font-family: var(--font-heading); font-size: 32px; font-weight: 800; letter-spacing: -0.01em;">
+        Anti-Evasion — Phase 5
+      </h1>
+      <p class="text-slate-500 mt-1" style="font-size: 14px;">
+        Multi-layer de-obfuscation catches what single-pass WAFs miss.
+      </p>
+    </div>
+    <div class="text-right pt-1">
+      <div class="mono text-slate-400" style="font-size: 11px;">PIPELINE STAGES</div>
+      <div class="mono font-semibold mt-0.5" style="color: var(--primary); font-size: 13px;">5 normalizers → 50+ regex</div>
+    </div>
+  </div>
+
+  <!-- Comparison table -->
+  <div class="card mt-6 overflow-hidden">
+    <!-- Header row -->
+    <div class="grid grid-cols-2">
+      <div class="px-6 py-3.5 flex items-center gap-2.5" style="background: #fff1f2; border-right: 1px solid rgba(124,58,237,.08);">
+        <i class="material-icons" style="color: #e11d48; font-size: 18px;">cancel</i>
+        <div>
+          <div class="font-semibold" style="font-family: var(--font-heading); font-size: 14px; color: #9f1239;">Naïve WAF (single-pass)</div>
+          <div class="text-slate-500" style="font-size: 11px;">raw input → regex match</div>
+        </div>
+      </div>
+      <div class="px-6 py-3.5 flex items-center gap-2.5" style="background: var(--emerald-100);">
+        <i class="material-icons" style="color: #059669; font-size: 18px;">verified</i>
+        <div>
+          <div class="font-semibold" style="font-family: var(--font-heading); font-size: 14px; color: #065f46;">DeceptiWAF (multi-layer)</div>
+          <div class="text-slate-500" style="font-size: 11px;">5-stage normalize → regex match</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 1 -->
+    <div class="grid grid-cols-2 row-divider">
+      <div class="px-6 py-3 col-naive flex items-center gap-3" style="border-right: 1px solid rgba(124,58,237,.08);">
+        <i class="material-icons icon-x" style="font-size: 18px;">close</i>
+        <span class="mono" style="font-size: 13.5px; color: #9f1239;">&lt;script&gt;</span>
+        <span class="text-slate-500" style="font-size: 12px;">(HTML entities)</span>
+      </div>
+      <div class="px-6 py-3 col-decept flex items-center gap-3">
+        <i class="material-icons icon-check" style="font-size: 18px;">check_circle</i>
+        <span class="font-medium" style="font-size: 13.5px; color: #065f46;">blocked</span>
+        <span class="mono text-slate-500" style="font-size: 12px;">— decodeHtmlEntities</span>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="grid grid-cols-2 row-divider">
+      <div class="px-6 py-3 col-naive flex items-center gap-3" style="border-right: 1px solid rgba(124,58,237,.08);">
+        <i class="material-icons icon-x" style="font-size: 18px;">close</i>
+        <span class="mono" style="font-size: 13.5px; color: #9f1239;">ＭａＭＲＭ</span>
+        <span class="text-slate-500" style="font-size: 12px;">(full-width Unicode)</span>
+      </div>
+      <div class="px-6 py-3 col-decept flex items-center gap-3">
+        <i class="material-icons icon-check" style="font-size: 18px;">check_circle</i>
+        <span class="font-medium" style="font-size: 13.5px; color: #065f46;">blocked</span>
+        <span class="mono text-slate-500" style="font-size: 12px;">— normalize NFKC</span>
+      </div>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="grid grid-cols-2 row-divider">
+      <div class="px-6 py-3 col-naive flex items-center gap-3" style="border-right: 1px solid rgba(124,58,237,.08);">
+        <i class="material-icons icon-x" style="font-size: 18px;">close</i>
+        <span class="mono" style="font-size: 13.5px; color: #9f1239;">UNION/**/SELECT</span>
+        <span class="text-slate-500" style="font-size: 12px;">(SQL comment)</span>
+      </div>
+      <div class="px-6 py-3 col-decept flex items-center gap-3">
+        <i class="material-icons icon-check" style="font-size: 18px;">check_circle</i>
+        <span class="font-medium" style="font-size: 13.5px; color: #065f46;">blocked</span>
+        <span class="mono text-slate-500" style="font-size: 12px;">— strip /* */</span>
+      </div>
+    </div>
+
+    <!-- Row 4 -->
+    <div class="grid grid-cols-2 row-divider">
+      <div class="px-6 py-3 col-naive flex items-center gap-3" style="border-right: 1px solid rgba(124,58,237,.08);">
+        <i class="material-icons icon-x" style="font-size: 18px;">close</i>
+        <span class="mono" style="font-size: 13.5px; color: #9f1239;">%2527 OR 1=1</span>
+        <span class="text-slate-500" style="font-size: 12px;">(double URL-encoded)</span>
+      </div>
+      <div class="px-6 py-3 col-decept flex items-center gap-3">
+        <i class="material-icons icon-check" style="font-size: 18px;">check_circle</i>
+        <span class="font-medium" style="font-size: 13.5px; color: #065f46;">blocked</span>
+        <span class="mono text-slate-500" style="font-size: 12px;">— recursive decode</span>
+      </div>
+    </div>
+
+    <!-- Row 5 -->
+    <div class="grid grid-cols-2 row-divider">
+      <div class="px-6 py-3 col-naive flex items-center gap-3" style="border-right: 1px solid rgba(124,58,237,.08);">
+        <i class="material-icons icon-x" style="font-size: 18px;">close</i>
+        <span class="mono" style="font-size: 13.5px; color: #9f1239;">UNION&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SELECT</span>
+        <span class="text-slate-500" style="font-size: 12px;">(whitespace pad)</span>
+      </div>
+      <div class="px-6 py-3 col-decept flex items-center gap-3">
+        <i class="material-icons icon-check" style="font-size: 18px;">check_circle</i>
+        <span class="font-medium" style="font-size: 13.5px; color: #065f46;">blocked</span>
+        <span class="mono text-slate-500" style="font-size: 12px;">— collapse whitespace</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom callout -->
+  <div class="flex justify-center mt-6">
+    <div class="inline-flex items-center gap-3 px-6 py-3 rounded-full" style="background: linear-gradient(135deg, var(--violet-100), var(--pink-100)); border: 1px solid var(--card-border);">
+      <i class="material-icons" style="color: var(--primary); font-size: 20px;">shield</i>
+      <span class="font-semibold" style="font-family: var(--font-heading); font-size: 15px; color: var(--ink);">
+        <span class="mono" style="color: var(--primary);">8</span> evasion techniques defeated
+        · <span class="mono" style="color: var(--accent);">28/28</span> tests passing
+      </span>
+    </div>
+  </div>
+</div>
+
+<aside data-notes="">
+Naïve WAFs run pattern matching against the raw request body — and attackers know this. They encode payloads to slip past regex. HTML entities like &lt;script&gt; look harmless to a rule looking for the literal &lt;script&gt; tag, so the attack reaches the page. Full-width Unicode characters like ＭＭＲＭ slip past SQL pattern rules. SQL comments like UNION slash-star star-slash SELECT break the contiguous pattern. Double URL-encoding like %2527 hides the apostrophe from a single decode pass. And whitespace padding breaks the literal UNION-SELECT match. Each of these defeats a single-pass WAF. DeceptiWAF’s pipeline runs five normalization layers — decodeURIComponent recursively, decode HTML entities, NFKC Unicode normalize, strip SQL comments, collapse whitespace — before matching. So no matter how the attacker encodes their payload, by the time we run our 50+ regex rules, the payload is in its canonical form and the rule fires.
+</aside>
+
+
+</body></html>

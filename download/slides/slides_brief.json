@@ -1,0 +1,75 @@
+{
+  "design": {
+    "title": "DeceptiWAF — Deception-Based Web Application Firewall",
+    "style_name": "Pastel Violet — modern, approachable, technical-credible",
+    "palette": { "background": "#faf5ff", "primary": "#7c3aed", "accent": "#ec4899" },
+    "typography": { "heading": "Plus Jakarta Sans", "body": "Inter", "numeric": "JetBrains Mono" },
+    "reference": "Linear.app marketing deck meets Notion product pages — soft pastel gradients, solid white cards, generous whitespace, violet/pink accents"
+  },
+  "global_css_path": "/home/z/my-project/download/slides/global.css",
+  "slides_dir": "/home/z/my-project/download/slides",
+  "language": "en",
+  "speaker_notes": "full",
+  "slides": [
+    {
+      "title": "Cover — DeceptiWAF",
+      "layout": "cover",
+      "output_path": "/home/z/my-project/download/slides/slide_01.html",
+      "task_brief": "COVER SLIDE. Centered layout on the pastel gradient background.\n\nTop: a small pill badge 'CYBERSECURITY PROJECT · 2025' in violet.\n\nCenter: Massive headline 'DeceptiWAF' in gradient text (violet → pink), font-size ~88px, Plus Jakarta Sans ExtraBold. Below it, subtitle in 28px slate: 'A Deception-Based Web Application Firewall with Brute-Force Honeypot'.\n\nBelow subtitle: a row of 3 small tech pills: 'Node.js', 'Express', 'Socket.io' — each white pill with violet text.\n\nBottom-center: credit line 'Kalyani University · Software Engineering Project' in 14px slate-500.\n\nTop-right corner: a subtle shield icon (Material Icons 'security') in a soft violet circle, 48px.\n\nNo image needed. Pure typographic cover.\n\nSpeaker notes: full script (~100 words) introducing the project — what DeceptiWAF is, why we built it, the core deception concept, and what the audience will see in the next 10 slides."
+    },
+    {
+      "title": "The Problem",
+      "layout": "split text+stats",
+      "output_path": "/home/z/my-project/download/slides/slide_02.html",
+      "task_brief": "SPLIT LAYOUT: left 55% text, right 45% stat cards.\n\nLeft side:\n- Small pill 'THE PROBLEM' in rose.\n- H1 headline (36px): 'Web apps face relentless automated attacks'\n- 3 bullet points (16px, slate-600, each with a small Material Icon):\n  1. icon 'bug_report' — 'SQL injection, XSS, and path traversal target every web form'\n  2. icon 'lock_open' — 'Brute-force login attacks are automated, parallel, and cheap to run'\n  3. icon 'visibility_off' — 'Traditional WAFs block-and-forget — they never learn who the attacker is'\n\nRight side: 3 stacked stat cards (white, rounded-2xl, soft shadow):\n- Card 1: big number '83%' in violet (JetBrains Mono, 44px), label 'of web apps have vulnerabilities (OWASP)'\n- Card 2: big number '#1' in pink (44px), label 'SQL injection in web attack rankings'\n- Card 3: big number '177' in amber (44px), label 'avg days to detect a breach (IBM)'\n\nSpeaker notes: full script (~120 words) explaining the threat landscape — why web apps are attacked, why block-and-forget isn't enough, and the gap DeceptiWAF fills."
+    },
+    {
+      "title": "Our Approach — Deception",
+      "layout": "key message",
+      "output_path": "/home/z/my-project/download/slides/slide_03.html",
+      "task_brief": "KEY MESSAGE SLIDE. Centered, bold, minimal.\n\nTop: small pill 'OUR APPROACH' in violet.\n\nCenter: massive statement (48px, Plus Jakarta Sans Bold, slate-800):\n'Don't just block attackers —'\nnext line in gradient text (violet → pink):\n'trap them.'\n\nBelow: subtext (20px, slate-600, max-width 800px, centered):\n'DeceptiWAF combines a scoring WAF with a deception honeypot. Instead of rejecting brute-forcers with a 401, we lie \"Login Successful\" and serve a fake dashboard — then watch every move they make on the SOC feed.'\n\nBottom: 3 horizontal pills with icons:\n- '🛡 WAF blocks' (rose pill)\n- '🕸 Honeypot traps' (fuchsia pill)\n- '👁 SOC watches' (violet pill)\n\nSpeaker notes: full script (~130 words) explaining the deception philosophy — why trapping is better than blocking, what attackers see, how the SOC benefits."
+    },
+    {
+      "title": "Architecture Overview",
+      "layout": "bento grid",
+      "output_path": "/home/z/my-project/download/slides/slide_04.html",
+      "task_brief": "BENTO GRID: 2x2 white cards, each a module. Title above grid: 'Architecture' (32px, gradient text).\n\nCard 1 (top-left): icon 'web' in violet circle. Title 'Module 1 — Target App'. Body: 'Express server mimicking KLY University portal. Login page, student dashboard, course search — the decoy surface attackers hit.'\n\nCard 2 (top-right): icon 'shield' in rose circle. Title 'Module 2 — WAF Middleware'. Body: '50+ regex rules across SQLi/XSS/PathTraversal/MaliciousUAs. Scoring engine blocks at score > 4. Multi-layer de-obfuscation pipeline.'\n\nCard 3 (bottom-left): icon 'bug_report' in fuchsia circle. Title 'Module 3 — CredShield Honeypot'. Body: 'Tracks failed logins per IP. After 3 fails, honeypot arms. 4th attempt is \"successful\" — serves fake dashboard with deterministic fake profile.'\n\nCard 4 (bottom-right): icon 'monitoring' in emerald circle. Title 'Module 4 — SOC Dashboard'. Body: 'Real-time Socket.io feed, IP geolocation via ip-api.com, event history (last 500), top attackers catalog, admin APIs.'\n\nCenter overlay between cards: a small pill 'Socket.io event bus' in slate, indicating modules communicate via Socket.io.\n\nSpeaker notes: full script (~140 words) walking through each module and how they connect."
+    },
+    {
+      "title": "WAF Engine — Scoring + De-obfuscation",
+      "layout": "split text+code",
+      "output_path": "/home/z/my-project/download/slides/slide_05.html",
+      "task_brief": "SPLIT: left 50% explanation, right 50% pipeline.\n\nLeft:\n- Pill 'MODULE 2 · WAF ENGINE' in rose.\n- H2 (28px): 'Scoring engine, not hard blocks'\n- Body (15px slate-600): 'Each regex rule has a point value. The request score is the sum of all matched rules. Block threshold = 4. This lets benign traffic with a single low-score indicator (like a -- in a legitimate comment) pass through, while real attacks trigger multiple high-score rules.'\n- Example table (mono font, compact):\n  | Payload | Rules hit | Score | Result |\n  | UNION SELECT | sqli_union_select (4) | 4 | ✗ flagged |\n  | ' UNION SELECT 1,2,3 -- | union(4) + comment(1) | 5 | ✓ BLOCKED |\n\nRight: 'De-obfuscation pipeline' heading, then a vertical stack of chips (each a white card with mono text, connected by small down-arrows):\n1. 'Raw input' (slate)\n2. 'decodeURIComponent × 3' (violet) — catches %27, %2527\n3. 'decodeHtmlEntities' (violet) — catches &lt; &#60; &#x3c;\n4. 'normalize(\"NFKC\")' (violet) — catches ＵＮＩＯＮ\n5. 'strip /* comments */' (violet) — catches UNION/**/SELECT\n6. 'Pattern match (50+ rules)' (pink, bold) — final detection\n\nBottom-right callout: '50+ rules · 4 attack families · 8 evasion techniques defeated'\n\nSpeaker notes: full script (~150 words) explaining scoring rationale + the multi-layer pipeline."
+    },
+    {
+      "title": "CredShield — The Honeypot",
+      "layout": "timeline",
+      "output_path": "/home/z/my-project/download/slides/slide_06.html",
+      "task_brief": "HORIZONTAL TIMELINE: 5 steps left-to-right. Title above: 'CredShield — Brute-Force Honeypot' (32px gradient text).\n\nTimeline is a horizontal line with 5 circular nodes. Each node has a number, a label below, and a color:\n1. Node 1 (amber): 'Attempt 1' / 'Failed login' / 'count=1'\n2. Node 2 (amber): 'Attempt 2' / 'Failed login' / 'count=2'\n3. Node 3 (orange): 'Attempt 3' / 'HONEYPOT ARMED' / 'threshold crossed'\n4. Node 4 (fuchsia): 'Attempt 4' / '\"Login Successful\"' / 'TRAP SPRINGS'\n5. Node 5 (violet): 'Attacker lands on /dashboard' / 'served fake profile' / 'silent deception'\n\nBelow the timeline: two callout cards side-by-side:\n- Card A (left): icon 'fingerprint' — 'Deterministic fake profiles: same username = same fake student, every time. No real user data exposed.'\n- Card B (right): icon 'schedule' — 'Auto-disarms after 30 min of inactivity. Legit users on shared IPs aren't locked out forever.'\n\nSpeaker notes: full script (~140 words) walking through the trap flow + why deterministic profiles matter."
+    },
+    {
+      "title": "SOC Dashboard — Live Command Center",
+      "layout": "split text+image",
+      "output_path": "/home/z/my-project/download/slides/slide_07.html",
+      "task_brief": "SPLIT: left 45% feature list, right 55% mockup.\n\nLeft:\n- Pill 'MODULE 4 · SOC DASHBOARD' in emerald.\n- H2 (28px): 'Real-time attack visibility'\n- 5 bullet points (15px slate-600, each with a small colored dot):\n  • 🟢 Live WAF block feed via Socket.io — IP, attack type, score, payload, hit breakdown\n  • 🟣 Purple honeypot trap alerts with fake identity served + attacker fingerprint\n  • 🌍 IP geolocation via ip-api.com — city, country, ISP, flag emoji\n  • 📊 Top attackers catalog + trapped attackers panel with admin reset\n  • 🔌 Admin APIs: /api/stats, /api/events/recent, /api/honeypot/reset\n\nRight: a dark panel mockup (bg #1e1932, rounded-2xl, padding 20px) simulating the live feed. Mono font, 12px, 5 example lines:\n  [14:23:01] [BLOCK] SQLi score=5/4 ip=10.0.0.7 🇺🇸 Ashburn, US\n    - sqli_or_tautology (4pt) [body.studentId]\n  [14:23:08] [BRUTE] ip=203.0.113.9 user=admin fails=2/3\n  [14:23:15] [HONEYPOT ARMED] ip=203.0.113.9 after 3 fails\n  [14:23:22] [HONEYPOT TRAP] ip=203.0.113.9 served_fake=Dev Raina\n\nBelow mockup: tiny label 'Dark feed panel · real Socket.io events'.\n\nSpeaker notes: full script (~140 words) describing what admins see + how geo + fingerprinting help attribution."
+    },
+    {
+      "title": "Anti-Evasion — Catching the Sneaky Stuff",
+      "layout": "comparison table",
+      "output_path": "/home/z/my-project/download/slides/slide_08.html",
+      "task_brief": "COMPARISON TABLE. Title: 'Anti-Evasion — Phase 5' (32px gradient text). Subtitle: 'Multi-layer de-obfuscation catches what single-pass WAFs miss.'\n\nTwo-column table (white card, rounded-2xl, full width):\n- Header row: 'Naïve WAF (single-pass)' | 'DeceptiWAF (multi-layer)'\n- Row 1: '&lt;script&gt; (HTML entities)' | '✓ blocked — decodeHtmlEntities'\n- Row 2: 'ＵＮＩＯＮ (full-width Unicode)' | '✓ blocked — normalize NFKC'\n- Row 3: 'UNION/**/SELECT (SQL comment)' | '✓ blocked — strip /* */'\n- Row 4: '%2527 OR 1=1 (double URL-encoded)' | '✓ blocked — recursive decode'\n- Row 5: 'UNION     SELECT (whitespace pad)' | '✓ blocked — collapse whitespace'\n\nLeft column cells: rose-50 background, mono font, ✗ icon. Right column cells: emerald-50 background, mono font, ✓ icon.\n\nBottom callout pill (centered): '8 evasion techniques defeated · 28/28 tests passing'\n\nSpeaker notes: full script (~130 words) explaining why each evasion works against naïve WAFs and how the multi-layer pipeline defeats them."
+    },
+    {
+      "title": "Results & Test Coverage",
+      "layout": "stats grid",
+      "output_path": "/home/z/my-project/download/slides/slide_09.html",
+      "task_brief": "STATS GRID. Title: 'Results' (32px gradient text).\n\n3x2 grid of stat cards (white, rounded-2xl, soft shadow, each ~280x140px):\n1. '50+' (violet, 48px mono) / 'regex rules across 4 attack families'\n2. '8' (pink, 48px mono) / 'evasion techniques defeated'\n3. '28/28' (emerald, 48px mono) / 'automated tests passing'\n4. '18' (amber, 48px mono) / 'demo users (SHA-256 hashed)'\n5. '500' (sky, 48px mono) / 'events cached in-memory ring buffer'\n6. '5' (rose, 48px mono) / 'admin-only REST APIs'\n\nBelow grid: 'End-to-end verified' heading + 4-item checklist (2x2, green checkmarks):\n- ✓ WAF blocks SQLi/XSS/PathTraversal/UAs (403)\n- ✓ Honeypot traps after 3 fails → /dashboard\n- ✓ Deterministic fake profiles per username\n- ✓ SOC live feed with geo + fingerprinting\n\nFooter (12px slate-400, centered): 'Built with Node.js · Express · Socket.io · cookie-parser — 3 dependencies, zero build tools'\n\nSpeaker notes: full script (~120 words) summarizing the metrics + what was verified."
+    },
+    {
+      "title": "Thank You — Questions?",
+      "layout": "closing",
+      "output_path": "/home/z/my-project/download/slides/slide_10.html",
+      "task_brief": "CLOSING SLIDE. Centered on pastel gradient.\n\nCenter: massive 'Thank You' (88px, gradient text violet → pink, Plus Jakarta Sans ExtraBold).\n\nBelow: subtitle 'Questions & Demo' (28px slate-600).\n\nBelow subtitle: 3 horizontal demo prompt pills (white cards with violet border, each with an icon + text):\n- '🔗 /test' — 'Cyber Range: fire attacks with one click'\n- '🔐 admin → /soc' — 'Live SOC dashboard with real-time feed'\n- '🕸 Brute-force 4×' — 'Watch the honeypot trap spring'\n\nBottom-center: credit line 'DeceptiWAF · Cybersecurity Project · Kalyani University · 2025' (13px slate-400).\n\nTop-right corner: small shield icon in violet circle (echoes the cover).\n\nNo image needed. Pure typographic closing.\n\nSpeaker notes: full script (~90 words) thanking the audience, inviting questions, and pointing them to the live demo routes."
+    }
+  ]
+}
