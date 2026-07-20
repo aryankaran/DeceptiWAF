@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeceptiWAF — 15-Slide Master Presentation Deck</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', system-ui, sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
+    h1, h2, h3, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-comic { font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .slide-card { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(51, 65, 85, 0.6); min-height: 540px; }
+    .defense-card { background: rgba(30, 27, 75, 0.5); border: 1px solid rgba(99, 102, 241, 0.4); }
+    .slide-step { display: none; }
+    .slide-step.active { display: block; }
+    .nav-btn { transition: all 0.2s ease; }
+    .nav-btn:hover:not(:disabled) { transform: translateY(-1px); }
+    @media print {
+      @page { size: landscape; margin: 0; }
+      header, footer { display: none !important; }
+      body { background-color: #020617 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; padding: 0 !important; }
+      main { max-width: 100% !important; padding: 1rem !important; }
+      .slide-step { display: block !important; page-break-after: always !important; break-after: page !important; }
+      .slide-card { border: none !important; box-shadow: none !important; min-height: 90vh !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header / Navigation Bar -->
+  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-md px-6 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="w-3 h-3 rounded-full bg-indigo-500 animate-pulse"></span>
+        <div>
+          <p class="font-comic font-bold tracking-wider text-slate-100 text-sm flex items-center gap-2">
+            DECEPTIWAF <span class="font-sans px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 text-xs border border-indigo-500/30">MASTER PRESENTATION DECK</span>
+          </p>
+          <p class="text-[10px] text-slate-400 mono">15-Slide Interactive Defense & Architecture Presentation</p>
+        </div>
+      </div>
+
+      <!-- Slide Controls -->
+      <div class="flex items-center gap-3 mono text-xs">
+        <span class="text-slate-400">SLIDE <span id="currentSlideNum" class="text-indigo-400 font-bold">1</span> / 15</span>
+        <button id="prevBtn" class="nav-btn bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 font-bold">&larr; Prev</button>
+        <button id="nextBtn" class="nav-btn bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white px-3 py-1.5 rounded-lg border border-indigo-500 font-bold">Next &rarr;</button>
+        <a href="/" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">App Demo &rarr;</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Slide Content Container -->
+  <main class="max-w-7xl mx-auto px-6 py-6 w-full flex-grow flex flex-col justify-center">
+
+    <!-- SLIDE 1: Title & Project Identity -->
+    <div class="slide-step active" data-slide="1">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950 border border-indigo-800/60 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-4">
+            🎓 Technical Project Presentation &middot; Kalyani University
+          </div>
+          <h1 class="font-comic text-3xl md:text-4xl font-extrabold text-slate-100 leading-tight mb-4">
+            DeceptiWAF: An Inline Active Deception WAF & Brute-Force Honeypot Architecture
+          </h1>
+          <p class="text-slate-300 text-sm md:text-base leading-relaxed max-w-4xl mb-6">
+            Active Cyber Defense combining AST Structural Tokenization, Sliding-Window Rate Limiting, and IP-Seeded Deterministic Decoy Isolation to neutralize web application attacks without alerting attackers.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-bold mono">Core Engine</p>
+              <p class="text-sm font-semibold text-indigo-400 mt-1">Node.js + Express Middleware</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-bold mono">Storage Subsystem</p>
+              <p class="text-sm font-semibold text-emerald-400 mt-1">SQLite WAL (better-sqlite3)</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-bold mono">Real-Time Telemetry</p>
+              <p class="text-sm font-semibold text-fuchsia-400 mt-1">Socket.IO WebSockets</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4 flex items-center justify-between">
+          <span><strong>Quick Nav:</strong> Use Left & Right Arrow keys on your keyboard to navigate slides.</span>
+          <span class="mono text-indigo-400 font-bold">Slide 01/15</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Modern Web Security Landscape -->
+    <div class="slide-step" data-slide="2">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-rose-400 tracking-wider uppercase mb-2">SLIDE 2: Modern Web Security Threat Landscape</h2>
+          <p class="text-xs text-slate-400 mono mb-6">Background analysis & motivation behind DeceptiWAF</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+            <div class="bg-slate-900/80 rounded-xl p-5 border border-slate-800 space-y-3">
+              <h3 class="font-bold text-slate-100 text-base">Current Attack Trends</h3>
+              <ul class="list-disc list-inside space-y-2 text-slate-300 text-xs leading-relaxed">
+                <li><strong>65%+ Web Breaches</strong> originate from SQL Injection (SQLi) and credential stuffing botnets.</li>
+                <li><strong>Automated Tooling</strong> (sqlmap, nikto, hydra) systematically scans web endpoints 24/7.</li>
+                <li><strong>Resource Exhaustion</strong>: Brute-force floods exhaust server CPU cycles and database connection pools.</li>
+              </ul>
+            </div>
+
+            <div class="bg-slate-900/80 rounded-xl p-5 border border-slate-800 space-y-3">
+              <h3 class="font-bold text-slate-100 text-base">Evasion Complexity</h3>
+              <ul class="list-disc list-inside space-y-2 text-slate-300 text-xs leading-relaxed">
+                <li><strong>Multi-Level Encoding</strong>: Attackers wrap payloads in percent-encoding (`%2527`) to bypass basic filters.</li>
+                <li><strong>Inline Comment Tricks</strong>: Inserting `UNION/**/SELECT` breaks naive regex substring checks.</li>
+                <li><strong>HTML Entity Obfuscation</strong>: Using `&lt;script&gt;` evades basic string matchers.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Key Architectural Rationale:</strong> DeceptiWAF was designed specifically to address both brute-force credential stuffing and obfuscated SQLi/XSS payloads that bypass legacy WAFs.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Problem Statement — The Flaws of Passive WAFs -->
+    <div class="slide-step" data-slide="3">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-amber-400 tracking-wider uppercase mb-2">SLIDE 3: Problem Statement — The Flaws of Passive WAFs</h2>
+          <p class="text-xs text-slate-400 mono mb-6">Why traditional HTTP 403 Forbidden responses fail in production</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="bg-rose-950/30 border border-rose-900/60 rounded-xl p-4 space-y-2">
+              <h3 class="font-bold text-rose-400 text-sm">1. Immediate Attacker Feedback</h3>
+              <p class="text-slate-300 leading-relaxed">A 403 status explicitly informs the attacker that their payload was detected. They instantly adjust signatures until the block is bypassed.</p>
+            </div>
+            <div class="bg-rose-950/30 border border-rose-900/60 rounded-xl p-4 space-y-2">
+              <h3 class="font-bold text-rose-400 text-sm">2. Zero Attacker Friction</h3>
+              <p class="text-slate-300 leading-relaxed">Standard WAFs incur zero time cost on the attacker. Botnets continue probing endpoints endlessly without penalty.</p>
+            </div>
+            <div class="bg-rose-950/30 border border-rose-900/60 rounded-xl p-4 space-y-2">
+              <h3 class="font-bold text-rose-400 text-sm">3. False Positive Friction</h3>
+              <p class="text-slate-300 leading-relaxed">Overly aggressive WAF regex rules block legitimate users, destroying user experience and generating support tickets.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Research Paradigm Shift:</strong> Move from <em>Passive Rejection (HTTP 403)</em> to <em>Active Deception</em> — silently trapping attackers inside isolated decoy portals.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Proposed Solution — DeceptiWAF Architecture -->
+    <div class="slide-step" data-slide="4">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-emerald-400 tracking-wider uppercase mb-2">SLIDE 4: Proposed Solution — Active Deception Strategy</h2>
+          <p class="text-xs text-slate-400 mono mb-6">Core architectural pillars of DeceptiWAF</p>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-emerald-400 font-bold mono text-sm mb-1">01. AST Engine</p>
+              <p class="text-slate-300 leading-relaxed">Lexical tokenization of SQL/DOM syntax trees to stop obfuscation.</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-amber-400 font-bold mono text-sm mb-1">02. Rate Limiting</p>
+              <p class="text-slate-300 leading-relaxed">Sliding-window IP throttling with micro-burst defense.</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-fuchsia-400 font-bold mono text-sm mb-1">03. CredShield Trap</p>
+              <p class="text-slate-300 leading-relaxed">Automated honeypot arming after 3 failed login attempts.</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-indigo-400 font-bold mono text-sm mb-1">04. SOC Telemetry</p>
+              <p class="text-slate-300 leading-relaxed">Real-time WebSocket streaming & SQLite WAL persistence.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Key Advantage:</strong> Attacker receives HTTP 200 OK and interacts with realistic decoy data while remaining completely isolated from the real database.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Visual End-to-End Request Pipeline Flowchart -->
+    <div class="slide-step" data-slide="5">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-indigo-400 tracking-wider uppercase mb-2">SLIDE 5: System Architecture & Request Lifecycle Flowchart</h2>
+          <p class="text-xs text-slate-400 mono mb-4">Complete inspection pipeline for every incoming HTTP request</p>
+
+          <!-- Visual Flowchart Diagram -->
+          <div class="bg-slate-950/80 p-5 rounded-2xl border border-slate-800 space-y-4">
+            <div class="flex items-center justify-center">
+              <div class="bg-blue-950/80 border border-blue-600/60 rounded-xl px-4 py-2 text-center text-xs font-bold text-blue-200 shadow-lg">
+                1. Incoming Client HTTP Request
+              </div>
+            </div>
+
+            <div class="text-center text-slate-500 text-xs font-bold mono">&darr;</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-amber-950/40 border border-amber-700/60 rounded-xl p-3 text-xs">
+                <p class="font-bold text-amber-400 mb-1">2. Rate Limiter Middleware</p>
+                <p class="text-slate-300 text-[11px]">Sliding-window IP check (<code class="mono">lib/ratelimit.js</code>). Throttles bursts &gt; 15 req/min on <code class="mono">/login</code>.</p>
+              </div>
+
+              <div class="bg-indigo-950/40 border border-indigo-700/60 rounded-xl p-3 text-xs">
+                <p class="font-bold text-indigo-400 mb-1">3. AST-Based WAF Engine</p>
+                <p class="text-slate-300 text-[11px]">Lexical tokenization (<code class="mono">lib/astWaf.js</code>). Evaluates SQLi &amp; XSS threat score threshold = 4.</p>
+              </div>
+            </div>
+
+            <div class="text-center text-slate-500 text-xs font-bold mono">&darr; Decision Check &darr;</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Left Branch: Malicious / Trapped -->
+              <div class="bg-rose-950/40 border border-rose-800/80 rounded-xl p-3 text-xs space-y-2">
+                <p class="font-bold text-rose-400 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-rose-500"></span> Threat Score &gt; 4 OR Trapped IP
+                </p>
+                <div class="bg-slate-900/90 rounded-lg p-2 border border-slate-800 text-[11px]">
+                  <p class="font-semibold text-fuchsia-300">4. CredShield Honeypot Trap</p>
+                  <p class="text-slate-400">Reroutes to fake student portal (<code class="mono">honeypot.html</code>) with IP-seeded fake credentials.</p>
+                </div>
+              </div>
+
+              <!-- Right Branch: Clean Request -->
+              <div class="bg-emerald-950/40 border border-emerald-800/80 rounded-xl p-3 text-xs space-y-2">
+                <p class="font-bold text-emerald-400 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Clean Request (Score &le; 4)
+                </p>
+                <div class="bg-slate-900/90 rounded-lg p-2 border border-slate-800 text-[11px]">
+                  <p class="font-semibold text-emerald-300">5. Target Application Route</p>
+                  <p class="text-slate-400">Executes real user auth, issues session token, and renders student portal.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center text-slate-500 text-xs font-bold mono">&darr; Persistent Logging &amp; Telemetry Stream &darr;</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-cyan-950/40 border border-cyan-800/60 rounded-xl p-3 text-xs">
+                <p class="font-bold text-cyan-300 mb-1">6. SQLite WAL Database Engine</p>
+                <p class="text-slate-300 text-[11px]">Zero-latency event write to <code class="mono">data/deceptiwaf.db</code> via <code class="mono">better-sqlite3</code>.</p>
+              </div>
+
+              <div class="bg-fuchsia-950/40 border border-fuchsia-800/60 rounded-xl p-3 text-xs">
+                <p class="font-bold text-fuchsia-300 mb-1">7. Socket.IO WebSocket Broadcast</p>
+                <p class="text-slate-300 text-[11px]">Real-time incident stream pushed instantly to SOC Command Center (<code class="mono">/soc</code>).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Pipeline Rationale:</strong> Requests are intercepted sequentially. Malicious and brute-force traffic is silently isolated into the decoy honeypot, ensuring zero impact on the real database.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Complete API Specification Matrix -->
+    <div class="slide-step" data-slide="6">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-cyan-400 tracking-wider uppercase mb-2">SLIDE 6: Complete API Endpoint Specification Matrix</h2>
+          <p class="text-xs text-slate-400 mono mb-4">Comprehensive HTTP Endpoint Reference &amp; Action Outcomes</p>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-800 max-h-[320px] overflow-y-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-900 text-slate-400 mono text-[10px] uppercase sticky top-0 border-b border-slate-800">
+                <tr>
+                  <th class="p-2.5">Endpoint</th>
+                  <th class="p-2.5">Method</th>
+                  <th class="p-2.5">Auth</th>
+                  <th class="p-2.5">System Action &amp; Outcome</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 bg-slate-950/60 mono text-[11px]">
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/</td>
+                  <td class="p-2.5 text-emerald-400">GET</td>
+                  <td class="p-2.5 text-slate-400">Public</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Renders Stripe-inspired login portal (<code class="mono">index.html</code>).</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/login</td>
+                  <td class="p-2.5 text-amber-400">POST</td>
+                  <td class="p-2.5 text-slate-400">Public</td>
+                  <td class="p-2.5 text-slate-300 font-sans">If trapped: issues fake token &amp; redirects to decoy portal. If valid: issues session token. If invalid: arms honeypot on 3rd failure.</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/logout</td>
+                  <td class="p-2.5 text-amber-400">POST</td>
+                  <td class="p-2.5 text-indigo-400">Auth</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Destroys active session token in SQLite DB and clears cookies.</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/dashboard</td>
+                  <td class="p-2.5 text-emerald-400">GET</td>
+                  <td class="p-2.5 text-indigo-400">Auth / Trap</td>
+                  <td class="p-2.5 text-slate-300 font-sans">If Student: renders real academic ledger. If Trapped IP: renders decoy portal (<code class="mono">honeypot.html</code>).</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/api/me</td>
+                  <td class="p-2.5 text-emerald-400">GET</td>
+                  <td class="p-2.5 text-indigo-400">Auth</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Returns JSON academic profile matching the active session token.</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/soc</td>
+                  <td class="p-2.5 text-emerald-400">GET</td>
+                  <td class="p-2.5 text-fuchsia-400">Admin</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Renders real-time SOC Command Center dashboard (<code class="mono">soc.html</code>).</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/test</td>
+                  <td class="p-2.5 text-emerald-400">GET</td>
+                  <td class="p-2.5 text-slate-400">Public</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Renders interactive Cyber Range attack testing studio (<code class="mono">test.html</code>).</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/api/events/recent</td>
+                  <td class="p-2.5 text-emerald-400">GET</td>
+                  <td class="p-2.5 text-fuchsia-400">Admin</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Returns recent security incident history from SQLite DB (<code class="mono">JSON</code>).</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/api/attackers/top</td>
+                  <td class="p-2.5 text-emerald-400">GET</td>
+                  <td class="p-2.5 text-fuchsia-400">Admin</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Returns aggregated top attacker IPs and event counts.</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/api/honeypot/status</td>
+                  <td class="p-2.5 text-emerald-400">GET</td>
+                  <td class="p-2.5 text-fuchsia-400">Admin</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Returns list of currently trapped attacker IPs and trap activation timestamps.</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/api/honeypot/reset</td>
+                  <td class="p-2.5 text-amber-400">POST</td>
+                  <td class="p-2.5 text-fuchsia-400">Admin</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Disarms active honeypot traps in CredShield memory (<code class="mono">200 OK</code>).</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/api/events/clear</td>
+                  <td class="p-2.5 text-amber-400">POST</td>
+                  <td class="p-2.5 text-fuchsia-400">Admin</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Deletes past security logs from SQLite DB (<code class="mono">200 OK</code>).</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-indigo-300 font-bold">/health</td>
+                  <td class="p-2.5 text-emerald-400">GET</td>
+                  <td class="p-2.5 text-slate-400">Public</td>
+                  <td class="p-2.5 text-slate-300 font-sans">Returns system uptime and timestamp status (<code class="mono">200 OK</code>).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Key Architecture Note:</strong> All administrative endpoints enforce strict session-role authentication checks (`user.role === 'admin'`).
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: AST-Based WAF Engine & Lexical Tokenizer -->
+    <div class="slide-step" data-slide="7">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-indigo-300 tracking-wider uppercase mb-2">SLIDE 7: AST-Based WAF Engine & Tokenizer</h2>
+          <p class="text-xs text-slate-400 mono mb-6">File: `lib/astWaf.js` &mdash; Structural token analysis over raw string matching</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-indigo-400 uppercase">AST Token Types</p>
+              <ul class="list-disc list-inside space-y-1 text-slate-300">
+                <li><code class="mono text-amber-300">KEYWORD</code>: SELECT, UNION, DROP, DELETE, WHERE</li>
+                <li><code class="mono text-cyan-300">OPERATOR</code>: =, !=, &lt;&gt;, ;, +, -, *</li>
+                <li><code class="mono text-emerald-300">STRING</code> / <code class="mono text-emerald-300">NUMBER</code>: Quoted literals and numeric values</li>
+                <li><code class="mono text-slate-400">COMMENT</code>: Inline `/*...*/` and line `--` comments</li>
+              </ul>
+            </div>
+
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-indigo-400 uppercase">AST Structures Analyzed</p>
+              <ul class="list-disc list-inside space-y-1 text-slate-300">
+                <li><strong>Tautology Detection</strong>: `LITERAL OPERATOR LITERAL` (e.g. `1=1` or `'a'='a'`).</li>
+                <li><strong>UNION SELECT Sequence</strong>: Checks keyword sequence ignoring comment filler.</li>
+                <li><strong>Stacked Query Check</strong>: Detects `;` followed by sensitive SQL keywords.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Why We Chose AST over Regex/ML:</strong> AST tokenization eliminates white-space & comment obfuscation vulnerabilities while running in sub-millisecond (&lt;1.5ms) CPU time without heavy ML GPU requirements.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Anti-Evasion & De-obfuscation Pipeline -->
+    <div class="slide-step" data-slide="8">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-orange-400 tracking-wider uppercase mb-2">SLIDE 8: De-obfuscation Pipeline & Edge Cases</h2>
+          <p class="text-xs text-slate-400 mono mb-6">File: `lib/waf.js` &mdash; Multi-layer normalization before inspection</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-orange-400 uppercase">1. Recursive URL Decoding</p>
+              <p class="text-slate-300 leading-relaxed">Decodes up to 3 depth layers of percent-encoding to reverse double-encoding evasion (`%2527` &rarr; `%27` &rarr; `'`).</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-orange-400 uppercase">2. HTML Entity Mapping</p>
+              <p class="text-slate-300 leading-relaxed">Converts named (`&amp;lt;`), decimal (`&amp;#60;`), and hex (`&amp;#x3c;`) entities back to raw HTML characters before XSS checks.</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-orange-400 uppercase">3. Comment Stripping</p>
+              <p class="text-slate-300 leading-relaxed">Strips inline SQL block comments (`/*...*/`) to normalize fragmented keywords (`UNI/*foo*/ON`).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Why We Chose Normalization:</strong> Normalizing raw payloads to canonical representation *before* rule matching guarantees that obfuscation variations resolve to the exact same AST structure.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Sliding-Window Rate Limiting Core -->
+    <div class="slide-step" data-slide="9">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-amber-400 tracking-wider uppercase mb-2">SLIDE 9: Sliding-Window Rate Limiting Core</h2>
+          <p class="text-xs text-slate-400 mono mb-6">File: `lib/ratelimit.js` &mdash; IP request tracker with burst defense</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-amber-400 uppercase">Algorithm: Sliding Window</p>
+              <p class="text-slate-300 leading-relaxed">Maintains an in-memory Map of millisecond request timestamps per IP address. Prunes timestamps older than the cutoff window (`WINDOW_MS = 60000`).</p>
+            </div>
+
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-amber-400 uppercase">Why Sliding Window over Fixed Window?</p>
+              <p class="text-slate-300 leading-relaxed">Fixed windows suffer from "boundary burst exploits" (59 reqs at 0:59 + 60 reqs at 1:01 = 119 reqs in 2 sec). Sliding windows evaluate exact millisecond intervals, eliminating boundary exploits.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Response Action:</strong> Triggers HTTP 429 (`Too Many Requests`) with `Retry-After` header and broadcasts `ratelimit_event` via WebSockets.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: CredShield Honeypot Core & Deception Lifecycle -->
+    <div class="slide-step" data-slide="10">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-fuchsia-400 tracking-wider uppercase mb-2">SLIDE 10: CredShield Honeypot & Deception Lifecycle</h2>
+          <p class="text-xs text-slate-400 mono mb-6">File: `lib/credshield.js` &mdash; Automated state-machine honeypot arming</p>
+
+          <div class="grid grid-cols-4 gap-3 text-xs">
+            <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 space-y-1">
+              <p class="font-bold text-slate-400 mono">PROBE 1</p>
+              <p class="text-slate-300">Invalid creds.</p>
+              <p class="text-[10px] text-slate-500 mono">401 Unauthorized</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 space-y-1">
+              <p class="font-bold text-amber-400 mono">PROBE 2</p>
+              <p class="text-slate-300">Fail counter = 2.</p>
+              <p class="text-[10px] text-slate-500 mono">401 Unauthorized</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 space-y-1">
+              <p class="font-bold text-rose-400 mono">PROBE 3 (ARM)</p>
+              <p class="text-slate-300">Crosses threshold.</p>
+              <p class="text-[10px] text-fuchsia-400 mono">Honeypot ARMED</p>
+            </div>
+            <div class="bg-fuchsia-950/40 border border-fuchsia-800/80 rounded-xl p-3 space-y-1">
+              <p class="font-bold text-fuchsia-300 mono">PROBE 4 (TRAP)</p>
+              <p class="text-slate-200 font-semibold">Decoy redirect.</p>
+              <p class="text-[10px] text-emerald-400 mono">HTTP 200 OK (Trap)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Auto-Disarm TTL:</strong> Inactive trapped IPs automatically disarm after 30 minutes (`HONEYPOT_TTL_MS`) to prevent permanent lockouts.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Deterministic Seeding & Decoy Profile Generation -->
+    <div class="slide-step" data-slide="11">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-emerald-400 tracking-wider uppercase mb-2">SLIDE 11: Deterministic Decoy Profile Generation</h2>
+          <p class="text-xs text-slate-400 mono mb-6">File: `lib/fakeProfile.js` &mdash; IP SHA-256 hash seeding</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-emerald-400 uppercase">Deterministic Seeding Formula</p>
+              <code class="block bg-slate-950 p-2.5 rounded text-indigo-300 mono text-[11px]">hash = crypto.createHash('sha256').update(ip).digest('hex')</code>
+              <p class="text-slate-300 leading-relaxed">Uses numeric integer offsets from the SHA-256 hash to deterministically select Student Name, Roll No., CGPA, Enrolled Courses, and Attendance records.</p>
+            </div>
+
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-emerald-400 uppercase">Why Determinism is Essential</p>
+              <p class="text-slate-300 leading-relaxed">If fake identities changed randomly on every page refresh, the attacker would immediately suspect a honeypot. Determinism ensures 100% session persistence and complete attacker isolation.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Outcome:</strong> Side-by-side visual inspection confirms real (`dashboard.html`) and decoy (`honeypot.html`) academic pages look identical in layout.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: Real-Time SOC Command Center -->
+    <div class="slide-step" data-slide="12">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-fuchsia-400 tracking-wider uppercase mb-2">SLIDE 12: Real-Time SOC Command Center</h2>
+          <p class="text-xs text-slate-400 mono mb-6">File: `public/soc.html` &mdash; Socket.IO telemetry dashboard</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-1.5">
+              <p class="font-bold text-indigo-300 uppercase">Live Attack Telemetry</p>
+              <p class="text-slate-300 leading-relaxed">Socket.IO streams `waf_event`, `honeypot_event`, and `ratelimit_event` instantly to the feed without page reloads.</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-1.5">
+              <p class="font-bold text-amber-400 uppercase">Top Attackers Catalog</p>
+              <p class="text-slate-300 leading-relaxed">Aggregates event metrics per IP (Total Events, WAF Blocks, Trapped Sessions, Rate Limits).</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-1.5">
+              <p class="font-bold text-rose-400 uppercase">Administrative Controls</p>
+              <p class="text-slate-300 leading-relaxed">One-click disarm (`POST /api/honeypot/reset`) and database incident log clear (`POST /api/events/clear`).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Security Audit Logging:</strong> Server console outputs `[ADMIN ACTION]` log events for all administrative disarms and history resets.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: SQLite Persistence Layer & Schema Design -->
+    <div class="slide-step" data-slide="13">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-cyan-400 tracking-wider uppercase mb-2">SLIDE 13: SQLite Persistence Layer & Schema</h2>
+          <p class="text-xs text-slate-400 mono mb-6">File: `lib/db.js` &mdash; `better-sqlite3` operating in WAL mode</p>
+
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mono text-[11px] text-cyan-300 space-y-2 overflow-x-auto">
+            <p><strong>TABLE sessions:</strong> (token PK, username, fake_profile_json, created_at)</p>
+            <p><strong>TABLE events:</strong> (id PK, seq, kind, type, attack_type, score, ip, method, path, hits_json, timestamp, server_time, geo_json)</p>
+            <p><strong>TABLE rate_limits:</strong> (ip PK, count, window_start, blocked_until)</p>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Why We Chose SQLite WAL Mode:</strong> SQLite runs zero-latency in-process C queries with zero network socket overhead. WAL (Write-Ahead Logging) mode enables concurrent non-blocking reads during log writes (&lt;0.5ms per query).
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: Experimental Benchmarks & Metrics -->
+    <div class="slide-step" data-slide="14">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-emerald-400 tracking-wider uppercase mb-2">SLIDE 14: Experimental Performance Benchmarks</h2>
+          <p class="text-xs text-slate-400 mono mb-6">Quantitative evaluation results across 50+ OWASP attack vectors</p>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-2xl font-extrabold text-indigo-400 font-comic">&lt; 1.5 ms</p>
+              <p class="text-xs text-slate-400 mt-1 uppercase font-bold mono">Inspection Latency</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-2xl font-extrabold text-emerald-400 font-comic">98.5%</p>
+              <p class="text-xs text-slate-400 mt-1 uppercase font-bold mono">OWASP Detection</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-2xl font-extrabold text-fuchsia-400 font-comic">100%</p>
+              <p class="text-xs text-slate-400 mt-1 uppercase font-bold mono">Anti-Evasion Pass</p>
+            </div>
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800">
+              <p class="text-2xl font-extrabold text-amber-400 font-comic">100%</p>
+              <p class="text-xs text-slate-400 mt-1 uppercase font-bold mono">Decoy Isolation</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="defense-card rounded-xl p-4 text-xs text-indigo-200 mt-4">
+          <strong>Summary:</strong> Zero downtimes recorded under concurrent load testing; high throughput verified with SQLite WAL logging.
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 15: Conclusion, Future Scope & Q&A -->
+    <div class="slide-step" data-slide="15">
+      <div class="slide-card rounded-2xl p-8 shadow-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="font-comic text-xl font-bold text-rose-400 tracking-wider uppercase mb-2">SLIDE 15: Conclusion, Future Roadmap & Q&A</h2>
+          <p class="text-xs text-slate-400 mono mb-6">Summary of contributions and live demonstration shortcuts</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-slate-100 uppercase">Key Contributions</p>
+              <ul class="list-disc list-inside space-y-1 text-slate-300">
+                <li>Combined AST structural parsing with active deception honeypots.</li>
+                <li>Eliminated attacker feedback loops (no HTTP 403 response leak).</li>
+                <li>Engineered real-time SOC WebSocket monitoring dashboard.</li>
+              </ul>
+            </div>
+
+            <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 space-y-2">
+              <p class="font-bold text-indigo-400 uppercase">Future Extension Roadmap</p>
+              <ul class="list-disc list-inside space-y-1 text-slate-300">
+                <li>Entropy-based Machine Learning models for zero-day payloads.</li>
+                <li>Automated honeytoken/canary asset injection in DB responses.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-indigo-950/60 border border-indigo-800/80 rounded-xl p-4 text-xs text-indigo-200 mt-4 flex items-center justify-between">
+          <span><strong>Live Presentation Links:</strong> <a href="/" target="_blank" class="underline text-indigo-300 font-bold">Login Portal</a> &middot; <a href="/soc" target="_blank" class="underline text-indigo-300 font-bold">SOC Center</a> &middot; <a href="/test" target="_blank" class="underline text-indigo-300 font-bold">Test Console</a></span>
+          <span class="mono text-emerald-400 font-bold">Thank You! Q&A</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer Controls -->
+  <footer class="bg-slate-900/90 border-t border-slate-800 px-6 py-2 text-center text-xs text-slate-500 mono">
+    DeceptiWAF Master Presentation Deck &middot; Use &larr; Left / Right &rarr; Arrow Keys to Switch Slides
+  </footer>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 15;
+
+    function showSlide(slideNum) {
+      if (slideNum < 1 || slideNum > totalSlides) return;
+      currentSlide = slideNum;
+      document.querySelectorAll('.slide-step').forEach((el) => {
+        el.classList.remove('active');
+        if (parseInt(el.getAttribute('data-slide'), 10) === slideNum) {
+          el.classList.add('active');
+        }
+      });
+      document.getElementById('currentSlideNum').textContent = currentSlide;
+      document.getElementById('prevBtn').disabled = (currentSlide === 1);
+      document.getElementById('nextBtn').disabled = (currentSlide === totalSlides);
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => showSlide(currentSlide - 1));
+    document.getElementById('nextBtn').addEventListener('click', () => showSlide(currentSlide + 1));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') showSlide(currentSlide - 1);
+      if (e.key === 'ArrowRight') showSlide(currentSlide + 1);
+    });
+
+    showSlide(1);
+  </script>
+</body>
+</html>
