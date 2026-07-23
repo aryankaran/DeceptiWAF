@@ -1,0 +1,592 @@
+     1→/**
+     2→ * DeceptiWAF - lib/waf.js
+     3→ * ------------------------------------------------------------------
+     4→ * Phase 2: Mini-WAF Engine
+     5→ *
+     6→ *   1. PATTERN DICTIONARY  — regex rules grouped by attack family
+     7→ *      (SQLi, XSS, Path Traversal, Malicious User-Agents)
+     8→ *
+     9→ *   2. SCORING ENGINE      — each rule has a point value. Sum all
+    10→ *      matched rules for the request. Threshold = 4 (block on > 4).
+    11→ *      Spec example: UNION=3, -- =1, so 'UNION--' = 4 (allowed, flagged),
+    12→ *      but ' UNION SELECT ... --' = 3 + 2 + 1 = 6 (blocked).
+    13→ *
+    14→ *   3. DE-OBFUSCATION       — URL-decode (one pass + recursive) before
+    15→ *      regex matching, so %27%20OR%201%3D1 catches URL-encoded attacks.
+    16→ *
+    17→ *   4. INSPECTION SURFACES  — URL path, query string values, body
+    18→ *      fields (urlencoded + JSON), User-Agent, Referer.
+    19→ *
+    20→ *   5. EXPORTS              — `inspectRequest(req)` returns the analysis
+    21→ *      object; `wafMiddleware` is the Express middleware that blocks.
+    22→ * ------------------------------------------------------------------
+    23→ */
+    24→
+    25→// ------------------------------------------------------------------
+    26→// Pattern dictionary
+    27→//   Each entry: { id, family, pattern, score, label }
+    28→// ------------------------------------------------------------------
+    29→const PATTERNS = [
+    30→
+    31→  // -------- SQL Injection --------------------------------------
+    32→  { id: 'sqli_union_select',    family: 'SQLi',  pattern: /union\s+(all\s+)?select/i,         score: 4, label: "UNION SELECT" },
+    33→  { id: 'sqli_or_tautology',    family: 'SQLi',  pattern: /['"]?\s*(or|and)\s+['"]?\d+['"]?\s*=\s*['"]?\d+/i, score: 4, label: "OR 1=1 tautology" },
+    34→  { id: 'sqli_or_string_eq',    family: 'SQLi',  pattern: /'\s*or\s+'[^']*'\s*=\s*'[^']*'/i,  score: 4, label: "OR 'x'='x' tautology" },
+    35→  { id: 'sqli_comment_dash',    family: 'SQLi',  pattern: /--/,                              score: 1, label: "SQL comment --" },
+    36→  { id: 'sqli_comment_hash',    family: 'SQLi',  pattern: /#/,                                score: 1, label: "SQL comment #" },
+    37→  { id: 'sqli_comment_slash',   family: 'SQLi',  pattern: /\/\*/,                             score: 2, label: "SQL comment /* */" },
+    38→  { id: 'sqli_mysqL_versioned', family: 'SQLi',  pattern: /\/\*!\d+/,                         score: 2, label: "MySQL versioned comment" },
+    39→  { id: 'sqli_drop_table',      family: 'SQLi',  pattern: /(drop|truncate)\s+table/i,         score: 5, label: "DROP/TRUNCATE TABLE" },
+    40→  { id: 'sqli_stacked_query',   family: 'SQLi',  pattern: /;\s*(select|insert|update|delete|drop|exec)/i, score: 4, label: "Stacked SQL query" },
+    41→  { id: 'sqli_information_sch', family: 'SQLi',  pattern: /information_schema/i,              score: 3, label: "information_schema reference" },
+    42→  { id: 'sqli_sleep',           family: 'SQLi',  pattern: /sleep\s*\(\s*\d+\s*\)/i,           score: 4, label: "SLEEP() time-based blind" },
+    43→  { id: 'sqli_benchmark',       family: 'SQLi',  pattern: /benchmark\s*\(/i,                  score: 4, label: "BENCHMARK() time-based blind" },
+    44→  { id: 'sqli_waitfor',         family: 'SQLi',  pattern: /waitfor\s+delay/i,                 score: 4, label: "WAITFOR DELAY (MSSQL)" },
+    45→  { id: 'sqli_xpcmdshell',      family: 'SQLi',  pattern: /xp_cmdshell/i,                     score: 5, label: "xp_cmdshell (RCE via SQL)" },
+    46→  { id: 'sqli_hex_blob',        family: 'SQLi',  pattern: /0x[0-9a-f]{8,}/i,                  score: 2, label: "Hex blob literal" },
+    47→  { id: 'sqli_extractvalue',    family: 'SQLi',  pattern: /extractvalue\s*\(/i,               score: 4, label: "extractValue() error-based" },
+    48→  { id: 'sqli_updatexml',       family: 'SQLi',  pattern: /updatexml\s*\(/i,                  score: 4, label: "updatexml() error-based" },
+    49→
+    50→  // -------- Cross-Site Scripting (XSS) -------------------------
+    51→  { id: 'xss_script_tag',       family: 'XSS',   pattern: /<\s*script/i,                       score: 4, label: "<script> tag" },
+    52→  { id: 'xss_onerror',          family: 'XSS',   pattern: /onerror\s*=/i,                      score: 4, label: "onerror= handler" },
+    53→  { id: 'xss_onload',           family: 'XSS',   pattern: /onload\s*=/i,                       score: 3, label: "onload= handler" },
+    54→  { id: 'xss_onmouseover',      family: 'XSS',   pattern: /onmouseover\s*=/i,                  score: 2, label: "onmouseover= handler" },
+    55→  { id: 'xss_onclick',          family: 'XSS',   pattern: /onclick\s*=/i,                      score: 2, label: "onclick= handler" },
+    56→  { id: 'xss_javascript_proto', family: 'XSS',   pattern: /javascript:/i,                      score: 3, label: "javascript: protocol" },
+    57→  { id: 'xss_alert',            family: 'XSS',   pattern: /alert\s*\(/i,                       score: 2, label: "alert() call" },
+    58→  { id: 'xss_prompt',           family: 'XSS',   pattern: /prompt\s*\(/i,                      score: 2, label: "prompt() call" },
+    59→  { id: 'xss_confirm',          family: 'XSS',   pattern: /confirm\s*\(/i,                     score: 2, label: "confirm() call" },
+    60→  { id: 'xss_document_cookie',  family: 'XSS',   pattern: /document\.cookie/i,                 score: 3, label: "document.cookie access" },
+    61→  { id: 'xss_eval',             family: 'XSS',   pattern: /eval\s*\(/i,                        score: 3, label: "eval() call" },
+    62→  { id: 'xss_fromcharcode',     family: 'XSS',   pattern: /string\.fromcharcode/i,             score: 3, label: "String.fromCharCode obfuscation" },
+    63→  { id: 'xss_iframe',           family: 'XSS',   pattern: /<\s*iframe/i,                       score: 3, label: "<iframe> tag" },
+    64→  { id: 'xss_svg',              family: 'XSS',   pattern: /<\s*svg/i,                          score: 3, label: "<svg> tag" },
+    65→  { id: 'xss_img_src_x',        family: 'XSS',   pattern: /<\s*img[^>]+src\s*=\s*['"]?x/i,     score: 2, label: "<img src=x> probe" },
+    66→  { id: 'xss_body_onload',      family: 'XSS',   pattern: /<\s*body[^>]+on/i,                  score: 3, label: "<body onload=...>" },
+    67→  { id: 'xss_innerhtml',        family: 'XSS',   pattern: /\.innerhtml\s*=/i,                 score: 3, label: ".innerHTML assignment" },
+    68→
+    69→  // -------- Path Traversal -------------------------------------
+    70→  { id: 'pt_dotdot_slash',      family: 'PathTraversal', pattern: /\.\.\//,                    score: 3, label: "../ traversal" },
+    71→  { id: 'pt_dotdot_backslash',  family: 'PathTraversal', pattern: /\.\.\\/,                    score: 3, label: "..\\ traversal" },
+    72→  { id: 'pt_etc_passwd',        family: 'PathTraversal', pattern: /\/etc\/passwd/i,            score: 5, label: "/etc/passwd access" },
+    73→  { id: 'pt_etc_shadow',        family: 'PathTraversal', pattern: /\/etc\/shadow/i,            score: 5, label: "/etc/shadow access" },
+    74→  { id: 'pt_proc_self',         family: 'PathTraversal', pattern: /\/proc\/self/i,             score: 3, label: "/proc/self access" },
+    75→  { id: 'pt_windows_winini',    family: 'PathTraversal', pattern: /(win\.ini|boot\.ini|system32)/i, score: 3, label: "Windows system file" },
+    76→  { id: 'pt_dotdot_urlenc',     family: 'PathTraversal', pattern: /(\.\.%2f|\.\.%5c|%2e%2e)/i,  score: 3, label: "URL-encoded ../" },
+    77→  { id: 'pt_dotdot_overlong',   family: 'PathTraversal', pattern: /\.\.%c0%af/i,                score: 3, label: "Overlong UTF-8 traversal" },
+    78→  { id: 'pt_php_wrapper',       family: 'PathTraversal', pattern: /php:\/\/(filter|input|data)/i, score: 5, label: "PHP stream wrapper" },
+    79→  { id: 'pt_file_uri',          family: 'PathTraversal', pattern: /file:\/\/\//i,              score: 3, label: "file:// URI" },
+    80→
+    81→  // -------- Malicious User-Agents ------------------------------
+    82→  // These are automated scanner signatures; a single hit is enough
+    83→  // to block (score >= 5).
+    84→  { id: 'ua_sqlmap',            family: 'MaliciousUA', pattern: /sqlmap/i,                     score: 5, label: "sqlmap scanner" },
+    85→  { id: 'ua_nikto',             family: 'MaliciousUA', pattern: /nikto/i,                      score: 5, label: "nikto scanner" },
+    86→  { id: 'ua_hydra',             family: 'MaliciousUA', pattern: /hydra/i,                      score: 5, label: "hydra brute-forcer" },
+    87→  { id: 'ua_havij',             family: 'MaliciousUA', pattern: /havij/i,                      score: 5, label: "Havij SQLi tool" },
+    88→  { id: 'ua_acunetix',          family: 'MaliciousUA', pattern: /acunetix/i,                   score: 5, label: "Acunetix scanner" },
+    89→  { id: 'ua_nessus',            family: 'MaliciousUA', pattern: /nessus/i,                     score: 4, label: "Nessus scanner" },
+    90→  { id: 'ua_nmap',              family: 'MaliciousUA', pattern: /nmap/i,                       score: 4, label: "nmap scripting engine" },
+    91→  { id: 'ua_masscan',           family: 'MaliciousUA', pattern: /masscan/i,                    score: 4, label: "masscan scanner" },
+    92→  { id: 'ua_dirbuster',         family: 'MaliciousUA', pattern: /dirbuster/i,                  score: 4, label: "DirBuster" },
+    93→  { id: 'ua_gobuster',          family: 'MaliciousUA', pattern: /gobuster/i,                   score: 4, label: "gobuster" },
+    94→  { id: 'ua_wpscan',            family: 'MaliciousUA', pattern: /wpscan/i,                     score: 4, label: "WPScan" },
+    95→  { id: 'ua_w3af',              family: 'MaliciousUA', pattern: /w3af/i,                       score: 4, label: "w3af scanner" },
+    96→  { id: 'ua_arachni',           family: 'MaliciousUA', pattern: /arachni/i,                    score: 4, label: "Arachni scanner" },
+    97→  { id: 'ua_wfuzz',             family: 'MaliciousUA', pattern: /wfuzz/i,                      score: 4, label: "wfuzz fuzzer" },
+    98→  { id: 'ua_zgrab',             family: 'MaliciousUA', pattern: /zgrab/i,                      score: 3, label: "zgrab scanner" },
+    99→];
+   100→
+   101→// Block threshold — per spec, block when score > 4
+   102→const BLOCK_THRESHOLD = 4;
+   103→
+   104→// ------------------------------------------------------------------
+   105→// De-obfuscation helpers (Phase 5: Anti-Evasion)
+   106→// ------------------------------------------------------------------
+   107→
+   108→// Try to URL-decode a string. Failures return the input unchanged.
+   109→function safeDecode(s) {
+   110→  if (typeof s !== 'string') return s;
+   111→  try { return decodeURIComponent(s); } catch { return s; }
+   112→}
+   113→
+   114→// Recursively URL-decode until stable (catches double-encoded payloads
+   115→// like %2527 — encoded twice to evade single-decode WAFs).
+   116→function deepDecode(s, maxPasses = 3) {
+   117→  if (typeof s !== 'string') return s;
+   118→  let prev = s;
+   119→  for (let i = 0; i < maxPasses; i++) {
+   120→    const next = safeDecode(prev);
+   121→    if (next === prev) break;
+   122→    prev = next;
+   123→  }
+   124→  return prev;
+   125→}
+   126→
+   127→// HTML entity decoder — handles named, decimal, and hex entities.
+   128→// Catches &lt;script&gt;, &#60;script&#62;, &#x3c;script&#x3e; etc.
+   129→const NAMED_ENTITIES = {
+   130→  lt: '<', gt: '>', amp: '&', quot: '"', apos: "'", nbsp: ' ',
+   131→  tab: '\t', newline: '\n', copy: '©', reg: '®', trade: '™',
+   132→  ldquo: '"', rdquo: '"', lsquo: "'", rsquo: "'",
+   133→  sol: '/', verbar: '|', num: '#', cent: '¢', pound: '£', yen: '¥',
+   134→  euro: '€',sect: '§', deg: '°', plusmn: '±', times: '×', divide: '÷',
+   135→};
+   136→
+   137→function decodeHtmlEntities(s) {
+   138→  if (typeof s !== 'string') return s;
+   139→  return s.replace(/&(#[xX]?[0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);/g, (m, ent) => {
+   140→    if (ent[0] === '#') {
+   141→      let cp;
+   142→      if (ent[1] === 'x' || ent[1] === 'X') {
+   143→        cp = parseInt(ent.slice(2), 16);
+   144→      } else {
+   145→        cp = parseInt(ent.slice(1), 10);
+   146→      }
+   147→      if (isNaN(cp) || cp < 0 || cp > 0x10FFFF) return m;
+   148→      try { return String.fromCodePoint(cp); } catch { return m; }
+   149→    } else {
+   150→      return NAMED_ENTITIES[ent.toLowerCase()] || m;
+   151→    }
+   152→  });
+   153→}
+   154→
+   155→// Unicode NFKC normalization — converts full-width chars (ＵＮＩＯＮ) and
+   156→// other compatibility forms to their ASCII equivalents. Catches
+   157→// 'ＵＮＩＯＮ ＳＥＬＥＣＴ' style evasion.
+   158→function normalizeUnicode(s) {
+   159→  if (typeof s !== 'string') return s;
+   160→  try { return s.normalize('NFKC'); } catch { return s; }
+   161→}
+   162→
+   163→// SQL/whitespace normalizer — replaces inline comments with spaces and
+   164→// collapses runs of whitespace. Catches 'UNION/**/SELECT' style evasion
+   165→// and 'UNION   SELECT' padding.
+   166→function normalizeForSql(s) {
+   167→  if (typeof s !== 'string') return s;
+   168→  return s
+   169→    .replace(/\/\*[\s\S]*?\*\//g, ' ')  // /* comment */ -> space
+   170→    .replace(/\s+/g, ' ')                  // collapse whitespace
+   171→    .trim();
+   172→}
+   173→
+   174→// Build the full haystack set: every reasonable de-obfuscation layer
+   175→// applied in sequence, deduplicated. The WAF tests each pattern against
+   176→// EACH haystack so layered obfuscation can't slip through.
+   177→function buildHaystacks(raw, opts = {}) {
+   178→  if (typeof raw !== 'string' || raw.length === 0) return [];
+   179→  const decode = opts.decode !== false;
+   180→  const haystacks = new Set();
+   181→
+   182→  haystacks.add(raw);
+   183→
+   184→  if (decode) {
+   185→    const urlDecoded = deepDecode(raw);
+   186→    haystacks.add(urlDecoded);
+   187→  }
+   188→
+   189→  // Apply HTML entity decoding to raw and urlDecoded
+   190→  const htmlRaw = decodeHtmlEntities(raw);
+   191→  haystacks.add(htmlRaw);
+   192→  if (decode) {
+   193→    const htmlUrl = decodeHtmlEntities(deepDecode(raw));
+   194→    haystacks.add(htmlUrl);
+   195→  }
+   196→
+   197→  // Apply Unicode normalization to everything we have so far
+   198→  const uniSet = new Set();
+   199→  for (const h of haystacks) {
+   200→    const n = normalizeUnicode(h);
+   201→    if (n !== h) uniSet.add(n);
+   202→  }
+   203→  for (const u of uniSet) haystacks.add(u);
+   204→
+   205→  // Apply SQL normalization to everything (catches UNION/**/SELECT)
+   206→  const sqlSet = new Set();
+   207→  for (const h of haystacks) {
+   208→    const n = normalizeForSql(h);
+   209→    if (n !== h) sqlSet.add(n);
+   210→  }
+   211→  for (const s of sqlSet) haystacks.add(s);
+   212→
+   213→  return Array.from(haystacks);
+   214→}
+   215→
+   216→// ------------------------------------------------------------------
+   217→// Inspection — collect every interesting string from the request
+   218→// ------------------------------------------------------------------
+   219→function collectInputVectors(req) {
+   220→  const vectors = [];
+   221→
+   222→  // 1. URL path
+   223→  if (req.path) vectors.push({ source: 'path', value: req.path });
+   224→
+   225→  // 2. Query string values
+   226→  if (req.query && typeof req.query === 'object') {
+   227→    for (const [k, v] of Object.entries(req.query)) {
+   228→      if (k === 'token') continue; // never inspect session tokens
+   229→      if (typeof v === 'string') vectors.push({ source: `query.${k}`, value: v });
+   230→    }
+   231→  }
+   232→
+   233→  // 3. Body fields (urlencoded or JSON)
+   234→  if (req.body && typeof req.body === 'object') {
+   235→    for (const [k, v] of Object.entries(req.body)) {
+   236→      if (typeof v === 'string') vectors.push({ source: `body.${k}`, value: v });
+   237→    }
+   238→  }
+   239→
+   240→  // 4. Headers worth inspecting
+   241→  const ua = req.get('user-agent');
+   242→  if (ua) vectors.push({ source: 'header.user-agent', value: ua, decode: false });
+   243→
+   244→  const ref = req.get('referer');
+   245→  if (ref) vectors.push({ source: 'header.referer', value: ref });
+   246→
+   247→  return vectors;
+   248→}
+   249→
+   250→// ------------------------------------------------------------------
+   251→// Core: inspect a single string against the pattern dictionary
+   252→// ------------------------------------------------------------------
+   253→function scanString(raw, opts = {}) {
+   254→  // Phase 5: build a multi-layer haystack so layered obfuscation
+   255→  // (URL-encode + HTML-entity + Unicode full-width + SQL comments)
+   256→  // can't slip through. Each pattern is tested against each haystack.
+   257→  const haystacks = buildHaystacks(raw, opts);
+   258→
+   259→  const hits = [];
+   260→  for (const pattern of PATTERNS) {
+   261→    for (const h of haystacks) {
+   262→      if (pattern.pattern.test(h)) {
+   263→        hits.push({
+   264→          id: pattern.id,
+   265→          family: pattern.family,
+   266→          label: pattern.label,
+   267→          score: pattern.score,
+   268→          source: opts.source || 'unknown',
+   269→        });
+   270→        break; // don't double-count the same pattern across haystacks
+   271→      }
+   272→    }
+   273→  }
+   274→  return hits;
+   275→}
+   276→
+   277→// ------------------------------------------------------------------
+   278→// Inspect the whole request — returns the analysis object
+   279→// ------------------------------------------------------------------
+   280→function inspectRequest(req) {
+   281→  const vectors = collectInputVectors(req);
+   282→  const allHits = [];
+   283→  let totalScore = 0;
+   284→
+   285→  for (const vec of vectors) {
+   286→    const hits = scanString(vec.value, { source: vec.source, decode: vec.decode !== false });
+   287→    for (const h of hits) {
+   288→      allHits.push({ ...h, source: vec.source, sample: vec.value.slice(0, 200) });
+   289→      totalScore += h.score;
+   290→    }
+   291→  }
+   292→
+   293→  // Deduplicate hits by pattern id+source (so multiple haystacks don't inflate)
+   294→  const seen = new Set();
+   295→  const deduped = [];
+   296→  for (const h of allHits) {
+   297→    const key = `${h.id}@${h.source}`;
+   298→    if (seen.has(key)) continue;
+   299→    seen.add(key);
+   300→    deduped.push(h);
+   301→  }
+   302→  // Recompute score on deduped
+   303→  totalScore = deduped.reduce((s, h) => s + h.score, 0);
+   304→
+   305→  // Determine primary attack family (highest-scoring family)
+   306→  const familyScores = {};
+   307→  for (const h of deduped) {
+   308→    familyScores[h.family] = (familyScores[h.family] || 0) + h.score;
+   309→  }
+   310→  const topFamily = Object.entries(familyScores).sort((a, b) => b[1] - a[1])[0];
+   311→  const attackType = topFamily ? topFamily[0] : 'Unknown';
+   312→
+   313→  return {
+   314→    blocked: totalScore > BLOCK_THRESHOLD,
+   315→    score: totalScore,
+   316→    threshold: BLOCK_THRESHOLD,
+   317→    attackType,
+   318→    hits: deduped,
+   319→    ip: req.ip,
+   320→    method: req.method,
+   321→    path: req.path,
+   322→    userAgent: req.get('user-agent') || '',
+   323→    // Phase 5+ fingerprinting — capture browser/network metadata for SOC display
+   324→    fingerprint: {
+   325→      userAgent: req.get('user-agent') || '',
+   326→      acceptLanguage: req.get('accept-language') || '',
+   327→      acceptEncoding: req.get('accept-encoding') || '',
+   328→      secChUa: req.get('sec-ch-ua') || '',
+   329→      secChUaPlatform: req.get('sec-ch-ua-platform') || '',
+   330→      secChUaMobile: req.get('sec-ch-ua-mobile') || '',
+   331→      secFetchMode: req.get('sec-fetch-mode') || '',
+   332→      secFetchSite: req.get('sec-fetch-site') || '',
+   333→      referer: req.get('referer') || '',
+   334→      host: req.get('host') || '',
+   335→      connection: req.get('connection') || '',
+   336→    },
+   337→    timestamp: new Date().toISOString(),
+   338→  };
+   339→}
+   340→
+   341→// ------------------------------------------------------------------
+   342→// Express middleware
+   343→// ------------------------------------------------------------------
+   344→function wafMiddleware(req, res, next) {
+   345→  // Skip inspection for static asset requests (favicon, etc.) — keep
+   346→  // logs clean and reduce noise.
+   347→  if (req.path.match(/\.(ico|png|jpg|jpeg|gif|css|js|map)$/i)) {
+   348→    return next();
+   349→  }
+   350→
+   351→  const result = inspectRequest(req);
+   352→
+   353→  if (result.blocked) {
+   354→    // ---- Block path ----
+   355→    const io = req.app.get('io');
+   356→    const eventPayload = {
+   357→      kind: 'waf',
+   358→      type: 'block',
+   359→      attackType: result.attackType,
+   360→      score: result.score,
+   361→      threshold: result.threshold,
+   362→      ip: result.ip,
+   363→      method: result.method,
+   364→      path: result.path,
+   365→      hits: result.hits,
+   366→      userAgent: result.userAgent,
+   367→      timestamp: result.timestamp,
+   368→    };
+   369→
+   370→    if (io) io.emit('waf_event', eventPayload);
+   371→
+   372→    // Phase 4: store in event history (best-effort geo lookup, async)
+   373→    storeEventWithGeo(eventPayload);
+   374→
+   375→    // ANSI-coloured console log
+   376→    const red = '\x1b[31m', yellow = '\x1b[33m', cyan = '\x1b[36m', dim = '\x1b[2m', reset = '\x1b[0m';
+   377→    console.log(
+   378→      `${red}[WAF BLOCK]${reset} ${cyan}${result.attackType}${reset} ` +
+   379→      `score=${red}${result.score}${reset}/${result.threshold} ` +
+   380→      `ip=${result.ip} ${dim}${result.method} ${result.path}${reset}`
+   381→    );
+   382→    for (const h of result.hits) {
+   383→      console.log(`  ${yellow}-${reset} ${h.family}/${h.id} (${h.score}pt) source=${h.source} ${dim}${h.label}${reset}`);
+   384→    }
+   385→
+   386→    // Inline 403 page (no template engine — keeps the project build-free)
+   387→    return res.status(403).type('html').send(renderBlockedPage(result));
+   388→  }
+   389→
+   390→  if (result.score > 0) {
+   391→    // ---- Suspicious-but-allowed path ----
+   392→    const io = req.app.get('io');
+   393→    const eventPayload = {
+   394→      kind: 'waf',
+   395→      type: 'flag',
+   396→      attackType: result.attackType,
+   397→      score: result.score,
+   398→      threshold: result.threshold,
+   399→      ip: result.ip,
+   400→      method: result.method,
+   401→      path: result.path,
+   402→      hits: result.hits,
+   403→      userAgent: result.userAgent,
+   404→      timestamp: result.timestamp,
+   405→    };
+   406→    if (io) io.emit('waf_event', eventPayload);
+   407→    storeEventWithGeo(eventPayload);
+   408→
+   409→    const yellow = '\x1b[33m', dim = '\x1b[2m', reset = '\x1b[0m';
+   410→    console.log(
+   411→      `${yellow}[WAF FLAG]${reset} score=${result.score}/${result.threshold} ` +
+   412→      `ip=${result.ip} ${dim}${result.method} ${result.path}${reset}`
+   413→    );
+   414→    for (const h of result.hits) {
+   415→      console.log(`  ${yellow}-${reset} ${h.family}/${h.id} (${h.score}pt) source=${h.source} ${dim}${h.label}${reset}`);
+   416→    }
+   417→  }
+   418→
+   419→  return next();
+   420→}
+   421→
+   422→// ------------------------------------------------------------------
+   423→// Phase 4 helper: store event with async geo lookup
+   424→// ------------------------------------------------------------------
+   425→let _eventStore = null;
+   426→let _geo = null;
+   427→function lazyDeps() {
+   428→  if (!_eventStore) _eventStore = require('./eventStore');
+   429→  if (!_geo) _geo = require('./geo');
+   430→}
+   431→function storeEventWithGeo(payload) {
+   432→  try {
+   433→    lazyDeps();
+   434→    // Synchronous store first (with cached/sync geo if available)
+   435→    const syncGeo = _geo.lookupSync(payload.ip);
+   436→    _eventStore.push({ ...payload, geo: syncGeo });
+   437→    // If geo is pending, do async lookup and patch the latest entry for that IP
+   438→    if (syncGeo.source === 'pending') {
+   439→      _geo.lookup(payload.ip).then((fullGeo) => {
+   440→        // Patch the attacker catalog with full geo
+   441→        // (eventStore.push already created the entry; we just update geo)
+   442→        const attackers = _eventStore.topAttackers(1000);
+   443→        // We don't have a "patch" API, but the next event from this IP
+   444→        // will pick up the cached geo. Good enough for the demo.
+   445→      }).catch(() => {});
+   446→    }
+   447→  } catch (e) {
+   448→    console.error('[WAF] storeEventWithGeo error:', e.message);
+   449→  }
+   450→}
+   451→
+   452→// ------------------------------------------------------------------
+   453→// Inline 403 page renderer (no template engine needed)
+   454→// ------------------------------------------------------------------
+   455→function escapeHtml(s) {
+   456→  return String(s)
+   457→    .replace(/&/g, '&amp;')
+   458→    .replace(/</g, '&lt;')
+   459→    .replace(/>/g, '&gt;')
+   460→    .replace(/"/g, '&quot;')
+   461→    .replace(/'/g, '&#39;');
+   462→}
+   463→
+   464→function renderBlockedPage(result) {
+   465→  const hitsRows = result.hits.map((h) => `
+   466→    <tr>
+   467→      <td class="px-4 py-2 mono text-xs text-fuchsia-400">${escapeHtml(h.family)}</td>
+   468→      <td class="px-4 py-2 mono text-xs text-slate-300">${escapeHtml(h.id)}</td>
+   469→      <td class="px-4 py-2 text-xs text-slate-400">${escapeHtml(h.label)}</td>
+   470→      <td class="px-4 py-2 mono text-xs text-slate-500">${escapeHtml(h.source)}</td>
+   471→      <td class="px-4 py-2 mono text-xs text-right text-red-400 font-bold">${h.score}</td>
+   472→    </tr>`).join('');
+   473→
+   474→  const samplePayload = result.hits[0]?.sample || result.path;
+   475→
+   476→  return `<!DOCTYPE html>
+   477→<html lang="en">
+   478→<head>
+   479→  <meta charset="UTF-8" />
+   480→  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   481→  <title>403 Blocked - DeceptiWAF</title>
+   482→  <script src="https://cdn.tailwindcss.com"></script>
+   483→  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+   484→  <style>
+   485→    body { font-family: 'Inter', system-ui, sans-serif; background: #020617; }
+   486→    .mono { font-family: 'JetBrains Mono', monospace; }
+   487→    @keyframes pulse-ring {
+   488→      0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+   489→      70%  { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+   490→      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+   491→    }
+   492→    .pulse-ring { animation: pulse-ring 2s infinite; }
+   493→  </style>
+   494→</head>
+   495→<body class="min-h-screen flex items-center justify-center p-4 text-slate-100">
+   496→
+   497→  <div class="w-full max-w-2xl">
+   498→    <div class="bg-slate-900/80 border border-red-900/50 rounded-2xl shadow-2xl overflow-hidden">
+   499→
+   500→      <!-- Header -->
+   501→      <div class="bg-red-950/40 border-b border-red-900/50 px-6 py-5 flex items-center gap-4">
+   502→        <div class="relative w-3 h-3 rounded-full bg-red-500 pulse-ring"></div>
+   503→        <div>
+   504→          <p class="mono text-red-400 font-bold tracking-widest text-sm">DECEPTIWAF // REQUEST BLOCKED</p>
+   505→          <p class="mono text-[10px] text-red-700/80">HTTP 403 FORBIDDEN &middot; WAF rule triggered</p>
+   506→        </div>
+   507→      </div>
+   508→
+   509→      <!-- Body -->
+   510→      <div class="p-6 space-y-5">
+   511→
+   512→        <!-- Score block -->
+   513→        <div class="grid grid-cols-3 gap-4">
+   514→          <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
+   515→            <p class="mono text-[10px] text-slate-500 tracking-widest">ATTACK TYPE</p>
+   516→            <p class="mono text-lg text-fuchsia-400 font-bold mt-1">${escapeHtml(result.attackType)}</p>
+   517→          </div>
+   518→          <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
+   519→            <p class="mono text-[10px] text-slate-500 tracking-widest">SCORE</p>
+   520→            <p class="mono text-lg text-red-400 font-bold mt-1">${result.score} <span class="text-slate-600 text-sm">/ ${result.threshold}</span></p>
+   521→          </div>
+   522→          <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4">
+   523→            <p class="mono text-[10px] text-slate-500 tracking-widest">SOURCE IP</p>
+   524→            <p class="mono text-lg text-amber-400 font-bold mt-1">${escapeHtml(result.ip)}</p>
+   525→          </div>
+   526→        </div>
+   527→
+   528→        <!-- Payload sample -->
+   529→        <div>
+   530→          <p class="mono text-[10px] text-slate-500 tracking-widest mb-1">PAYLOAD SAMPLE</p>
+   531→          <pre class="bg-slate-950/80 border border-slate-800 rounded-lg p-3 mono text-xs text-amber-300 overflow-x-auto whitespace-pre-wrap break-all">${escapeHtml(samplePayload)}</pre>
+   532→        </div>
+   533→
+   534→        <!-- Hit details -->
+   535→        <div>
+   536→          <p class="mono text-[10px] text-slate-500 tracking-widest mb-2">RULES TRIGGERED (${result.hits.length})</p>
+   537→          <div class="bg-slate-950/60 border border-slate-800 rounded-lg overflow-hidden">
+   538→            <table class="w-full">
+   539→              <thead class="bg-slate-900/80 mono text-[10px] text-slate-500 tracking-widest text-left">
+   540→                <tr>
+   541→                  <th class="px-4 py-2">FAMILY</th>
+   542→                  <th class="px-4 py-2">RULE ID</th>
+   543→                  <th class="px-4 py-2">LABEL</th>
+   544→                  <th class="px-4 py-2">SOURCE</th>
+   545→                  <th class="px-4 py-2 text-right">PTS</th>
+   546→                </tr>
+   547→              </thead>
+   548→              <tbody class="divide-y divide-slate-800/60">
+   549→                ${hitsRows}
+   550→                <tr class="bg-slate-900/40">
+   551→                  <td colspan="4" class="px-4 py-2 mono text-xs text-right text-slate-400">TOTAL</td>
+   552→                  <td class="px-4 py-2 mono text-xs text-right text-red-400 font-bold">${result.score}</td>
+   553→                </tr>
+   554→              </tbody>
+   555→            </table>
+   556→          </div>
+   557→        </div>
+   558→
+   559→        <!-- Meta -->
+   560→        <div class="mono text-[10px] text-slate-600 flex justify-between border-t border-slate-800 pt-4">
+   561→          <span>METHOD: ${escapeHtml(result.method)}</span>
+   562→          <span>PATH: ${escapeHtml(result.path)}</span>
+   563→          <span>TIMESTAMP: ${escapeHtml(result.timestamp)}</span>
+   564→        </div>
+   565→
+   566→        <!-- CTA -->
+   567→        <div class="flex gap-3 pt-2">
+   568→          <a href="/" class="flex-1 text-center bg-slate-800 hover:bg-slate-700 text-slate-200 mono text-xs py-2.5 rounded-lg">RETURN TO LOGIN</a>
+   569→        </div>
+   570→      </div>
+   571→    </div>
+   572→
+   573→    <p class="text-center mono text-[10px] text-slate-700 mt-6">// This request has been logged and reported to the SOC dashboard.</p>
+   574→  </div>
+   575→</body>
+   576→</html>`;
+   577→}
+   578→
+   579→module.exports = {
+   580→  PATTERNS,
+   581→  BLOCK_THRESHOLD,
+   582→  inspectRequest,
+   583→  scanString,
+   584→  deepDecode,
+   585→  decodeHtmlEntities,
+   586→  normalizeUnicode,
+   587→  normalizeForSql,
+   588→  buildHaystacks,
+   589→  wafMiddleware,
+   590→  renderBlockedPage,
+   591→};
+   592→

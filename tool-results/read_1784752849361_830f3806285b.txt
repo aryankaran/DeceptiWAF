@@ -1,0 +1,607 @@
+     1→<!DOCTYPE html>
+     2→<html lang="en">
+     3→<head>
+     4→  <meta charset="UTF-8" />
+     5→  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     6→  <title>DeceptiWAF SOC - Command Center</title>
+     7→  <script src="https://cdn.tailwindcss.com"></script>
+     8→  <link rel="preconnect" href="https://fonts.googleapis.com" />
+     9→  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    10→  <link
+    11→    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+    12→    rel="stylesheet"
+    13→  />
+    14→  <style>
+    15→    body { font-family: 'Inter', system-ui, sans-serif; }
+    16→    .mono { font-family: 'JetBrains Mono', monospace; }
+    17→    .grid-bg {
+    18→      background-image:
+    19→        linear-gradient(rgba(34, 197, 94, 0.04) 1px, transparent 1px),
+    20→        linear-gradient(90deg, rgba(34, 197, 94, 0.04) 1px, transparent 1px);
+    21→      background-size: 32px 32px;
+    22→    }
+    23→    @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+    24→    .blink { animation: blink 1s steps(1) infinite; }
+    25→    @keyframes pulse-ring {
+    26→      0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    27→      70%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    28→      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    29→    }
+    30→    .pulse-ring { animation: pulse-ring 2s infinite; }
+    31→    @keyframes flash-red {
+    32→      0%   { background-color: rgba(239, 68, 68, 0.25); }
+    33→      100% { background-color: transparent; }
+    34→    }
+    35→    .flash-red { animation: flash-red 0.6s ease-out; }
+    36→    @keyframes flash-fuchsia {
+    37→      0%   { background-color: rgba(217, 70, 239, 0.25); }
+    38→      100% { background-color: transparent; }
+    39→    }
+    40→    .flash-fuchsia { animation: flash-fuchsia 0.6s ease-out; }
+    41→  </style>
+    42→</head>
+    43→<body class="bg-slate-950 text-slate-100 min-h-screen grid-bg">
+    44→
+    45→  <!-- ============================================================
+    46→       DeceptiWAF SOC Dashboard (Phase 4 — full build)
+    47→       - Live WAF + honeypot event feed via socket.io
+    48→       - Event history loaded from /api/events/recent on boot
+    49→       - IP geolocation (city/country/ISP) per attacker
+    50→       - Top attackers catalog
+    51→       - Aggregate stats
+    52→       ============================================================ -->
+    53→
+    54→  <!-- Top bar -->
+    55→  <header class="border-b border-green-900/40 bg-slate-900/70 backdrop-blur sticky top-0 z-10">
+    56→    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+    57→      <div class="flex items-center gap-3">
+    58→        <div class="relative w-3 h-3 rounded-full bg-red-500 pulse-ring"></div>
+    59→        <div>
+    60→          <p class="mono text-green-400 font-bold tracking-widest text-sm">DECEPTIWAF // SOC</p>
+    61→          <p class="mono text-[10px] text-green-700">command center v4.0  &middot;  live</p>
+    62→        </div>
+    63→      </div>
+    64→      <div class="flex items-center gap-6 mono text-xs">
+    65→        <span class="text-green-500">SESSION: <span id="clock" class="text-green-300">--:--:--</span></span>
+    66→        <span class="text-green-700">|</span>
+    67→        <span class="text-slate-400">OPERATOR: <span class="text-green-300">admin</span></span>
+    68→        <button id="refreshBtn" class="text-amber-400 hover:text-amber-300 border border-amber-900 hover:border-amber-700 px-2 py-1 rounded">REFRESH</button>
+    69→        <form action="/logout" method="POST" id="logoutForm">
+    70→          <button type="submit" class="text-red-400 hover:text-red-300 border border-red-900 hover:border-red-700 px-2 py-1 rounded">DISCONNECT</button>
+    71→        </form>
+    72→      </div>
+    73→    </div>
+    74→  </header>
+    75→
+    76→  <main class="max-w-7xl mx-auto px-6 py-6">
+    77→
+    78→    <!-- KPI strip -->
+    79→    <section class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+    80→      <div class="bg-slate-900/60 border border-green-900/40 rounded-lg p-4">
+    81→        <p class="mono text-[10px] text-green-700 tracking-widest">EVENTS / MIN</p>
+    82→        <p id="kpiEpm" class="mono text-2xl text-green-400 font-bold mt-1">0.0</p>
+    83→      </div>
+    84→      <div class="bg-slate-900/60 border border-red-900/40 rounded-lg p-4">
+    85→        <p class="mono text-[10px] text-red-700 tracking-widest">BLOCKED</p>
+    86→        <p id="kpiBlocked" class="mono text-2xl text-red-400 font-bold mt-1">0</p>
+    87→      </div>
+    88→      <div class="bg-slate-900/60 border border-fuchsia-900/40 rounded-lg p-4">
+    89→        <p class="mono text-[10px] text-fuchsia-700 tracking-widest">TRAPPED</p>
+    90→        <p id="kpiTrapped" class="mono text-2xl text-fuchsia-400 font-bold mt-1">0</p>
+    91→      </div>
+    92→      <div class="bg-slate-900/60 border border-amber-900/40 rounded-lg p-4">
+    93→        <p class="mono text-[10px] text-amber-700 tracking-widest">UNIQUE IPs</p>
+    94→        <p id="kpiIps" class="mono text-2xl text-amber-400 font-bold mt-1">0</p>
+    95→      </div>
+    96→      <div class="bg-slate-900/60 border border-sky-900/40 rounded-lg p-4">
+    97→        <p class="mono text-[10px] text-sky-700 tracking-widest">GEO LOOKUPS</p>
+    98→        <p id="kpiGeo" class="mono text-2xl text-sky-400 font-bold mt-1">0</p>
+    99→      </div>
+   100→    </section>
+   101→
+   102→    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   103→
+   104→      <!-- Live feed -->
+   105→      <section class="lg:col-span-2 bg-slate-900/60 border border-green-900/40 rounded-lg">
+   106→        <div class="px-4 py-3 border-b border-green-900/40 flex items-center justify-between">
+   107→          <div class="flex items-center gap-2">
+   108→            <span class="w-2 h-2 rounded-full bg-green-500 blink"></span>
+   109→            <h2 class="mono text-sm text-green-400 tracking-widest">LIVE ATTACK FEED</h2>
+   110→          </div>
+   111→          <div class="flex items-center gap-3">
+   112→            <label class="mono text-[10px] text-slate-500 flex items-center gap-1">
+   113→              <input id="autoScroll" type="checkbox" checked class="rounded bg-slate-800 border-slate-700" /> autoscroll
+   114→            </label>
+   115→            <button id="clearFeed" class="mono text-[10px] text-red-400 hover:text-red-300 border border-red-900 hover:border-red-700 px-2 py-0.5 rounded">CLEAR</button>
+   116→          </div>
+   117→        </div>
+   118→        <div id="feed" class="p-4 mono text-xs space-y-1 min-h-[420px] max-h-[60vh] overflow-y-auto">
+   119→          <div class="text-slate-500">[boot] SOC dashboard initializing...</div>
+   120→        </div>
+   121→      </section>
+   122→
+   123→      <!-- Side panel -->
+   124→      <aside class="space-y-6">
+   125→
+   126→        <!-- Top attackers (with geo) -->
+   127→        <div class="bg-slate-900/60 border border-amber-900/40 rounded-lg">
+   128→          <div class="px-4 py-3 border-b border-amber-900/40 flex items-center justify-between">
+   129→            <h3 class="mono text-sm text-amber-400 tracking-widest">TOP ATTACKERS</h3>
+   130→            <span id="topCount" class="mono text-[10px] text-amber-700">0</span>
+   131→          </div>
+   132→          <div id="topAttackers" class="mono text-xs text-slate-500 max-h-72 overflow-y-auto">
+   133→            <div class="p-4">No attackers yet. Run attacks via /test to populate.</div>
+   134→          </div>
+   135→        </div>
+   136→
+   137→        <!-- Trapped attackers -->
+   138→        <div class="bg-slate-900/60 border border-fuchsia-900/40 rounded-lg">
+   139→          <div class="px-4 py-3 border-b border-fuchsia-900/40 flex items-center justify-between">
+   140→            <h3 class="mono text-sm text-fuchsia-400 tracking-widest">TRAPPED ATTACKERS</h3>
+   141→            <div class="flex items-center gap-2">
+   142→              <span id="trappedBadge" class="mono text-[10px] text-fuchsia-700">0 active</span>
+   143→              <button id="resetHoneypot" class="mono text-[10px] text-red-400 hover:text-red-300 border border-red-900 hover:border-red-700 px-2 py-0.5 rounded">RESET</button>
+   144→            </div>
+   145→          </div>
+   146→          <div id="trappedPanel" class="mono text-xs text-slate-500 max-h-60 overflow-y-auto">
+   147→            <div class="p-4">No attackers currently trapped.</div>
+   148→          </div>
+   149→        </div>
+   150→
+   151→        <!-- System status -->
+   152→        <div class="bg-slate-900/60 border border-green-900/40 rounded-lg">
+   153→          <div class="px-4 py-3 border-b border-green-900/40">
+   154→            <h3 class="mono text-sm text-green-400 tracking-widest">SYSTEM STATUS</h3>
+   155→          </div>
+   156→          <div class="p-4 mono text-xs space-y-1.5">
+   157→            <div class="flex justify-between"><span class="text-slate-500">WAF engine</span><span class="text-green-400">ONLINE</span></div>
+   158→            <div class="flex justify-between"><span class="text-slate-500">CredShield</span><span class="text-green-400">ONLINE</span></div>
+   159→            <div class="flex justify-between"><span class="text-slate-500">Socket.io bus</span><span id="sockStatus" class="text-amber-400">connecting...</span></div>
+   160→            <div class="flex justify-between"><span class="text-slate-500">IP geolocation</span><span class="text-green-400">ONLINE (ip-api.com)</span></div>
+   161→            <div class="flex justify-between"><span class="text-slate-500">Event history</span><span id="histStatus" class="text-amber-400">loading...</span></div>
+   162→          </div>
+   163→        </div>
+   164→
+   165→      </aside>
+   166→    </div>
+   167→
+   168→    <p class="mono text-[10px] text-green-800 text-center mt-6">
+   169→      // deceptiwaf soc v4.0  &middot;  ip geolocation by ip-api.com  &middot;  events cached in-memory (last 500)
+   170→    </p>
+   171→  </main>
+   172→
+   173→  <script src="/socket.io/socket.io.js"></script>
+   174→  <script>
+   175→    // ============================================================
+   176→    // Session + token helpers
+   177→    // ============================================================
+   178→    function getToken() {
+   179→      const urlToken = new URLSearchParams(window.location.search).get('token');
+   180→      if (urlToken) { try { localStorage.setItem('dwaf_token', urlToken); } catch (e) {} return urlToken; }
+   181→      try { return localStorage.getItem('dwaf_token'); } catch (e) { return null; }
+   182→    }
+   183→    function clearToken() { try { localStorage.removeItem('dwaf_token'); } catch (e) {} }
+   184→    function esc(s) {
+   185→      return String(s == null ? '' : s)
+   186→        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+   187→        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+   188→    }
+   189→
+   190→    // ============================================================
+   191→    // Logout wiring
+   192→    // ============================================================
+   193→    (function wireLogout() {
+   194→      const form = document.getElementById('logoutForm');
+   195→      if (!form) return;
+   196→      form.addEventListener('submit', (e) => {
+   197→        e.preventDefault();
+   198→        const token = getToken();
+   199→        const url = token ? '/logout?token=' + encodeURIComponent(token) : '/logout';
+   200→        fetch(url, { method: 'POST', credentials: 'same-origin' })
+   201→          .then(() => { clearToken(); window.location.href = '/'; })
+   202→          .catch(() => { clearToken(); window.location.href = '/'; });
+   203→      });
+   204→    })();
+   205→
+   206→    // ============================================================
+   207→    // Session check — bounce non-admins
+   208→    // ============================================================
+   209→    (async function checkSession() {
+   210→      const token = getToken();
+   211→      if (!token) { window.location.href = '/?error=auth'; return; }
+   212→      try {
+   213→        const resp = await fetch('/api/me?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+   214→        if (!resp.ok) { clearToken(); window.location.href = '/?error=auth'; return; }
+   215→        const data = await resp.json();
+   216→        if (data.user.role !== 'admin') window.location.href = '/dashboard?token=' + encodeURIComponent(token);
+   217→      } catch (e) { console.error('[soc] session check failed:', e); }
+   218→    })();
+   219→
+   220→    // ============================================================
+   221→    // State
+   222→    // ============================================================
+   223→    let blockedCount = 0, trappedCount = 0;
+   224→    let uniqueIps = new Set();
+   225→    let eventTimes = [];
+   226→    let trappedAttackers = new Map();
+   227→    let attackers = new Map(); // ip -> aggregate
+   228→    let geoCacheSize = 0;
+   229→
+   230→    const feed = document.getElementById('feed');
+   231→
+   232→    function fmtTime(iso) {
+   233→      const d = new Date(iso);
+   234→      const p = (n) => String(n).padStart(2, '0');
+   235→      return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+   236→    }
+   237→
+   238→    // Convert ISO country code to flag emoji
+   239→    function flagEmoji(cc) {
+   240→      if (!cc || cc.length !== 2 || cc === '??' || cc === 'LO') return '';
+   241→      const cp = [...cc.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65);
+   242→      return String.fromCodePoint(...cp) + ' ';
+   243→    }
+   244→
+   245→    function fmtGeo(g) {
+   246→      if (!g) return '';
+   247→      const flag = flagEmoji(g.countryCode);
+   248→      if (g.source === 'local') return flag + 'Local Network';
+   249→      if (g.source === 'fallback' || g.source === 'pending') return flag + 'geo...';
+   250→      const parts = [];
+   251→      if (g.city && g.city !== '—') parts.push(g.city);
+   252→      if (g.country && g.country !== 'Unknown') parts.push(g.country);
+   253→      return flag + (parts.length ? parts.join(', ') : 'Unknown');
+   254→    }
+   255→
+   256→    function fmtGeoDetail(g) {
+   257→      if (!g) return '';
+   258→      const lines = [];
+   259→      if (g.isp && g.isp !== '—') lines.push('ISP: ' + g.isp);
+   260→      if (g.org && g.org !== '—') lines.push('Org: ' + g.org);
+   261→      if (g.source) lines.push('source: ' + g.source);
+   262→      return lines.join(' / ');
+   263→    }
+   264→
+   265→    // ============================================================
+   266→    // KPIs
+   267→    // ============================================================
+   268→    function updateKpis() {
+   269→      document.getElementById('kpiBlocked').textContent = blockedCount;
+   270→      document.getElementById('kpiTrapped').textContent = trappedCount;
+   271→      document.getElementById('kpiIps').textContent = uniqueIps.size;
+   272→      document.getElementById('kpiGeo').textContent = geoCacheSize;
+   273→      const cutoff = Date.now() - 60000;
+   274→      eventTimes = eventTimes.filter((t) => t > cutoff);
+   275→      document.getElementById('kpiEpm').textContent = (eventTimes.length).toFixed(1);
+   276→    }
+   277→
+   278→    // ============================================================
+   279→    // Feed rendering
+   280→    // ============================================================
+   281→    function appendFeed(html, flash) {
+   282→      const div = document.createElement('div');
+   283→      div.innerHTML = html;
+   284→      if (flash) div.className = flash + ' px-2 py-1 rounded';
+   285→      feed.appendChild(div);
+   286→      const auto = document.getElementById('autoScroll').checked;
+   287→      if (auto) feed.scrollTop = feed.scrollHeight;
+   288→      // Cap feed length
+   289→      while (feed.children.length > 200) feed.removeChild(feed.firstChild);
+   290→    }
+   291→
+   292→    function renderWafEvent(evt) {
+   293→      eventTimes.push(Date.now());
+   294→      uniqueIps.add(evt.ip);
+   295→      if (evt.type === 'block') blockedCount++;
+   296→
+   297→      const color = evt.type === 'block' ? 'text-red-400' : 'text-amber-400';
+   298→      const tag = evt.type === 'block' ? '[BLOCK] ' : '[FLAG]  ';
+   299→      const flash = evt.type === 'block' ? 'flash-red' : '';
+   300→      const geoStr = fmtGeo(evt.geo);
+   301→
+   302→      appendFeed(
+   303→        '<div class="' + color + '">' +
+   304→        '<span class="text-slate-600">' + esc(fmtTime(evt.timestamp)) + '</span> ' +
+   305→        tag +
+   306→        '<span class="text-fuchsia-300">' + esc(evt.attackType) + '</span> ' +
+   307→        'score=<span class="text-red-300">' + esc(evt.score) + '</span>/' + esc(evt.threshold) + ' ' +
+   308→        'ip=<span class="text-amber-300">' + esc(evt.ip) + '</span> ' +
+   309→        (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+   310→        esc(evt.method) + ' ' + esc(evt.path) +
+   311→        '</div>',
+   312→        flash
+   313→      );
+   314→
+   315→      if (evt.type === 'block' && evt.hits) {
+   316→        for (const h of evt.hits) {
+   317→          appendFeed(
+   318→            '<div class="text-slate-500 pl-6">  - ' + esc(h.family) + '/' + esc(h.id) +
+   319→            ' (' + esc(h.score) + 'pt) <span class="text-slate-600">[' + esc(h.source) + ']</span> ' +
+   320→            '<span class="text-slate-700">' + esc(h.label) + '</span></div>'
+   321→          );
+   322→        }
+   323→      }
+   324→
+   325→      updateKpis();
+   326→      updateAttackerCatalog(evt);
+   327→    }
+   328→
+   329→    function renderHoneypotEvent(evt) {
+   330→      eventTimes.push(Date.now());
+   331→      uniqueIps.add(evt.ip);
+   332→      const t = fmtTime(evt.timestamp);
+   333→      const geoStr = fmtGeo(evt.geo);
+   334→
+   335→      if (evt.type === 'failed') {
+   336→        appendFeed(
+   337→          '<div class="text-amber-400">' +
+   338→          '<span class="text-slate-600">' + esc(t) + '</span> ' +
+   339→          '[BRUTE]  ip=<span class="text-amber-300">' + esc(evt.ip) + '</span> ' +
+   340→          (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+   341→          'user=<span class="text-amber-300">' + esc(evt.username) + '</span> ' +
+   342→          'fails=<span class="text-red-300">' + esc(evt.attempt) + '</span>/' + esc(evt.threshold) +
+   343→          '</div>'
+   344→        );
+   345→      } else if (evt.type === 'activated') {
+   346→        appendFeed(
+   347→          '<div class="text-fuchsia-400 font-bold">' +
+   348→          '<span class="text-slate-600">' + esc(t) + '</span> ' +
+   349→          '[HONEYPOT ARMED] ip=<span class="text-fuchsia-300">' + esc(evt.ip) + '</span> ' +
+   350→          (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+   351→          'after ' + esc(evt.attempt) + ' fails — next login trapped' +
+   352→          '</div>',
+   353→          'flash-fuchsia'
+   354→        );
+   355→      } else if (evt.type === 'trapped') {
+   356→        trappedCount++;
+   357→        trappedAttackers.set(evt.ip, {
+   358→          ip: evt.ip, username: evt.username, attempt: evt.attempt,
+   359→          since: evt.timestamp, geo: evt.geo,
+   360→          fakeIdentity: evt.fakeIdentity,
+   361→          fingerprint: evt.fingerprint,
+   362→        });
+   363→        const fakeName = evt.fakeIdentity ? evt.fakeIdentity.name : '?';
+   364→        const fakeBranch = evt.fakeIdentity ? evt.fakeIdentity.branch : '';
+   365→        appendFeed(
+   366→          '<div class="text-fuchsia-300 font-bold">' +
+   367→          '<span class="text-slate-600">' + esc(t) + '</span> ' +
+   368→          '[HONEYPOT TRAP] ip=<span class="text-fuchsia-300">' + esc(evt.ip) + '</span> ' +
+   369→          (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+   370→          'claimed=<span class="text-amber-300">' + esc(evt.username) + '</span> ' +
+   371→          'served_fake=<span class="text-green-400">' + esc(fakeName) + '</span> ' +
+   372→          '<span class="text-slate-600">(' + esc(fakeBranch) + ')</span> ' +
+   373→          '— <span class="text-fuchsia-400">-> /dashboard</span>' +
+   374→          '</div>',
+   375→          'flash-fuchsia'
+   376→        );
+   377→        // Show fingerprint if available
+   378→        if (evt.fingerprint && evt.fingerprint.userAgent) {
+   379→          appendFeed(
+   380→            '<div class="text-slate-600 pl-6">  fp: ' + esc(evt.fingerprint.userAgent.slice(0, 80)) +
+   381→            (evt.fingerprint.secChUaPlatform ? ' | platform=' + esc(evt.fingerprint.secChUaPlatform) : '') +
+   382→            (evt.fingerprint.acceptLanguage ? ' | lang=' + esc(evt.fingerprint.acceptLanguage.split(',')[0]) : '') +
+   383→            '</div>'
+   384→          );
+   385→        }
+   386→        renderTrappedAttackers();
+   387→      }
+   388→
+   389→      updateKpis();
+   390→      updateAttackerCatalog(evt);
+   391→    }
+   392→
+   393→    // ============================================================
+   394→    // Attacker catalog (top attackers panel)
+   395→    // ============================================================
+   396→    function updateAttackerCatalog(evt) {
+   397→      if (!evt.ip) return;
+   398→      let a = attackers.get(evt.ip);
+   399→      if (!a) {
+   400→        a = { ip: evt.ip, geo: evt.geo || null, total: 0, blocked: 0, flagged: 0, trapped: 0, failed: 0, lastSeen: evt.timestamp };
+   401→        attackers.set(evt.ip, a);
+   402→      }
+   403→      a.total++;
+   404→      a.lastSeen = evt.timestamp;
+   405→      if (evt.geo) a.geo = evt.geo;
+   406→      if (evt.kind === 'waf' && evt.type === 'block') a.blocked++;
+   407→      else if (evt.kind === 'waf' && evt.type === 'flag') a.flagged++;
+   408→      else if (evt.kind === 'honeypot' && evt.type === 'trapped') a.trapped++;
+   409→      else if (evt.kind === 'honeypot' && evt.type === 'failed') a.failed++;
+   410→      renderTopAttackers();
+   411→    }
+   412→
+   413→    function renderTopAttackers() {
+   414→      const panel = document.getElementById('topAttackers');
+   415→      const count = document.getElementById('topCount');
+   416→      const list = Array.from(attackers.values()).sort((a, b) => b.total - a.total).slice(0, 10);
+   417→      count.textContent = attackers.size + ' total';
+   418→      if (list.length === 0) {
+   419→        panel.innerHTML = '<div class="p-4">No attackers yet. Run attacks via /test to populate.</div>';
+   420→        return;
+   421→      }
+   422→      let html = '';
+   423→      for (const a of list) {
+   424→        const geoStr = fmtGeo(a.geo);
+   425→        const flag = a.geo ? flagEmoji(a.geo.countryCode) : '';
+   426→        html +=
+   427→          '<div class="px-4 py-2 border-b border-amber-900/30 last:border-0">' +
+   428→          '<div class="flex justify-between items-center">' +
+   429→            '<span class="text-amber-300">' + flag + esc(a.ip) + '</span>' +
+   430→            '<span class="text-slate-600 text-[10px]">' + esc(fmtTime(a.lastSeen)) + '</span>' +
+   431→          '</div>' +
+   432→          '<div class="text-slate-500 mt-0.5">' +
+   433→            '<span class="text-sky-400">' + esc(geoStr) + '</span> ' +
+   434→            'events=<span class="text-slate-300">' + a.total + '</span> ' +
+   435→            'blk=<span class="text-red-400">' + a.blocked + '</span> ' +
+   436→            'trp=<span class="text-fuchsia-400">' + a.trapped + '</span>' +
+   437→          '</div>' +
+   438→          '</div>';
+   439→      }
+   440→      panel.innerHTML = html;
+   441→    }
+   442→
+   443→    function renderTrappedAttackers() {
+   444→      const panel = document.getElementById('trappedPanel');
+   445→      const badge = document.getElementById('trappedBadge');
+   446→      if (badge) badge.textContent = trappedAttackers.size + ' active';
+   447→      if (trappedAttackers.size === 0) {
+   448→        panel.innerHTML = '<div class="p-4">No attackers currently trapped.</div>';
+   449→        return;
+   450→      }
+   451→      let html = '';
+   452→      for (const a of trappedAttackers.values()) {
+   453→        const since = new Date(a.since).toLocaleTimeString('en-GB');
+   454→        const geoStr = a.geo ? fmtGeo(a.geo) : '';
+   455→        const fakeName = a.fakeIdentity ? a.fakeIdentity.name : '?';
+   456→        html +=
+   457→          '<div class="px-4 py-2 border-b border-fuchsia-900/30 last:border-0">' +
+   458→          '<div class="flex justify-between"><span class="text-fuchsia-300">' + esc(a.ip) + '</span><span class="text-slate-600">' + esc(since) + '</span></div>' +
+   459→          '<div class="text-slate-500 mt-0.5">' +
+   460→            (geoStr ? '<span class="text-sky-400">' + esc(geoStr) + '</span> ' : '') +
+   461→            'tried=<span class="text-amber-300">' + esc(a.username) + '</span> ' +
+   462→            'saw=<span class="text-green-400">' + esc(fakeName) + '</span> ' +
+   463→            'att=<span class="text-red-300">' + esc(a.attempt) + '</span>' +
+   464→          '</div>' +
+   465→          '</div>';
+   466→      }
+   467→      panel.innerHTML = html;
+   468→    }
+   469→
+   470→    // ============================================================
+   471→    // Load event history on boot
+   472→    // ============================================================
+   473→    async function loadHistory() {
+   474→      const token = getToken();
+   475→      if (!token) return;
+   476→      try {
+   477→        const resp = await fetch('/api/events/recent?limit=50&token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+   478→        if (!resp.ok) {
+   479→          document.getElementById('histStatus').textContent = 'failed (' + resp.status + ')';
+   480→          document.getElementById('histStatus').className = 'text-red-400';
+   481→          return;
+   482→        }
+   483→        const data = await resp.json();
+   484→        const events = (data.events || []).slice().reverse(); // oldest first for append
+   485→        if (events.length === 0) {
+   486→          feed.innerHTML = '<div class="text-slate-500">[boot] No events in history yet.</div>' +
+   487→            '<div class="text-slate-600 mt-2"><span class="text-green-700">&gt;&gt;</span> Open <a href="/test" class="text-green-400 underline">/test</a> and fire attacks to populate this feed.</div>' +
+   488→            '<div class="text-slate-700 mt-4">[idle] listening...<span class="blink">_</span></div>';
+   489→        } else {
+   490→          feed.innerHTML = '<div class="text-slate-500">[history] loaded ' + events.length + ' recent events:</div>';
+   491→          for (const evt of events) {
+   492→            if (evt.kind === 'waf') renderWafEvent(evt);
+   493→            else if (evt.kind === 'honeypot') renderHoneypotEvent(evt);
+   494→          }
+   495→          appendFeed('<div class="text-green-500 mt-2">--- end of history, listening live ---</div>');
+   496→        }
+   497→        document.getElementById('histStatus').textContent = 'loaded (' + events.length + ')';
+   498→        document.getElementById('histStatus').className = 'text-green-400';
+   499→
+   500→        // Also load top attackers
+   501→        const aResp = await fetch('/api/attackers/top?limit=20&token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+   502→        if (aResp.ok) {
+   503→          const aData = await aResp.json();
+   504→          for (const a of (aData.attackers || [])) {
+   505→            attackers.set(a.ip, {
+   506→              ip: a.ip, geo: a.geo, total: a.totalEvents,
+   507→              blocked: a.blockedCount, flagged: a.flaggedCount,
+   508→              trapped: a.trappedCount, failed: a.failedCount,
+   509→              lastSeen: a.lastSeen,
+   510→            });
+   511→          }
+   512→          renderTopAttackers();
+   513→        }
+   514→
+   515→        // Load aggregate stats
+   516→        const sResp = await fetch('/api/stats?token=' + encodeURIComponent(token), { credentials: 'same-origin' });
+   517→        if (sResp.ok) {
+   518→          const sData = await sResp.json();
+   519→          blockedCount = sData.blocked || 0;
+   520→          trappedCount = sData.trapped || 0;
+   521→          geoCacheSize = sData.geo?.cacheSize || 0;
+   522→          // uniqueIps from attackers map
+   523→          for (const ip of attackers.keys()) uniqueIps.add(ip);
+   524→          updateKpis();
+   525→        }
+   526→      } catch (e) {
+   527→        console.error('[soc] loadHistory error:', e);
+   528→        document.getElementById('histStatus').textContent = 'error';
+   529→        document.getElementById('histStatus').className = 'text-red-400';
+   530→      }
+   531→    }
+   532→
+   533→    // ============================================================
+   534→    // Socket.io live events
+   535→    // ============================================================
+   536→    const socket = io();
+   537→    socket.on('connect', () => {
+   538→      document.getElementById('sockStatus').textContent = 'ONLINE';
+   539→      document.getElementById('sockStatus').className = 'text-green-400';
+   540→      appendFeed('<div class="text-green-500">[socket] connected (' + socket.id + ')</div>');
+   541→    });
+   542→    socket.on('disconnect', () => {
+   543→      document.getElementById('sockStatus').textContent = 'OFFLINE';
+   544→      document.getElementById('sockStatus').className = 'text-red-400';
+   545→      appendFeed('<div class="text-red-500">[socket] disconnected</div>');
+   546→    });
+   547→    socket.on('waf_event', renderWafEvent);
+   548→    socket.on('honeypot_event', renderHoneypotEvent);
+   549→
+   550→    // ============================================================
+   551→    // Admin controls
+   552→    // ============================================================
+   553→    document.getElementById('resetHoneypot').addEventListener('click', async () => {
+   554→      if (!confirm('Disarm ALL honeypot-trapped IPs and clear trap history?')) return;
+   555→      const token = getToken();
+   556→      try {
+   557→        // 1. Disarm all trapped IPs (CredShield server-side state)
+   558→        const resp = await fetch('/api/honeypot/reset?token=' + encodeURIComponent(token), { method: 'POST', credentials: 'same-origin' });
+   559→        if (!resp.ok) {
+   560→          appendFeed('<div class="text-red-400 font-bold">[ADMIN] Reset FAILED: HTTP ' + resp.status + '</div>');
+   561→          return;
+   562→        }
+   563→        // 2. Also clear event history so loadHistory() doesn't re-populate
+   564→        //    the panel on next page load/refresh
+   565→        await fetch('/api/events/clear?token=' + encodeURIComponent(token), { method: 'POST', credentials: 'same-origin' });
+   566→
+   567→        // 3. Clear ALL client-side state (not just the Map)
+   568→        trappedAttackers.clear();
+   569→        trappedCount = 0;
+   570→        updateKpis();
+   571→        renderTrappedAttackers();
+   572→        appendFeed('<div class="text-green-400 font-bold">[ADMIN] Honeypot reset — all IPs disarmed, history cleared.</div>');
+   573→      } catch (e) {
+   574→        appendFeed('<div class="text-red-400 font-bold">[ADMIN] Reset error: ' + esc(e.message) + '</div>');
+   575→      }
+   576→    });
+   577→
+   578→    document.getElementById('clearFeed').addEventListener('click', () => {
+   579→      feed.innerHTML = '<div class="text-slate-500">[feed] cleared by operator.</div>';
+   580→    });
+   581→
+   582→    document.getElementById('refreshBtn').addEventListener('click', () => {
+   583→      feed.innerHTML = '<div class="text-slate-500">[boot] refreshing...</div>';
+   584→      blockedCount = 0; trappedCount = 0; uniqueIps.clear(); eventTimes = [];
+   585→      attackers.clear(); trappedAttackers.clear();
+   586→      updateKpis(); renderTopAttackers(); renderTrappedAttackers();
+   587→      loadHistory();
+   588→    });
+   589→
+   590→    // ============================================================
+   591→    // Clock + periodic refresh
+   592→    // ============================================================
+   593→    function tick() {
+   594→      const d = new Date();
+   595→      const p = (n) => String(n).padStart(2, '0');
+   596→      document.getElementById('clock').textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+   597→    }
+   598→    tick();
+   599→    setInterval(tick, 1000);
+   600→    setInterval(updateKpis, 5000);
+   601→
+   602→    // Kick off history load
+   603→    loadHistory();
+   604→  </script>
+   605→</body>
+   606→</html>
+   607→
