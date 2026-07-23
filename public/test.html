@@ -7,11 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     * { -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Inter', system-ui, sans-serif; background-color: #020617; }
     h1, h2, h3, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-comic { font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif; }
     .mono { font-family: 'JetBrains Mono', monospace; }
     .feed-panel { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(51, 65, 85, 0.6); }
     @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
@@ -34,8 +35,8 @@
       <div class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-rose-500 pulse-dot shadow-lg shadow-rose-500/50"></div>
         <div>
-          <p class="font-display font-extrabold tracking-wider text-slate-100 text-sm flex items-center gap-2">
-            DECEPTIWAF <span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 text-xs border border-rose-500/30">CYBER RANGE STAGE</span>
+          <p class="font-comic font-bold tracking-wider text-slate-100 text-sm flex items-center gap-2">
+            DECEPTIWAF <span class="font-sans px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 text-xs border border-rose-500/30">CYBER RANGE STAGE</span>
           </p>
           <p class="text-[10px] text-slate-400 mono">fire attack vectors & observe WAF engine / honeypot reaction</p>
         </div>
@@ -54,13 +55,15 @@
 
   <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
 
-    <!-- Information Hint -->
-    <div class="bg-indigo-950/40 border border-indigo-800/60 rounded-2xl p-4 flex items-start gap-3 text-xs text-indigo-200">
-      <span class="text-indigo-400 font-bold mono text-sm">&gt;&gt;</span>
-      <div>
-        <span class="font-bold text-indigo-300">Demonstration Instructions:</span>
-        Open the <a href="/soc" target="_blank" class="text-indigo-400 underline font-bold hover:text-indigo-300">SOC Command Center</a> in another browser tab. As you trigger attacks or run custom payloads below, watch HTTP 403 / 429 status codes appear here and observe real-time incident alerts populate the SOC feed.
-      </div>
+    <!-- Quick Tip Box -->
+    <div class="bg-indigo-950/40 border border-indigo-800/60 rounded-2xl p-4 text-xs text-indigo-200">
+      <p class="font-bold text-indigo-300 mb-1.5 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Quick Tips
+      </p>
+      <ul class="list-disc list-inside space-y-1 text-slate-300">
+        <li>Open the <a href="/soc" target="_blank" class="text-indigo-400 underline font-semibold hover:text-indigo-300">SOC Command Center</a> in a separate tab to watch live telemetry events.</li>
+        <li>Trigger vector presets below to observe HTTP 403 blocks, HTTP 429 rate limits, and CredShield honeypot traps.</li>
+      </ul>
     </div>
 
     <!-- KPI Strip -->
@@ -93,22 +96,22 @@
       <!-- Left Column: Attack Vectors -->
       <div class="space-y-6">
         <section class="attack-card rounded-2xl p-4">
-          <h2 class="font-display text-xs font-bold text-rose-400 tracking-wider uppercase mb-3">SQL INJECTION VECTORS (Regex + AST)</h2>
+          <h2 class="font-comic text-xs font-bold text-rose-400 tracking-wider uppercase mb-3">SQL INJECTION VECTORS (Regex + AST)</h2>
           <div id="sqli-buttons" class="grid grid-cols-1 gap-2"></div>
         </section>
 
         <section class="attack-card rounded-2xl p-4">
-          <h2 class="font-display text-xs font-bold text-orange-400 tracking-wider uppercase mb-3">XSS PAYLOAD VECTORS</h2>
+          <h2 class="font-comic text-xs font-bold text-orange-400 tracking-wider uppercase mb-3">XSS PAYLOAD VECTORS</h2>
           <div id="xss-buttons" class="grid grid-cols-1 gap-2"></div>
         </section>
 
         <section class="attack-card rounded-2xl p-4">
-          <h2 class="font-display text-xs font-bold text-amber-400 tracking-wider uppercase mb-3">PATH TRAVERSAL & LFI</h2>
+          <h2 class="font-comic text-xs font-bold text-amber-400 tracking-wider uppercase mb-3">PATH TRAVERSAL & LFI</h2>
           <div id="pt-buttons" class="grid grid-cols-1 gap-2"></div>
         </section>
 
         <section class="attack-card rounded-2xl p-4">
-          <h2 class="font-display text-xs font-bold text-cyan-400 tracking-wider uppercase mb-3">DE-OBFUSCATION & ANTI-EVASION</h2>
+          <h2 class="font-comic text-xs font-bold text-cyan-400 tracking-wider uppercase mb-3">DE-OBFUSCATION & ANTI-EVASION</h2>
           <div id="evasion-buttons" class="grid grid-cols-1 gap-2"></div>
         </section>
       </div>
@@ -117,18 +120,18 @@
       <div class="space-y-6">
         
         <section class="attack-card rounded-2xl p-4">
-          <h2 class="font-display text-xs font-bold text-fuchsia-400 tracking-wider uppercase mb-3">MALICIOUS USER-AGENTS & SCANNERS</h2>
+          <h2 class="font-comic text-xs font-bold text-fuchsia-400 tracking-wider uppercase mb-3">MALICIOUS USER-AGENTS & SCANNERS</h2>
           <div id="ua-buttons" class="grid grid-cols-1 gap-2"></div>
         </section>
 
         <section class="attack-card rounded-2xl p-4">
-          <h2 class="font-display text-xs font-bold text-emerald-400 tracking-wider uppercase mb-3">BENIGN CONTROL REQUESTS</h2>
+          <h2 class="font-comic text-xs font-bold text-emerald-400 tracking-wider uppercase mb-3">BENIGN CONTROL REQUESTS</h2>
           <div id="benign-buttons" class="grid grid-cols-1 gap-2"></div>
         </section>
 
         <!-- Rate Limit Flood Test Card -->
         <section class="attack-card rounded-2xl p-4">
-          <h2 class="font-display text-xs font-bold text-amber-400 tracking-wider uppercase mb-2">⚡ RATE LIMIT SPAM TESTER</h2>
+          <h2 class="font-comic text-xs font-bold text-amber-400 tracking-wider uppercase mb-2">RATE LIMIT SPAM TESTER</h2>
           <p class="text-xs text-slate-400 mb-3">Fires 25 rapid requests in 2 seconds to trigger sliding window HTTP 429 rate limit block.</p>
           <button id="spamRateLimit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg shadow-amber-600/30">
             FIRE 25 RAPID REQUESTS (Trigger HTTP 429)
@@ -137,7 +140,7 @@
 
         <!-- CredShield Brute-Force Honeypot Walkthrough -->
         <section class="attack-card rounded-2xl p-4 border-fuchsia-900/40">
-          <h2 class="font-display text-xs font-bold text-fuchsia-400 tracking-wider uppercase mb-2">CREDSHIELD — BRUTE-FORCE HONEYPOT DEMO</h2>
+          <h2 class="font-comic text-xs font-bold text-fuchsia-400 tracking-wider uppercase mb-2">CREDSHIELD — BRUTE-FORCE HONEYPOT DEMO</h2>
           <p class="text-xs text-slate-400 leading-relaxed mb-3">
             Simulates a brute-force attacker. After 3 failed logins, CredShield arms. The 4th login attempt traps the attacker and serves deterministic fake student data.
           </p>
@@ -155,12 +158,38 @@
           </div>
         </section>
 
+        <!-- Custom Payload Sandbox -->
+        <section class="attack-card rounded-2xl p-4 border-indigo-900/40">
+          <h2 class="font-comic text-xs font-bold text-indigo-400 tracking-wider uppercase mb-2">CUSTOM PAYLOAD SANDBOX</h2>
+          <p class="text-xs text-slate-400 mb-3">Test custom attack strings against DeceptiWAF AST and Regex engines.</p>
+          <form id="customPayloadForm" class="space-y-2.5">
+            <div class="grid grid-cols-3 gap-2">
+              <select id="customMethod" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 mono focus:outline-none focus:border-indigo-500">
+                <option value="POST">POST</option>
+                <option value="GET">GET</option>
+              </select>
+              <select id="customPath" class="col-span-2 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 mono focus:outline-none focus:border-indigo-500">
+                <option value="/login">/login</option>
+                <option value="/dashboard">/dashboard</option>
+                <option value="/">/ (root)</option>
+              </select>
+            </div>
+            <div>
+              <input type="text" id="customInput" placeholder="Payload string (e.g. ' UNION SELECT 1,2,3 --)" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 mono placeholder-slate-500 focus:outline-none focus:border-indigo-500" required />
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5">
+              <span>SEND CUSTOM PAYLOAD</span>
+              <span class="mono text-[10px]">&rarr;</span>
+            </button>
+          </form>
+        </section>
+
         <!-- Chaos Mode -->
         <section class="attack-card rounded-2xl p-4">
-          <h2 class="font-display text-xs font-bold text-rose-400 tracking-wider uppercase mb-3">CHAOS SIMULATION</h2>
+          <h2 class="font-comic text-xs font-bold text-rose-400 tracking-wider uppercase mb-3">CHAOS SIMULATION</h2>
           <div class="space-y-2">
             <button id="fireAll" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs py-3 rounded-xl transition shadow-lg shadow-rose-600/30">
-              🔥 FIRE ALL ATTACK VECTORS (ALL CATEGORIES)
+              FIRE ALL ATTACK VECTORS (ALL CATEGORIES)
             </button>
             <button id="clearLog" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 mono text-xs py-2 rounded-xl border border-slate-700 transition">
               CLEAR RESULT LOG
@@ -176,7 +205,7 @@
       <div class="px-4 py-3 border-b border-slate-800 bg-slate-900/90 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-rose-400 pulse-dot"></span>
-          <h2 class="mono text-xs font-bold text-indigo-300 tracking-widest uppercase">ATTACK RESULT TERMINAL</h2>
+          <h2 class="font-comic text-xs font-bold text-indigo-300 tracking-widest uppercase">ATTACK RESULT TERMINAL</h2>
         </div>
         <span class="mono text-[10px] text-slate-500">real HTTP fetch calls</span>
       </div>
@@ -186,7 +215,7 @@
     </section>
 
     <footer class="mono text-[10px] text-slate-500 text-center py-4">
-      DeceptiWAF Cyber Range &middot; Active Defense Telemetry
+      DeceptiWAF Test Console &middot; Active Security Telemetry
     </footer>
   </main>
 
@@ -354,6 +383,23 @@
     document.getElementById('bruteForce').addEventListener('click', async () => {
       bruteStatus('[RUNNING] Simulating 4 brute-force attempts...', 'text-fuchsia-400');
       for (let i = 1; i <= 4; i++) { await doBruteStep(i); await new Promise((r) => setTimeout(r, 350)); }
+    });
+
+    document.getElementById('customPayloadForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const method = document.getElementById('customMethod').value;
+      const path = document.getElementById('customPath').value;
+      const input = document.getElementById('customInput').value.trim();
+      if (!input) return;
+
+      let attackObj = { label: input, desc: 'Custom Payload Sandbox', method };
+      if (method === 'POST') {
+        attackObj.url = path;
+        attackObj.body = 'studentId=' + encodeURIComponent(input) + '&password=x';
+      } else {
+        attackObj.url = path + (path.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(input);
+      }
+      fireAttack(attackObj);
     });
   </script>
 </body>

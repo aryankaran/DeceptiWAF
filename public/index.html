@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,32 +8,47 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
   <style>
-    * { -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; }
-    .font-comic { font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif; }
-    .mono { font-family: 'JetBrains Mono', monospace; }
-    
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+    }
+
+    .font-comic {
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     .stripe-bg {
       background-color: #f8fafc;
       background-image: radial-gradient(#e2e8f0 0.8px, transparent 0.8px), radial-gradient(#e2e8f0 0.8px, #f8fafc 0.8px);
       background-size: 32px 32px;
       background-position: 0 0, 16px 16px;
     }
-    
+
     .stripe-card {
       background: #ffffff;
       border: 1px solid #eaecf0;
       box-shadow: 0 12px 32px -4px rgba(16, 24, 40, 0.06), 0 4px 12px -2px rgba(16, 24, 40, 0.03);
     }
-    
+
     .stripe-input {
       background: #ffffff;
       border: 1px solid #d0d5dd;
       box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
       transition: all 0.15s ease;
     }
+
     .stripe-input:focus {
       border-color: #6366f1;
       box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12), 0 1px 2px rgba(16, 24, 40, 0.05);
@@ -43,18 +59,21 @@
       box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.15);
       transition: all 0.15s ease;
     }
+
     .stripe-btn:hover {
       background: #4338ca;
     }
   </style>
 </head>
+
 <body class="stripe-bg min-h-screen flex items-center justify-center p-4 selection:bg-indigo-500 selection:text-white">
 
   <div class="w-full max-w-[420px] relative z-10 py-8">
 
     <!-- Header Brand Section -->
     <div class="text-center mb-6">
-      <div class="inline-flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-200/90 shadow-sm mb-3">
+      <div
+        class="inline-flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-200/90 shadow-sm mb-3">
         <img src="/logo.png" alt="Kalyani University Logo" class="h-10 w-auto object-contain shrink-0" />
         <div class="text-left">
           <h1 class="font-comic text-lg font-bold text-slate-900 leading-tight">Kalyani University</h1>
@@ -64,7 +83,8 @@
 
       <!-- DeceptiWAF status badge -->
       <div class="flex items-center justify-center mt-1">
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-medium">
+        <div
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-medium">
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
           Protected by DeceptiWAF v1.4
         </div>
@@ -80,8 +100,14 @@
       </div>
 
       <!-- Error Banner -->
-      <div id="errorBanner" class="hidden mb-5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3.5 flex items-start gap-2.5">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mt-0.5 shrink-0 text-rose-600"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div id="errorBanner"
+        class="hidden mb-5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3.5 flex items-start gap-2.5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" class="mt-0.5 shrink-0 text-rose-600">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
         <span id="errorText">Invalid student ID or password.</span>
       </div>
 
@@ -89,8 +115,8 @@
 
         <div>
           <label for="studentId" class="block text-xs font-semibold text-slate-700 mb-1.5">Student ID / Username</label>
-          <input type="text" id="studentId" name="studentId" autocomplete="username"
-            placeholder="e.g. aryan, sucheta, or admin" required
+          <input type="text" id="studentId" name="studentId" autocomplete="username" placeholder="e.g. aryan, or admin"
+            required
             class="stripe-input w-full px-3.5 py-2.5 rounded-xl text-slate-900 text-sm outline-none placeholder:text-slate-400 font-medium" />
         </div>
 
@@ -99,21 +125,36 @@
             <label for="password" class="block text-xs font-semibold text-slate-700">Password</label>
           </div>
           <div class="relative">
-            <input type="password" id="password" name="password" autocomplete="current-password"
-              placeholder="••••••••" required
+            <input type="password" id="password" name="password" autocomplete="current-password" placeholder="••••••••"
+              required
               class="stripe-input w-full px-3.5 py-2.5 pr-10 rounded-xl text-slate-900 text-sm outline-none placeholder:text-slate-400 font-medium" />
             <button type="button" id="togglePassword"
               class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
               title="Toggle password visibility">
-              <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+              <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                <line x1="2" y1="2" x2="22" y2="22" />
+              </svg>
             </button>
           </div>
         </div>
 
-        <button type="submit" class="stripe-btn w-full text-white font-semibold py-2.5 rounded-xl text-sm mt-2 flex items-center justify-center gap-1.5">
+        <button type="submit"
+          class="stripe-btn w-full text-white font-semibold py-2.5 rounded-xl text-sm mt-2 flex items-center justify-center gap-1.5">
           <span>Sign In to Portal</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
         </button>
       </form>
 
@@ -121,13 +162,16 @@
       <div class="mt-6 pt-5 border-t border-slate-100">
         <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Preset Demo Accounts</p>
         <div class="flex flex-wrap gap-1.5">
-          <button type="button" onclick="quickFill('aryan', 'aryan@2024')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-medium border border-slate-200/80 transition-colors">
+          <button type="button" onclick="quickFill('aryan', 'aryan@2024')"
+            class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-medium border border-slate-200/80 transition-colors">
             Student: aryan
           </button>
-          <button type="button" onclick="quickFill('sucheta', 'sucheta@2024')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-medium border border-slate-200/80 transition-colors">
+          <button type="button" onclick="quickFill('sucheta', 'sucheta@2024')"
+            class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-medium border border-slate-200/80 transition-colors">
             Student: sucheta
           </button>
-          <button type="button" onclick="quickFill('admin', 'socadmin123')" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium border border-rose-200/80 transition-colors">
+          <button type="button" onclick="quickFill('admin', 'socadmin123')"
+            class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium border border-rose-200/80 transition-colors">
             Admin: SOC
           </button>
         </div>
@@ -160,10 +204,10 @@
       const text = document.getElementById('errorText');
       if (err) {
         banner.classList.remove('hidden');
-        if (err === 'invalid')      text.textContent = 'Invalid Student ID or password.';
+        if (err === 'invalid') text.textContent = 'Invalid Student ID or password.';
         else if (err === 'missing') text.textContent = 'Please enter both Student ID and password.';
-        else if (err === 'auth')    text.textContent = 'Session expired or unauthorized access. Please sign in.';
-        else                        text.textContent = 'Login attempt failed. Please try again.';
+        else if (err === 'auth') text.textContent = 'Session expired or unauthorized access. Please sign in.';
+        else text.textContent = 'Login attempt failed. Please try again.';
       }
 
       const passInput = document.getElementById('password');
@@ -180,4 +224,5 @@
     })();
   </script>
 </body>
+
 </html>

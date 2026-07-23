@@ -3,3 +3,5 @@ upload
 *.db
 *.db-shm
 *.db-wal
+new-slides
+out/

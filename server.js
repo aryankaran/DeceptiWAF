@@ -1,8 +1,4 @@
-/**
- * DeceptiWAF — server.js
- * Express + Socket.io server: decoy student portal, WAF middleware,
- * CredShield brute-force honeypot, and real-time SOC dashboard.
- */
+// Express & Socket.io Application Server
 
 const path = require('path');
 const fs = require('fs');
@@ -317,6 +313,8 @@ app.get('/soc', (req, res) => {
 });
 
 app.get('/test', (req, res) => res.sendFile(path.join(__dirname, 'public', 'test.html')));
+
+app.get('/slides', (req, res) => res.sendFile(path.join(__dirname, 'public', 'slides.html')));
 
 app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
 
