@@ -8,18 +8,37 @@
   <b>A next-generation Node.js Security Solution combining multi-pass payload de-obfuscation, AST structural tokenization, and active honeypot deception (CredShield).</b>
 </p>
 
+<p align="center">
+  <a href="#-system-architecture"><img src="https://img.shields.io/badge/Architecture-AST%20%2B%20Deception-blueviolet?style=for-the-badge" alt="Architecture"></a>
+  <a href="#-feature-matrix-deceptiwaf-vs-traditional-wafs"><img src="https://img.shields.io/badge/WAF%20Engine-Multi--Pass%20Deobfuscator-blue?style=for-the-badge" alt="WAF Engine"></a>
+  <a href="#-quickstart--setup"><img src="https://img.shields.io/badge/Runtime-Node.js%20%7C%20Bun-green?style=for-the-badge" alt="Runtime"></a>
+</p>
+
 ---
 
 ## 🛡️ Executive Summary
 
 Traditional Web Application Firewalls (WAFs) rely heavily on static signature matching, making them vulnerable to nested payload obfuscation, encoding tricks, and automated credential stuffing.
 
-**DeceptiWAF** shifts the paradigm from passive blocking to **active cyber deception**. When an attacker repeatedly attempts brute-force logins or payload injection:
-1. **Multi-Pass De-Obfuscation**: Recursively unwraps URL encoding, hex encoding, and HTML entities to reveal hidden attack vectors.
-2. **AST Structural Tokenization**: Parses incoming SQL and JavaScript expressions into Abstract Syntax Trees (AST) to detect syntactic anomalies beyond regex signatures.
-3. **CredShield Active Deception**: Rather than outright blocking brute-force attackers, CredShield silently shifts the attacker into an isolated **Honeypot Sandbox**.
-4. **Deterministic Synthetic Profiles**: Trapped attackers receive realistic, dynamically generated student profiles bound to their target user ID, keeping them engaged while logging full threat telemetry.
-5. **Real-Time SOC Console**: Broadcasts threat events, IP geolocation, browser fingerprints, and honeypot activations to a live glassmorphism Security Operations Center (SOC) dashboard.
+**DeceptiWAF** shifts the security paradigm from passive blocking to **active cyber deception**:
+
+- **Multi-Pass De-Obfuscator**: Recursively unwraps URL encoding, hex strings, and HTML entities up to 5 passes to expose obfuscated attack vectors.
+- **AST Structural Tokenizer**: Parses SQL and JavaScript expressions into Abstract Syntax Trees (AST) to detect syntactic anomalies beyond regex signatures.
+- **CredShield Active Honeypot**: Rather than locking out brute-force attackers, CredShield silently traps them in an isolated **Honeypot Sandbox**.
+- **Synthetic Identity Engine**: Trapped attackers receive realistic, dynamically generated student profiles bound to their target user ID, keeping them engaged while logging full threat telemetry.
+- **Real-Time SOC Console**: Broadcasts threat events, IP geolocation, browser fingerprints, and honeypot activations to a live glassmorphism Security Operations Center (SOC) dashboard via Socket.io.
+
+---
+
+## 📊 Feature Matrix: DeceptiWAF vs. Traditional WAFs
+
+| Security Capability | Traditional Regex WAF | Static Rate Limiter | DeceptiWAF |
+|---------------------|-----------------------|---------------------|------------|
+| **Obfuscated Payload Decoding** | Single-pass URL decode | ❌ None | **5-Pass Recursive Multi-Format** |
+| **SQLi / XSS Inspection** | Regex string matching | ❌ None | **Regex + AST Structural Tokenization** |
+| **Brute-Force Mitigation** | IP Lockout (403/429) | Drop Connection | **CredShield Active Honeypot Sandbox** |
+| **Attacker Feedback** | Explicit Block Error | Connection Reset | **Zero Indicator (Fake Profile Deception)** |
+| **Telemetry & Analytics** | Static Server Logs | Basic Counters | **Real-Time Socket.io Glassmorphism SOC** |
 
 ---
 
@@ -57,90 +76,131 @@ flowchart TD
 
 ---
 
-## 🛠️ Core Security Modules Breakdown
+## 🔌 Complete API Endpoint Reference
 
-### 1. Multi-Pass Payload De-Obfuscation (`lib/waf.js`)
-Attackers often attempt to evade signature detection using nested encoding (e.g., `%2527%20OR%201=1`).
-- **Recursive Decoding**: Processes requests up to 5 recursive passes of URL decoding, hexadecimal string parsing, and HTML entity unescaping.
-- **Pattern Matching**: Inspects sanitized strings for SQLi (`UNION SELECT`, `--`, `;`), XSS (`<script>`, `onerror=`, `javascript:`), Path Traversal (`../`, `..\\`), and Scanner User-Agents (`sqlmap`, `nikto`, `nmap`).
+| Method | Endpoint | Access Level | Required Parameters | System Action & Response Payload |
+|--------|----------|--------------|---------------------|----------------------------------|
+| `POST` | `/login` | Public | `studentId`, `password` | Authenticates student against `data/users.json` or intercepts trapped IP returning a synthetic identity. |
+| `POST` | `/logout` | Authenticated | Cookie: `deceptiwaf_session` | Destroys in-memory session and removes SQLite WAL record. Redirects to `/`. |
+| `GET` | `/api/me` | Authenticated | Cookie or Query `?token=` | Returns authentic student object or synthetic honeypot profile JSON. |
+| `GET` | `/api/events/recent` | Admin | `?limit=` (default 50) | Retrieves recent security incidents, WAF blocks, and honeypot activations. |
+| `GET` | `/api/attackers/top` | Admin | `?limit=` (default 20) | Returns catalog of top threat source IPs ordered by attack volume. |
+| `GET` | `/api/stats` | Admin | Query `?token=` | Aggregated metrics: total threats, WAF blocks, active honeypots, and cache stats. |
+| `GET` | `/api/honeypot/status` | Admin | Query `?token=` | Returns snapshot of all tracked IPs, failed attempt counters, and trap states. |
+| `POST` | `/api/honeypot/reset` | Admin | Body/Query `ip=` (optional) | Disarms active honeypot traps for a specific IP or clears all disarmed states. |
+| `POST` | `/api/events/clear` | Admin | Query `?token=` | Wipes incident history from memory buffer and SQLite WAL database. |
+| `GET` | `/health` | Public | None | Server pulse check. Returns `{ "ok": true, "ts": 1784847214000 }`. |
 
-### 2. AST Structural Tokenizer (`lib/astWaf.js`)
-- Tokenizes incoming query parameters and POST bodies into abstract syntax trees.
-- Identifies structural anomalies such as tautological SQL clauses (`OR 1=1`, `'a'='a'`) and execution sinks (`eval()`, `Function()`).
+### Socket.io Real-Time Event Matrix
 
-### 3. CredShield Active Deception Trap (`lib/credshield.js`)
-- Tracks authentication failures per IP address against `HONEYPOT_THRESHOLD`.
-- **Silent Redirection**: Once triggered, instead of returning HTTP 403 or locking out the IP, CredShield arms the trap. On the next login attempt, it returns HTTP 200 with a valid session cookie pointing to a sandbox environment.
-
-### 4. Dynamic Synthetic Identity Engine (`lib/fakeProfile.js`)
-- Generates rich, realistic student profile data (full name, roll number, academic branch, GPA, fee status, hostel allocation, and activity logs).
-- **Deterministic Identity**: Ensures that repeated logins under the same username return identical fake profiles, maintaining illusion integrity for the attacker.
-
-### 5. Real-Time SOC Dashboard (`public/soc.html`)
-- Built using modern glassmorphism styling, soft pastel indicators, and responsive CSS.
-- Integrates Socket.io for sub-second telemetry updates:
-  - Active Threat Counter & Honeypot Trap Activation metrics.
-  - Interactive Geolocation Threat Map (`lib/geo.js`).
-  - Attacker Browser Fingerprinting (`User-Agent`, `Sec-Ch-Ua`, `Accept-Language`, `Referer`).
-
-### 6. Persistence Layer (`lib/db.js`)
-- Operates on **SQLite WAL (Write-Ahead Logging)** mode via `better-sqlite3`.
-- Safely persists active sessions, incident logs, and threat events across application restarts.
+| Event Name | Type | Data Payload Structure | Description |
+|------------|------|------------------------|-------------|
+| `waf_blocked` | Broadcast | `{ ip, url, rule, payload, geo, fingerprint }` | Emitted instantly when WAF blocks SQLi, XSS, or Path Traversal |
+| `honeypot_event` | Broadcast | `{ ip, username, attempt, fakeIdentity, geo }` | Emitted when CredShield arms or traps an attacker in the sandbox |
+| `soc_reset` | Broadcast | `{ action: "reset", target: "all" }` | Emitted when administrator disarms traps or clears SOC counters |
 
 ---
 
-## 🚀 Quickstart & Installation
+## ⚡ Attack Scenario & Telemetry Walkthrough
 
-### Prerequisites
-- Node.js (v18+) or Bun runtime
-- npm / yarn / bun
-
-### 1. Clone & Install Dependencies
+### Scenario 1: Legitimate Student Authentication
+A valid student logs in with authentic credentials:
 ```bash
+curl -i -X POST http://localhost:3000/login \
+  -d "studentId=21cs104&password=21cs104@2024"
+```
+**System Behavior**:
+- Password verified against SHA-256 hash in `data/users.json`.
+- Session issued and stored in SQLite WAL (`lib/db.js`).
+- Redirects to `/dashboard?token=<session_token>`.
+
+---
+
+### Scenario 2: Multi-Pass Obfuscated WAF Interception
+An attacker attempts a nested URL-encoded SQL injection payload (`%2527%20OR%201=1%20--`):
+```bash
+curl -i "http://localhost:3000/?search=%2527%20OR%201=1%20--"
+```
+**System Behavior**:
+1. `lib/waf.js` unwraps Pass 1 (`%27 OR 1=1 --`) and Pass 2 (`' OR 1=1 --`).
+2. Regex and AST engines identify tautological SQL injection.
+3. Request terminated immediately:
+```http
+HTTP/1.1 403 Forbidden
+Content-Type: text/html
+
+<!DOCTYPE html>
+<html>... 403 Security Violation: SQL Injection Detected ...</html>
+```
+4. Socket.io emits `waf_blocked` event to the SOC Dashboard.
+
+---
+
+### Scenario 3: CredShield Active Deception & Sandbox Trapping
+
+#### 1. Brute-Force Phase (Triggering Threshold)
+An automated script submits 3 consecutive invalid login attempts:
+```bash
+for i in {1..3}; do
+  curl -s -X POST http://localhost:3000/login \
+    -d "studentId=21cs104&password=invalid_pass_$i" > /dev/null
+done
+```
+**Server Log**: `[HONEYPOT ARMED] ip=127.0.0.1 next login will be trapped`
+
+#### 2. Sandbox Trapping Phase
+The attacker submits a 4th login attempt (even with bogus credentials):
+```bash
+curl -i -X POST http://localhost:3000/login \
+  -d "studentId=21cs104&password=anything"
+```
+**System Response**:
+```http
+HTTP/1.1 302 Found
+Set-Cookie: deceptiwaf_session=a4f9b2...; Path=/; HttpOnly
+Location: /dashboard?token=a4f9b2...
+```
+**Deception Effect**:
+- The attacker receives HTTP 302 Redirect to `/dashboard` and believes the login succeeded.
+- `lib/fakeProfile.js` generates a realistic synthetic student profile bound to `21cs104`.
+- The attacker is trapped in an isolated sandbox (`public/honeypot.html`).
+- The SOC dashboard receives a live `honeypot_event` broadcast containing the attacker's IP geolocation, browser fingerprint, and targeted user ID.
+
+---
+
+## 🚀 Quickstart & Deployment
+
+```bash
+# 1. Clone Repository & Install Dependencies
 git clone https://github.com/aryankaran/DeceptiWAF.git
 cd DeceptiWAF
 npm install
-```
 
-### 2. Generate Student Account Database
-Generate SHA-256 hashed credentials for the user dataset:
-```bash
+# 2. Seed Student Credentials Database
 node scripts/generate-users.js
-```
 
-### 3. Run Development Server
-```bash
+# 3. Start Server
 npm start
 ```
-The application server will start on `http://localhost:3000`.
+
+Access Points:
+- **Public Login**: `http://localhost:3000/`
+- **SOC Dashboard**: `http://localhost:3000/soc`
+- **Attack Simulator**: `http://localhost:3000/test`
+- **Slide Viewer**: `http://localhost:3000/slides`
 
 ---
 
-## 🌐 Application Route Matrix
+## 🧪 Automated Security Test Suite
 
-| Route | Access Level | Description |
-|-------|--------------|-------------|
-| `/` | Public | Main login portal (Stripe SaaS UI layout) |
-| `/dashboard` | Student / Trapped | User dashboard (Displays real or synthetic profile) |
-| `/soc` | Admin | Real-time SOC Security Console & Attack Telemetry |
-| `/slides` | Public | Interactive presentation deck web viewer |
-| `/api/events` | Admin | Fetches recent threat log buffer from SQLite DB |
-| `/api/stats` | Admin | Aggregated attack metrics & honeypot statistics |
-| `/api/reset` | Admin | Resets SOC counter metrics & active honeypot traps |
-
----
-
-## 🧪 Security Testing & Verification
-
-An automated WAF test harness script is included in `scripts/test-waf.sh`:
+Run the built-in WAF attack simulator script:
 ```bash
 chmod +x scripts/test-waf.sh
 ./scripts/test-waf.sh
 ```
-This script executes a battery of test payloads (obfuscated SQLi, XSS vectors, and brute-force sequences) against the local server to verify de-obfuscation and honeypot activation.
 
 ---
 
 ## 📄 License & Attribution
 
-DeceptiWAF is developed for cybersecurity research, academic defenses, and security demonstration purposes. Created by **Aryan Karan**.
+Created by **Aryan Karan**. Developed for cybersecurity research, academic defenses, and security engineering demonstrations.
