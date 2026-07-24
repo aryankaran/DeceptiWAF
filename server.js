@@ -353,16 +353,16 @@ io.on('connection', (socket) => {
 // Start
 const PORT = config.PORT;
 server.listen(PORT, config.HOST, () => {
-  console.log('==================================================');
+  console.log('<==================================================>');
   console.log('  DeceptiWAF — Target App + SOC Dashboard');
-  console.log('==================================================');
+  console.log(' ==================================================');
   console.log(`  Login page  : http://localhost:${PORT}/`);
   console.log(`  Dashboard   : http://localhost:${PORT}/dashboard`);
   console.log(`  SOC (admin) : http://localhost:${PORT}/soc`);
   console.log(`  Attack sim  : http://localhost:${PORT}/test`);
   console.log(`  Health      : http://localhost:${PORT}/health`);
-  console.log('--------------------------------------------------');
-  console.log('  Students: <username>@2024  (see data/users.json)');
+  console.log(' --------------------------------------------------');
+  console.log('  Students: <username>@2026');
   console.log('  Admin   : socadmin123');
-  console.log('==================================================');
+  console.log('<==================================================>');
 });

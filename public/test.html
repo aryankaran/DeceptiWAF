@@ -298,7 +298,11 @@
       total++; updateKpis();
       const opts = { method: attack.method || 'GET', redirect: 'manual' };
       if (attack.body) { opts.headers = { 'Content-Type': 'application/x-www-form-urlencoded' }; opts.body = attack.body; }
-      if (attack.ua) { opts.headers = opts.headers || {}; opts.headers['User-Agent'] = attack.ua; }
+      if (attack.ua) {
+        opts.headers = opts.headers || {};
+        opts.headers['User-Agent'] = attack.ua;
+        opts.headers['X-Test-User-Agent'] = attack.ua;
+      }
 
       try {
         const resp = await fetch(attack.url || '/', opts);
