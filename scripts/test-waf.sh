@@ -32,7 +32,7 @@ expect_block() {
     printf "  ${c_grn}BLOCK${c_rst}  %s  ${c_dim}(403)%s\n" "$label" "${c_rst}"
   else
     FAIL=$((FAIL+1))
-    printf "  ${c_red}PASS ${c_rst}  %s  ${c_dim}(got %s, expected 403)%s\n" "$label" "$code" "${c_rst}"
+    printf "  ${c_red}FAIL ${c_rst}  %s  ${c_dim}(got %s, expected 403)%s\n" "$label" "$code" "${c_rst}"
   fi
 }
 
